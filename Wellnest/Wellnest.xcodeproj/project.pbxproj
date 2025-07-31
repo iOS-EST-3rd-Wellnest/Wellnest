@@ -40,11 +40,11 @@
 				Features/Onboarding/Model/.gitkeep,
 				Features/Onboarding/View/.gitkeep,
 				Features/Onboarding/ViewModel/.gitkeep,
+				Secrets.plist,
 				Shared/Common/Extensions/.gitkeep,
 				Shared/Common/Utils/.gitkeep,
 				Shared/Models/.gitkeep,
 				Shared/Persistence/UserDefault/.gitkeep,
-				Shared/Services/.gitkeep,
 			);
 			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;
 		};
@@ -426,6 +426,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Wellnest/Secrets.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -454,6 +455,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Wellnest/Secrets.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
