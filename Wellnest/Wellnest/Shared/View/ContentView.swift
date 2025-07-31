@@ -27,6 +27,8 @@ struct ContentView: View {
                     }
                 }
                 .onDelete(perform: deleteItems)
+
+                
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -38,7 +40,16 @@ struct ContentView: View {
                     }
                 }
             }
+            Button {
+
+            } label: {
+                Text("Button")
+            }
+
             Text("Select an item")
+
+
+
         }
     }
 
