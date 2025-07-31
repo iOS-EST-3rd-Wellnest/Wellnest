@@ -1,62 +1,79 @@
-# Xcode
-#
-# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+# MARK: - Xcode 빌드 관련
+DerivedData/
+build/
+*.xcworkspace
+!default.xcworkspace
 
-## User settings
+# MARK: - Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# MARK: - 사용자 설정
+*.xcuserstate
+*.xcscmblueprint
 xcuserdata/
+*.xccheckout
+*.moved-aside
 
-## Obj-C/Swift specific
-*.hmap
+# MARK: - CoreData
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
-## App packaging
+# MARK: - HealthKit 백업 방지용 (예: CSV나 export 로그)
+HealthDataExport/
+*.csv
+
+# MARK: - AI 모델 / Alan AI
+*.mlmodelc
+*.mlmodel
+
+# MARK: - 앱 바이너리 / 릴리즈 아티팩트
 *.ipa
-*.dSYM.zip
+*.app
 *.dSYM
+*.xcarchive
 
-## Playgrounds
+# MARK: - CocoaPods (필요한 경우)
+Pods/
+Podfile.lock
+
+# MARK: - Carthage (사용 시)
+Carthage/
+Carthage.build/
+
+# MARK: - fastlane
+fastlane/report.xml
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/Preview.html
+
+# MARK: - 기타 macOS
+.DS_Store
+
+# MARK: - Playground
 timeline.xctimeline
 playground.xcworkspace
 
-# Swift Package Manager
-#
-# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
-# Packages/
-# Package.pins
-# Package.resolved
-# *.xcodeproj
-#
-# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
-# hence it is not needed unless you have added a package configuration file to your project
-# .swiftpm
+# MARK: - Previews
+*.preview-thumbnails
 
-.build/
+# MARK: - API 키 / 비밀 파일
+.env
+.env.*
+*.secrets
+*.key
+*.pem
+Secrets.plist
 
-# CocoaPods
-#
-# We recommend against adding the Pods directory to your .gitignore. However
-# you should judge for yourself, the pros and cons are mentioned at:
-# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
-#
-# Pods/
-#
-# Add this line if you want to avoid checking in source code from the Xcode workspace
-# *.xcworkspace
+# MARK: - SwiftLint / CI 설정 캐시
+.swiftlint.yml
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
-# Carthage
-#
-# Add this line if you want to avoid checking in source code from Carthage dependencies.
-# Carthage/Checkouts
+# MARK: - Log
+*.log
+*.logarchive
 
-Carthage/Build/
-
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo.
-# Instead, use fastlane to re-generate the screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/#source-control
-
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output
+# MARK: - Bundled Images / Generated Assets
+*.xcassets.generated/
