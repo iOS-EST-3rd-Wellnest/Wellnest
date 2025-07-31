@@ -7,11 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B0049A4A2E3B310900D48E8C /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A492E3B310900D48E8C /* FirebaseAnalyticsCore */; };
-		B0049A4C2E3B313E00D48E8C /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A4B2E3B313E00D48E8C /* FirebaseAnalyticsIdentitySupport */; };
-		B0049A4E2E3B319400D48E8C /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A4D2E3B319400D48E8C /* FirebaseAI */; };
-		B0049A502E3B319400D48E8C /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A4F2E3B319400D48E8C /* FirebaseAppCheck */; };
-		B05A20AD2E3B2C7D00AA8F36 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B05A20AC2E3B2C7D00AA8F36 /* FirebaseAnalytics */; };
+		B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,11 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B05A20AD2E3B2C7D00AA8F36 /* FirebaseAnalytics in Frameworks */,
-				B0049A4E2E3B319400D48E8C /* FirebaseAI in Frameworks */,
-				B0049A4A2E3B310900D48E8C /* FirebaseAnalyticsCore in Frameworks */,
-				B0049A502E3B319400D48E8C /* FirebaseAppCheck in Frameworks */,
-				B0049A4C2E3B313E00D48E8C /* FirebaseAnalyticsIdentitySupport in Frameworks */,
+				B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,11 +137,7 @@
 			);
 			name = Wellnest;
 			packageProductDependencies = (
-				B05A20AC2E3B2C7D00AA8F36 /* FirebaseAnalytics */,
-				B0049A492E3B310900D48E8C /* FirebaseAnalyticsCore */,
-				B0049A4B2E3B313E00D48E8C /* FirebaseAnalyticsIdentitySupport */,
-				B0049A4D2E3B319400D48E8C /* FirebaseAI */,
-				B0049A4F2E3B319400D48E8C /* FirebaseAppCheck */,
+				B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */,
 			);
 			productName = Wellnest;
 			productReference = B05A1EEF2E3B222800AA8F36 /* Wellnest.app */;
@@ -234,7 +222,7 @@
 			mainGroup = B05A1EE62E3B222800AA8F36;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B05A1EF02E3B222800AA8F36 /* Products */;
@@ -443,6 +431,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -470,6 +459,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -593,9 +583,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 12.0.0;
@@ -604,29 +594,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B0049A492E3B310900D48E8C /* FirebaseAnalyticsCore */ = {
+		B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalyticsCore;
-		};
-		B0049A4B2E3B313E00D48E8C /* FirebaseAnalyticsIdentitySupport */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalyticsIdentitySupport;
-		};
-		B0049A4D2E3B319400D48E8C /* FirebaseAI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAI;
-		};
-		B0049A4F2E3B319400D48E8C /* FirebaseAppCheck */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAppCheck;
-		};
-		B05A20AC2E3B2C7D00AA8F36 /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B05A20AB2E3B2C7D00AA8F36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
 		};
 /* End XCSwiftPackageProductDependency section */
