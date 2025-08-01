@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProfileDetailView: View {
     @State private var name = ""
-    @State private var age = ""
+    @State private var selectedAge: Int? = nil
     @State private var height = ""
     @State private var weight = ""
     var body: some View {
@@ -29,55 +29,49 @@ struct ProfileDetailView: View {
                     TextField("이름을 입력해주세요.", text: $name)
                         .padding()
                         .font(.caption)
-//                        .overlay {
-//                            RoundedRectangle(cornerRadius: 16)
-//                                .stroke(lineWidth: 1).opacity(0.3)
-//                        }
                         .listRowInsets(EdgeInsets())
                 }
                 
                 Section("나이") {
                     
                 }
-                
-                Section("키 / 몸무게") {
-                    HStack {
+                    
+                    Section("키 / 몸무게") {
                         HStack {
-                            TextField("키를 입력해주세요.", text: $height)
-                                .padding()
-                                .font(.caption)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(lineWidth: 1).opacity(0.3)
-                                }
-                            
-                            Text("cm")
+                            HStack {
+                                TextField("키를 입력해주세요.", text: $height)
+                                    .padding()
+                                    .font(.caption)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(lineWidth: 1).opacity(0.3)
+                                    }
                                 
-                        }
-                        
-                        HStack {
-                            TextField("몸무게를 입력해주세요.", text: $weight)
-                                .padding()
-                                .font(.caption)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(lineWidth: 1).opacity(0.3)
-                                }
-                            
-                            Text("kg")
+                                Text("cm")
                                 
+                            }
+                            
+                            HStack {
+                                TextField("몸무게를 입력해주세요.", text: $weight)
+                                    .padding()
+                                    .font(.caption)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(lineWidth: 1).opacity(0.3)
+                                    }
+                                
+                                Text("kg")
+                                
+                            }
                         }
                     }
-                }
+                .navigationTitle("프로필 수정")
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .navigationTitle("프로필 수정")
-            .navigationBarTitleDisplayMode(.inline)
-            
-            
         }
     }
 }
-
-#Preview {
-    ProfileDetailView()
-}
+    
+    #Preview {
+        ProfileDetailView()
+    }

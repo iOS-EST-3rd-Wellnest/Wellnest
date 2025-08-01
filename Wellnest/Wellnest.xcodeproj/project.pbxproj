@@ -40,6 +40,7 @@
 				Features/Onboarding/Model/.gitkeep,
 				Features/Onboarding/View/.gitkeep,
 				Features/Onboarding/ViewModel/.gitkeep,
+				Secrets.plist,
 				Shared/Common/Extensions/.gitkeep,
 				Shared/Common/Utils/.gitkeep,
 				Shared/Models/.gitkeep,

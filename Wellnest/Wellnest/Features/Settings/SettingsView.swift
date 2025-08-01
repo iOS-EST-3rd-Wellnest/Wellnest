@@ -21,7 +21,12 @@ struct SettingsView: View {
                 
                 Section(header: Text("앱 설정")) {
                     // TODO: 알림
-                    Text("알림 설정")
+                    NavigationLink {
+                        NotificationView()
+                    } label: {
+                        Label("알림 설정", systemImage: "bell")
+                        
+                    }
                     
                     // TODO: 캘린더 연동
                     // 캘린더 연동 -> 커스텀 캘린더를 사용하는게 아닌가?
