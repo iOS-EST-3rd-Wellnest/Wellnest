@@ -13,6 +13,7 @@ enum CornerRadius {
 }
 
 enum Spacing {
-    static let layout: CGFloat = 20
-    static let content: CGFloat = 10
+    static let layout: CGFloat = 16
+    static let content: CGFloat = 8
+    static let inline: CGFloat = 4
 }
