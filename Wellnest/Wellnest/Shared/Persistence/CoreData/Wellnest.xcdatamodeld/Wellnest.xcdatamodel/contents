@@ -1,7 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="DailySummaryEntity" representedClassName="DailySummaryEntity" syncable="YES">
+        <attribute name="articleRecommendation" optional="YES" attributeType="String"/>
+        <attribute name="completeRate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="goal" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="mealRecommendation" optional="YES" attributeType="String"/>
+        <attribute name="quoteOfTheDay" optional="YES" attributeType="String"/>
+        <attribute name="videoRecommendation" optional="YES" attributeType="String"/>
+        <attribute name="weatherSummary" optional="YES" attributeType="String"/>
+        <relationship name="schedules" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="ScheduleEntity" inverseName="parentSummary" inverseEntity="ScheduleEntity"/>
+    </entity>
     <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="ScheduleEntity" representedClassName="ScheduleEntity" syncable="YES">
+        <attribute name="alarm" optional="YES" attributeType="String"/>
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="detail" optional="YES" attributeType="String"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isAllday" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="isCompleted" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="repeatRule" optional="YES" attributeType="String"/>
+        <attribute name="scheduleType" attributeType="String"/>
+        <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="parentSummary" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DailySummaryEntity" inverseName="schedules" inverseEntity="DailySummaryEntity"/>
     </entity>
     <entity name="UserEntity" representedClassName="UserEntity" syncable="YES">
         <attribute name="activityPreferences" optional="YES" attributeType="String"/>
