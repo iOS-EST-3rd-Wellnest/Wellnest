@@ -9,8 +9,9 @@ import SwiftUI
 
 struct NotificationView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-        // test
+        Text("알림 설정 뷰 입니다.")
+            .navigationTitle("알림 설정")
+            .navigationBarTitleDisplayMode(.inline)
     }
 }
 

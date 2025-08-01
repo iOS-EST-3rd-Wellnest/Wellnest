@@ -14,6 +14,7 @@ enum UserAgeRange: String, CaseIterable, Identifiable {
     case forties = "40대"
     case fifties = "50대"
     case sixty = "60대"
+    case moreThenSixty = "60대 이상"
     
     var id: String {
         self.rawValue

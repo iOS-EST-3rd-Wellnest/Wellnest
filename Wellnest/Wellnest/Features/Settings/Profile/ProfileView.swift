@@ -8,21 +8,17 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Binding var name: String
+    
     var body: some View {
         HStack {
             Circle()
                 .frame(width: 40, height: 40)
                 .foregroundStyle(.indigo)
-                
-            VStack {
-                Text("이름")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                
-                Text("E-mail")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-            }
+            
+            Text(name)
+                .font(.title3)
+                .fontWeight(.bold)
             
             Spacer()
             
@@ -33,5 +29,5 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView()
+    ProfileView(name: .constant("홍길동"))
 }
