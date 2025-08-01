@@ -15,7 +15,7 @@ extension DailySummaryEntity {
     }
 
     /// 고유 식별자
-    @NSManaged public var id: Int64
+    @NSManaged public var id: UUID
 
     /// 해당 날짜
     @NSManaged public var date: Date

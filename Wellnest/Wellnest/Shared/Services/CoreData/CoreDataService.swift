@@ -59,7 +59,8 @@ extension CoreDataService {
     }
 
     func fetch<Entity>(
-        _ predicate: NSPredicate? = nil,
+        _ type: Entity.Type,
+        predicate: NSPredicate? = nil,
         sortDescriptors: [NSSortDescriptor]? = nil
     ) throws -> [Entity] where Entity: NSManagedObject {
         let request = NSFetchRequest<Entity>(entityName: String(describing: Entity.self))
@@ -98,7 +99,7 @@ extension CoreDataService {
     }
 
     func deleteAll<Entity>(_ type: Entity.Type) throws where Entity: NSManagedObject {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: type))
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Entity.self))
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
         do {
             try context.execute(deleteRequest)

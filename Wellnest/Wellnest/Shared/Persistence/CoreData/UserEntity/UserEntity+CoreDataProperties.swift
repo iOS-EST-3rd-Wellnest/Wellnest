@@ -15,7 +15,7 @@ extension UserEntity {
     }
 
     /// 고유 식별자
-    @NSManaged public var id: Int64
+    @NSManaged public var id: UUID
 
     /// 연령대 (예: "20대", "30대", "40대")
     @NSManaged public var ageRange: String

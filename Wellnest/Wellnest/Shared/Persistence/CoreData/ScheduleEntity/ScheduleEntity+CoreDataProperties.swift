@@ -15,7 +15,7 @@ extension ScheduleEntity {
     }
 
     /// 고유 식별자
-    @NSManaged public var id: Int64
+    @NSManaged public var id: UUID
 
     /// 일정 제목 (예: "운동하기", "회의 참석")
     @NSManaged public var title: String

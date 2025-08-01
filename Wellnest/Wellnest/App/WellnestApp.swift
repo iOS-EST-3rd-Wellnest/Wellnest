@@ -18,12 +18,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct WellnestApp: App {
-    let persistenceController = PersistenceController.shared
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            TodayScheduleListView()
+                .environment(\.managedObjectContext, CoreDataService.shared.context)
         }
     }
 }
