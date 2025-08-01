@@ -22,7 +22,7 @@ struct WellnestApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRouter()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }
