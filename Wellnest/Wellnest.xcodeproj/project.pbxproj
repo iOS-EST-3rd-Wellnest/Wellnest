@@ -42,7 +42,6 @@
 				Features/Onboarding/ViewModel/.gitkeep,
 				Secrets.plist,
 				Shared/Common/Utils/.gitkeep,
-				Shared/Models/.gitkeep,
 				Shared/Persistence/UserDefault/.gitkeep,
 			);
 			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;

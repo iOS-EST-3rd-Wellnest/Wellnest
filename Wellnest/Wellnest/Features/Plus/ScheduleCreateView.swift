@@ -7,44 +7,6 @@
 
 import SwiftUI
 
-struct RepeatRule {
-    static let tags: [Tag] = Frequency.allCases.map { Tag(name: $0.label) }
-
-    var endDate: Date?
-    var frequency: String?
-    // 반복 주기 enum
-    enum Frequency: CaseIterable, Equatable, Hashable {
-        case daily, weekly, monthly, yearly
-
-        var label: String {
-            switch self {
-            case .daily: return "매일"
-            case .weekly: return "매주"
-            case .monthly: return "매월"
-            case .yearly: return "매년"
-            }
-        }
-    }
-}
-
-struct AlarmRule {
-    static let tags: [Tag] = Frequency.allCases.map { Tag(name: $0.label) }
-
-    var frequency: String?
-
-    enum Frequency: CaseIterable, Equatable, Hashable {
-        case onTime, tenMinutes, halfAnHour
-
-        var label: String {
-            switch self {
-            case .onTime: return "정시에"
-            case .tenMinutes: return "10분 전"
-            case .halfAnHour: return "30분 전"
-            }
-        }
-    }
-
-}
 
 struct ScheduleCreateView: View {
     @Environment(\.managedObjectContext) private var context
@@ -55,24 +17,33 @@ struct ScheduleCreateView: View {
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date().addingTimeInterval(3600)
 
+    // 하루 종일 여부
     @State private var isAllDay: Bool = false
 
+    // 반복 여부
     @State private var isRepeated: Bool = false
+
+    // 반복 종료일 여부
     @State private var hasRepeatedDone: Bool = false
+
+    // 반복 주기
     @State private var repeatRule: RepeatRule? = nil
 
+    // 알람 여부
     @State private var isAlarm: Bool = false
-    @State private var alarmRule: AlarmRule? = nil
-    @State private var isFocused: Bool = true
 
-    let alarmOptions = ["없음", "10분 전", "30분 전", "1시간 전"]
+    // 알람 주기
+    @State private var alarmRule: AlarmRule? = nil
+
+    // 초기에 첫번째 텍스트 필드에 focus
+    @State private var isTextFiledFocused: Bool = true
 
     var body: some View {
         NavigationView {
             ScrollView(.vertical) {
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading) {
-                        FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isFocused)
+                        FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isTextFiledFocused)
                             .frame(height: 20)
                     }
 
@@ -193,7 +164,7 @@ struct ScheduleCreateView: View {
                 }
                 .onAppear {
                     DispatchQueue.main.async {
-                        isFocused = true
+                        isTextFiledFocused = true
                     }
                 }
             }
