@@ -12,9 +12,6 @@
         <attribute name="weatherSummary" optional="YES" attributeType="String"/>
         <relationship name="schedules" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="ScheduleEntity" inverseName="parentSummary" inverseEntity="ScheduleEntity"/>
     </entity>
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-    </entity>
     <entity name="ScheduleEntity" representedClassName="ScheduleEntity" syncable="YES">
         <attribute name="alarm" optional="YES" attributeType="String"/>
         <attribute name="category" optional="YES" attributeType="String"/>

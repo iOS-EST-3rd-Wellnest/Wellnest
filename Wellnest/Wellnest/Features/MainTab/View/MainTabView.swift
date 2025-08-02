@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Environment(\.managedObjectContext) private var context
+    
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
 
@@ -16,7 +18,8 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    PlanView()
+                    TodayScheduleListView()
+                        .environment(\.managedObjectContext, context)
                 case .plan:
                     PlanView()
                 case .analysis:
@@ -30,6 +33,10 @@ struct MainTabView: View {
             CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .fullScreenCover(isPresented: $showScheduleMenu) {
+            ScheduleCreateView()
+                .environment(\.managedObjectContext, context)
+        }
     }
 }
 

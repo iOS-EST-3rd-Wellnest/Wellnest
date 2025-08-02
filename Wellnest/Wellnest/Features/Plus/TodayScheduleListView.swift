@@ -80,12 +80,19 @@ struct TodayScheduleListView: View {
         let start = Calendar.current.startOfDay(for: Date())
         let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
 
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZZ"
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+
+        print("🕐 now (KST):", formatter.string(from: start))
+        print("🕐 startOfToday (KST):", formatter.string(from: end))
+
         let predicate = NSPredicate(
-            format: "startDate >= %@ AND startDate < %@",
-            start as NSDate,
-            end as NSDate
+            format: "startDate < %@ AND endDate > %@",
+            end as NSDate,
+            start as NSDate
         )
-        
+
 
         do {
             schedules = try CoreDataService.shared.fetch(
