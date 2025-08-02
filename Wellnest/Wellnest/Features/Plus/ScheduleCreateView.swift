@@ -51,114 +51,117 @@ struct ScheduleCreateView: View {
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading) {
+            ScrollView(.vertical) {
                 VStack(alignment: .leading) {
-                    FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isFocused)
-                        .frame(height: 20)
-                }
-                
-                Divider()
-                VStack(alignment: .leading) {
-                    TextField("위치 또는 영상 통화", text: $detail)
-                        .textContentType(.location)
-                }
-                
-                Divider()
-                
-                VStack(alignment: .leading) {
-                    Toggle("하루 종일", isOn: $isAllDay)
-                    
                     VStack(alignment: .leading) {
-                        Text("시작")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        DatePicker("", selection: $startDate, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
-                            .labelsHidden()
+                        FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isFocused)
+                            .frame(height: 20)
                     }
-                    
+
+                    Divider()
                     VStack(alignment: .leading) {
-                        Text("종료")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        DatePicker("", selection: $endDate, in: startDate..., displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
-                            .labelsHidden()
+                        TextField("위치 또는 영상 통화", text: $detail)
+                            .textContentType(.location)
                     }
-                }
-                
-                Divider()
-                
-                VStack(alignment: .leading) {
-                    Toggle("반복", isOn: $isRepeated)
-                    
-                    if isRepeated {
-                        HStack(spacing: 12) {
-                            FlexibleView(
-                                data: RepeatRule.tags,
-                                spacing: 8,
-                                alignment: .leading
-                            ) { tag in
-                                TagView(tag: tag, isSelected: repeatRule?.frequency == tag.name)
-                                    .onTapGesture {
-                                        repeatRule = RepeatRule(endDate: nil, frequency: tag.name)
-                                    }
-                                    .onDisappear{
-                                        repeatRule = nil
-                                        hasRepeatedDone = false
-                                    }
-                            }
+
+                    Divider()
+
+                    VStack(alignment: .leading) {
+                        Toggle("하루 종일", isOn: $isAllDay)
+
+                        VStack(alignment: .leading) {
+                            Text("시작")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            DatePicker("", selection: $startDate, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
+                                .labelsHidden()
+                        }
+
+                        VStack(alignment: .leading) {
+                            Text("종료")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            DatePicker("", selection: $endDate, in: startDate..., displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
+                                .labelsHidden()
                         }
                     }
 
-                    if let repeatRule {
-                        Toggle("반복 종료", isOn: $hasRepeatedDone)
-                        if hasRepeatedDone {
-                            VStack(alignment: .leading) {
-                                Text("종료일")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                DatePicker("", selection: $endDate, in: startDate..., displayedComponents: .date)
-                                    .labelsHidden()
+                    Divider()
+
+                    VStack(alignment: .leading) {
+                        Toggle("반복", isOn: $isRepeated)
+
+                        if isRepeated {
+                            HStack(spacing: 12) {
+                                FlexibleView(
+                                    data: RepeatRule.tags,
+                                    spacing: 8,
+                                    alignment: .leading
+                                ) { tag in
+                                    TagView(tag: tag, isSelected: repeatRule?.frequency == tag.name)
+                                        .onTapGesture {
+                                            repeatRule = RepeatRule(endDate: nil, frequency: tag.name)
+                                        }
+                                        .onDisappear{
+                                            repeatRule = nil
+                                            hasRepeatedDone = false
+                                        }
+                                }
                             }
                         }
+
+                        if let repeatRule {
+                            Toggle("반복 종료", isOn: $hasRepeatedDone)
+                            if hasRepeatedDone {
+                                VStack(alignment: .leading) {
+                                    Text("종료일")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    DatePicker("", selection: $endDate, in: startDate..., displayedComponents: .date)
+                                        .labelsHidden()
+                                }
+                            }
+                        }
+
+                    }
+                    Divider()
+                    VStack(alignment: .leading) {
+                        Toggle("알람", isOn: $isAlarm)
+
                     }
 
+                    Spacer()
+                    Button("저장하기") {
+                        saveSchedule()
+                    }
+                    .disabled(title.isEmpty)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .init(horizontal: .center, vertical: .center))
+                    .background(.blue)
+                    .cornerRadius(CornerRadius.medium)
+                    .opacity(title.isEmpty ? 0.5 : 1.0)
                 }
-                Divider()
-                VStack(alignment: .leading) {
-                    Toggle("알람", isOn: $isAlarm)
-                    
-                }
-                
-                Spacer()
-                Button("저장하기") {
-                    saveSchedule()
-                }
-                .disabled(title.isEmpty)
-                .foregroundColor(.white)
                 .padding()
-                .frame(maxWidth: .infinity, alignment: .init(horizontal: .center, vertical: .center))
-                .background(.blue)
-                .cornerRadius(CornerRadius.medium)
-                .opacity(title.isEmpty ? 0.5 : 1.0)
-            }
-            .padding()
-            .tapToDismissKeyboard()
-            .navigationTitle("새 일정")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .destructiveAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
+                .tapToDismissKeyboard()
+                .navigationTitle("새 일정")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .destructiveAction) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                    }
+                }
+                .onAppear {
+                    DispatchQueue.main.async {
+                        isFocused = true
                     }
                 }
             }
-            .onAppear {
-                DispatchQueue.main.async {
-                    isFocused = true
-                }
-            }
+
         }
     }
 }
