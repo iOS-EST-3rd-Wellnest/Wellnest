@@ -27,6 +27,25 @@ struct RepeatRule {
     }
 }
 
+struct AlarmRule {
+    static let tags: [Tag] = Frequency.allCases.map { Tag(name: $0.label) }
+
+    var frequency: String?
+
+    enum Frequency: CaseIterable, Equatable, Hashable {
+        case onTime, tenMinutes, halfAnHour
+
+        var label: String {
+            switch self {
+            case .onTime: return "정시에"
+            case .tenMinutes: return "10분 전"
+            case .halfAnHour: return "30분 전"
+            }
+        }
+    }
+
+}
+
 struct ScheduleCreateView: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -42,9 +61,8 @@ struct ScheduleCreateView: View {
     @State private var hasRepeatedDone: Bool = false
     @State private var repeatRule: RepeatRule? = nil
 
-
     @State private var isAlarm: Bool = false
-    @State private var alarm: String = "없음"
+    @State private var alarmRule: AlarmRule? = nil
     @State private var isFocused: Bool = true
 
     let alarmOptions = ["없음", "10분 전", "30분 전", "1시간 전"]
@@ -128,6 +146,24 @@ struct ScheduleCreateView: View {
                     VStack(alignment: .leading) {
                         Toggle("알람", isOn: $isAlarm)
 
+                        if isAlarm {
+                            HStack(spacing: 12) {
+                                FlexibleView(
+                                    data: AlarmRule.tags,
+                                    spacing: 8,
+                                    alignment: .leading
+                                ) { tag in
+                                    TagView(tag: tag, isSelected: alarmRule?.frequency == tag.name)
+                                        .onTapGesture {
+                                            alarmRule = AlarmRule(frequency: tag.name)
+                                        }
+                                        .onDisappear{
+                                            alarmRule = nil
+                                        }
+                                }
+                            }
+                        }
+
                     }
 
                     Spacer()
@@ -177,7 +213,7 @@ extension ScheduleCreateView {
         newSchedule.isAllDay = isAllDay
         newSchedule.isCompleted = false
         newSchedule.repeatRule = repeatRule?.frequency
-        newSchedule.alarm = alarm
+        newSchedule.alarm = alarmRule?.frequency
         newSchedule.scheduleType = "custom"
         newSchedule.createdAt = Date()
         newSchedule.updatedAt = Date()
@@ -190,11 +226,3 @@ extension ScheduleCreateView {
 #Preview {
     ScheduleCreateView()
 }
-
-
-
-
-
-
-
-
