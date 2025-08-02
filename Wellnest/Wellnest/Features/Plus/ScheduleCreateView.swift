@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct ScheduleCreateView: View {
-    @Environment(\.managedObjectContext) private var context
+    @EnvironmentObject var viewModel: ScheduleViewModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var title: String = ""
@@ -120,6 +120,8 @@ struct ScheduleCreateView: View {
                     Spacer()
                     Button("저장하기") {
                         saveSchedule()
+                        viewModel.loadTodaySchedules() // 👈 저장 후 홈 화면 갱신되도록
+                        dismiss()
                     }
                     .disabled(title.isEmpty)
                     .foregroundColor(.white)
@@ -155,7 +157,7 @@ struct ScheduleCreateView: View {
 
 extension ScheduleCreateView {
     private func saveSchedule() {
-        let newSchedule = ScheduleEntity(context: context)
+        let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
         newSchedule.id = UUID()
         newSchedule.title = title
         newSchedule.detail = detail
@@ -171,7 +173,6 @@ extension ScheduleCreateView {
 
         print(newSchedule)
         try? CoreDataService.shared.saveContext()
-        dismiss()
     }
 }
 #Preview {

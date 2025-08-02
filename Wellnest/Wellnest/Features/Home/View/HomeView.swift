@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct HomeView: View {
     @State var name: String = "홍길동"
-    
+
+#warning("⛔️ FixMe: 테스트용. 주용님이 ScheduleViewModel 수정해주세요.")
+    @EnvironmentObject private var viewModel: ScheduleViewModel
+
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
@@ -17,7 +21,7 @@ struct HomeView: View {
         
         return df.string(from: Date.now)
     }
-    
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading) {
@@ -99,9 +103,30 @@ struct HomeView: View {
                             .multilineTextAlignment(.center)
                         }
                     }
+
                 }
+                
             }
             .padding()
+#warning("⛔️ FixMe: 테스트용. 주용님이 ScheduleRowView UI 수정해주세요.")
+    #if DEBUG
+            VStack(alignment: .leading, spacing: Spacing.content) {
+                if viewModel.todaySchedules.isEmpty {
+                    Text("오늘 일정이 없습니다.")
+                        .foregroundStyle(.secondary)
+                        .padding(.top, Spacing.inline)
+                } else {
+                    ForEach(viewModel.todaySchedules) { schedule in
+                        ScheduleRowView(schedule: schedule)
+                            .padding(.vertical, Spacing.inline)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .onAppear {
+                viewModel.loadTodaySchedules()
+            }
+#endif
         }
     }
 }
@@ -109,3 +134,4 @@ struct HomeView: View {
 #Preview {
     HomeView()
 }
+
