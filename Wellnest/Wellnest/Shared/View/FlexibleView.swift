@@ -14,7 +14,7 @@ struct FlexibleView<Data: Collection, Content: View>: View where Data.Element: H
     var alignment: HorizontalAlignment
     let content: (Data.Element) -> Content
 
-    init(data: Data, spacing: CGFloat = 8, alignment: HorizontalAlignment = .leading,
+    init(data: Data, spacing: CGFloat = Spacing.content, alignment: HorizontalAlignment = .leading,
          @ViewBuilder content: @escaping (Data.Element) -> Content) {
         self.data = data
         self.spacing = spacing
@@ -38,7 +38,7 @@ struct FlexibleView<Data: Collection, Content: View>: View where Data.Element: H
         return ZStack(alignment: Alignment(horizontal: alignment, vertical: .top)) {
             ForEach(Array(data), id: \.self) { item in
                 content(item)
-                    .padding([.horizontal, .vertical], 4)
+                    .padding([.horizontal, .vertical], Spacing.inline)
                     .alignmentGuide(.leading, computeValue: { d in
                         if abs(width - d.width) > geometry.size.width {
                             width = 0

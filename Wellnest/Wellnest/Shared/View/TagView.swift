@@ -14,12 +14,12 @@ struct TagView<Model: TagModel>: View {
     var body: some View {
         Text(tag.name)
             .font(.system(size: 14, weight: .medium))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.layout)
+            .padding(.vertical, Spacing.content)
             .background(isSelected ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
             .foregroundColor(isSelected ? .blue : .primary)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.large)
                     .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
             )
             .cornerRadius(16)

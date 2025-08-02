@@ -21,7 +21,7 @@ struct TagToggleSection<Model: TagModel>: View {
 
             if isOn {
                 HStack(spacing: 12) {
-                    FlexibleView(data: tags, spacing: 8, alignment: .leading) { tag in
+                    FlexibleView(data: tags, spacing: Spacing.content, alignment: .leading) { tag in
                         TagView(tag: tag, isSelected: tag == selectedTag)
                             .onTapGesture {
                                 selectedTag = tag
