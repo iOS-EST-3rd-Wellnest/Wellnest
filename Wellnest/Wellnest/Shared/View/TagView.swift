@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TagView: View {
-    let tag: Tag
+struct TagView<Model: TagModel>: View {
+    let tag: Model
     var isSelected: Bool = false
 
     var body: some View {
@@ -31,6 +31,3 @@ struct Tag: Identifiable, Hashable {
     let name: String
 }
 
-#Preview {
-    TagView(tag: Tag(name: "메뉴"), isSelected: false)
-}

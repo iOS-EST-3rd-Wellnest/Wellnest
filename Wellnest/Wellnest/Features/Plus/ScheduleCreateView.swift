@@ -16,6 +16,7 @@ struct ScheduleCreateView: View {
     @State private var detail: String = ""
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date().addingTimeInterval(3600)
+    @State private var repeatEndDate = Date()
 
     // 하루 종일 여부
     @State private var isAllDay: Bool = false
@@ -27,7 +28,7 @@ struct ScheduleCreateView: View {
     @State private var hasRepeatedDone: Bool = false
 
     // 반복 주기
-    @State private var repeatRule: RepeatRule? = nil
+    @State private var selectedRepeatRule: RepeatRule? = nil
 
     // 알람 여부
     @State private var isAlarm: Bool = false
@@ -36,14 +37,14 @@ struct ScheduleCreateView: View {
     @State private var alarmRule: AlarmRule? = nil
 
     // 초기에 첫번째 텍스트 필드에 focus
-    @State private var isTextFiledFocused: Bool = true
+    @State private var isTextFieldFocused: Bool = true
 
     var body: some View {
         NavigationView {
             ScrollView(.vertical) {
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading) {
-                        FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isTextFiledFocused)
+                        FocusableTextField(text: $title, placeholder: "일정을 입력하세요", isFirstResponder: isTextFieldFocused)
                             .frame(height: 20)
                     }
 
@@ -77,65 +78,44 @@ struct ScheduleCreateView: View {
 
                     Divider()
 
-                    VStack(alignment: .leading) {
-                        Toggle("반복", isOn: $isRepeated)
-
-                        if isRepeated {
-                            HStack(spacing: 12) {
-                                FlexibleView(
-                                    data: RepeatRule.tags,
-                                    spacing: 8,
-                                    alignment: .leading
-                                ) { tag in
-                                    TagView(tag: tag, isSelected: repeatRule?.frequency == tag.name)
-                                        .onTapGesture {
-                                            repeatRule = RepeatRule(endDate: nil, frequency: tag.name)
-                                        }
-                                        .onDisappear{
-                                            repeatRule = nil
-                                            hasRepeatedDone = false
-                                        }
-                                }
-                            }
-                        }
-
-                        if let repeatRule {
-                            Toggle("반복 종료", isOn: $hasRepeatedDone)
-                            if hasRepeatedDone {
+                    TagToggleSection(
+                        title: "반복",
+                        tags: RepeatRule.tags,
+                        isOn: $isRepeated,
+                        selectedTag: $selectedRepeatRule,
+                        showDetail: selectedRepeatRule != nil,
+                        detailContent: {
+                            AnyView(
                                 VStack(alignment: .leading) {
-                                    Text("종료일")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    DatePicker("", selection: $endDate, in: startDate..., displayedComponents: .date)
-                                        .labelsHidden()
-                                }
-                            }
-                        }
+                                    Toggle("반복 종료", isOn: $hasRepeatedDone)
 
-                    }
+                                    if hasRepeatedDone {
+                                        VStack(alignment: .leading) {
+                                            Text("종료일")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                            DatePicker(
+                                                "",
+                                                selection: $repeatEndDate,
+                                                in: Date()...,
+                                                displayedComponents: .date
+                                            )
+                                            .labelsHidden()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    )
                     Divider()
-                    VStack(alignment: .leading) {
-                        Toggle("알람", isOn: $isAlarm)
-
-                        if isAlarm {
-                            HStack(spacing: 12) {
-                                FlexibleView(
-                                    data: AlarmRule.tags,
-                                    spacing: 8,
-                                    alignment: .leading
-                                ) { tag in
-                                    TagView(tag: tag, isSelected: alarmRule?.frequency == tag.name)
-                                        .onTapGesture {
-                                            alarmRule = AlarmRule(frequency: tag.name)
-                                        }
-                                        .onDisappear{
-                                            alarmRule = nil
-                                        }
-                                }
-                            }
-                        }
-
-                    }
+                    TagToggleSection(
+                        title: "알람",
+                        tags: AlarmRule.tags,
+                        isOn: $isAlarm,
+                        selectedTag: $alarmRule,
+                        showDetail: false,
+                        detailContent: nil
+                    )
 
                     Spacer()
                     Button("저장하기") {
@@ -164,7 +144,7 @@ struct ScheduleCreateView: View {
                 }
                 .onAppear {
                     DispatchQueue.main.async {
-                        isTextFiledFocused = true
+                        isTextFieldFocused = true
                     }
                 }
             }
@@ -183,8 +163,8 @@ extension ScheduleCreateView {
         newSchedule.endDate = endDate
         newSchedule.isAllDay = isAllDay
         newSchedule.isCompleted = false
-        newSchedule.repeatRule = repeatRule?.frequency
-        newSchedule.alarm = alarmRule?.frequency
+        newSchedule.repeatRule = selectedRepeatRule?.name
+        newSchedule.alarm = alarmRule?.name
         newSchedule.scheduleType = "custom"
         newSchedule.createdAt = Date()
         newSchedule.updatedAt = Date()

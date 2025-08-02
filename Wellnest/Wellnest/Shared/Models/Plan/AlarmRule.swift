@@ -7,20 +7,14 @@
 
 import Foundation
 
-struct AlarmRule {
-    static let tags: [Tag] = Frequency.allCases.map { Tag(name: $0.label) }
+struct AlarmRule: TagModel {
+    let id = UUID()
+    let name: String
 
-    var frequency: String?
-
-    enum Frequency: CaseIterable, Equatable, Hashable {
-        case onTime, tenMinutes, halfAnHour
-
-        var label: String {
-            switch self {
-            case .onTime: return "정시에"
-            case .tenMinutes: return "10분 전"
-            case .halfAnHour: return "30분 전"
-            }
-        }
-    }
+    static let tags: [AlarmRule] = [
+        AlarmRule(name: "10분 전"),
+        AlarmRule(name: "30분 전"),
+        AlarmRule(name: "1시간 전"),
+        AlarmRule(name: "하루 전")
+    ]
 }
