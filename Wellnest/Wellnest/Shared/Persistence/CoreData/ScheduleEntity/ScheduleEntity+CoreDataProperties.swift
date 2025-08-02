@@ -26,8 +26,8 @@ extension ScheduleEntity {
     /// 일정 시작 시간
     @NSManaged public var startDate: Date
 
-    /// 일정 종료 시간 (옵션)
-    @NSManaged public var endDate: Date?
+    /// 일정 종료 시간 
+    @NSManaged public var endDate: Date
 
     /// 일정 유형 (예: "daily", "weekly", "monthly")
     @NSManaged public var scheduleType: String

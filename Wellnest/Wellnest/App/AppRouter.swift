@@ -10,6 +10,7 @@ import SwiftUI
 struct AppRouter: View {
     // 온보딩 여부 isOnboarded 추가해주세요!
     @AppStorage("isOnboarded") private var isOnboarded: Bool = true
+   
 
     var body: some View {
         if isOnboarded {

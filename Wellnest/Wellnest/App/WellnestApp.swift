@@ -18,12 +18,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct WellnestApp: App {
-    let persistenceController = PersistenceController.shared
-
     var body: some Scene {
         WindowGroup {
             AppRouter()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }
 }
