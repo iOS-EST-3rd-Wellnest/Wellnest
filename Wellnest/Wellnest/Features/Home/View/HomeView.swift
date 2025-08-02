@@ -11,7 +11,6 @@ import CoreData
 struct HomeView: View {
     @State var name: String = "홍길동"
 
-#warning("⛔️ FixMe: 테스트용. 주용님이 ScheduleViewModel 수정해주세요.")
     @EnvironmentObject private var viewModel: ScheduleViewModel
 
     var today: String {
@@ -126,7 +125,7 @@ struct HomeView: View {
             .onAppear {
                 viewModel.loadTodaySchedules()
             }
-#endif
+    #endif
         }
     }
 }

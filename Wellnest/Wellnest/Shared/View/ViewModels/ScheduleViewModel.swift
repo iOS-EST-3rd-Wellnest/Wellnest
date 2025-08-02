@@ -12,13 +12,14 @@ final class ScheduleViewModel: ObservableObject {
     @Published var todaySchedules: [ScheduleItem] = []
 
     func loadTodaySchedules() {
-        let (now, endOfDay) = Self.todayBounds()
+        let (now, startOfTomorrow) = Self.todayBounds()
 
         let predicate = NSPredicate(
-            format: "startDate >= %@ AND startDate <= %@",
+            format: "endDate != nil AND endDate > %@ AND startDate < %@",
             now as NSDate,
-            endOfDay as NSDate
+            startOfTomorrow as NSDate
         )
+        
 
         let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
 
@@ -41,13 +42,10 @@ final class ScheduleViewModel: ObservableObject {
         let now = Date()
         let calendar = Calendar.current
 
-        // 오늘 자정 (다음 날 00:00:00)
-        let startOfTomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
 
-        // 오늘 밤 11:59:59 (실제로는 자정 바로 직전까지 포함하는 게 안전)
-        let endOfToday = calendar.date(byAdding: .second, value: -1, to: startOfTomorrow)!
-
-        return (now, endOfToday)
+        return (now, startOfTomorrow)
     }
 
     private static func mapToItem(entity: ScheduleEntity) -> ScheduleItem {
