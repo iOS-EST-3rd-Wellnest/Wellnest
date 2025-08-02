@@ -93,7 +93,6 @@ struct TodayScheduleListView: View {
             start as NSDate
         )
 
-
         do {
             schedules = try CoreDataService.shared.fetch(
                 ScheduleEntity.self,
