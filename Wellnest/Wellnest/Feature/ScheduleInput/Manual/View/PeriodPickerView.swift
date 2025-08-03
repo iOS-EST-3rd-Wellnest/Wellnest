@@ -94,8 +94,8 @@ extension PeriodPickerView {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
-
             Button {
+                hideKeyboard() // 👈 키보드 강제 내려주기
                 onTap()
             } label: {
                 HStack {

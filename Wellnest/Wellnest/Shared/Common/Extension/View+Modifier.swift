@@ -12,7 +12,7 @@ extension View {
         self.shadow(radius: 6, x: 2, y: 2)
     }
 
-    func tapToDismissKeyboard() -> some View {
-        self.modifier(TapToDismissKeyboard())
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }

@@ -27,19 +27,26 @@ struct ManualScheduleInputView: View {
                     Divider()
                     alarmSection
                     Spacer()
-                    saveButton
                 }
                 .padding()
-                .tapToDismissKeyboard()
-                .navigationTitle("새 일정")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                        }
+            }
+            .onTapGesture {
+                hideKeyboard()
+            }
+            .safeAreaInset(edge: .bottom) {
+                saveButton
+                    .padding()
+                    .background(.white)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+            }
+            .navigationTitle("새 일정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .destructiveAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
                     }
                 }
             }
