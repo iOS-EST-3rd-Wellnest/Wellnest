@@ -30,6 +30,9 @@ struct MainTabView: View {
             CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .fullScreenCover(isPresented: $showScheduleMenu) {
+            ManualScheduleInputView(selectedTab: $selectedTab)
+        }
     }
 }
 

@@ -104,17 +104,17 @@ struct ManualScheduleInputView: View {
     }
     // MARK: - repeatSection
 
-    // 반복 종료 일
-    @State private var repeatEndDate = Date()
-
     // 반복 여부
     @State private var isRepeated: Bool = false
 
-    // 반복 종료일 여부
-    @State private var hasRepeatedDone: Bool = false
-
     // 반복 주기
     @State private var selectedRepeatRule: RepeatRule? = nil
+
+    // 반복 종료일 여부
+    @State private var hasRepeatEndDate: Bool = false
+
+    // 반복 종료 일
+    @State private var repeatEndDate = Date()
 
     private var repeatSection: some View {
         TagToggleSection(
@@ -126,8 +126,8 @@ struct ManualScheduleInputView: View {
             detailContent: {
                 AnyView(
                     VStack(alignment: .leading) {
-                        Toggle("반복 종료", isOn: $hasRepeatedDone)
-                        if hasRepeatedDone {
+                        Toggle("반복 종료", isOn: $hasRepeatEndDate)
+                        if hasRepeatEndDate {
                             VStack(alignment: .leading) {
                                 Text("종료일")
                                     .font(.subheadline)
@@ -190,6 +190,8 @@ extension ManualScheduleInputView {
         newSchedule.isAllDay = isAllDay as NSNumber
         newSchedule.isCompleted = false
         newSchedule.repeatRule = selectedRepeatRule?.name
+        newSchedule.hasRepeatEndDate = hasRepeatEndDate
+        newSchedule.repeatEndDate = repeatEndDate
         newSchedule.alarm = alarmRule?.name
         newSchedule.scheduleType = "custom"
         newSchedule.createdAt = Date()
