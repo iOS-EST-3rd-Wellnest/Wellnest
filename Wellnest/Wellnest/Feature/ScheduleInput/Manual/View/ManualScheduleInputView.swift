@@ -173,7 +173,6 @@ struct ManualScheduleInputView: View {
     private var saveButton: some View {
         FilledButton(title: "저장하기") {
             saveSchedule()
-            viewModel.loadTodaySchedules()
             selectedTab = .plan
             dismiss()
         }
