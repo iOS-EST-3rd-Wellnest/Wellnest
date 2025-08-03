@@ -8,11 +8,7 @@
 import SwiftUI
 
 struct ManualScheduleInputView: View {
-
     @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject var viewModel: ManualScheduleViewModel
-
     @Binding var selectedTab: TabBarItem
 
     var body: some View {
