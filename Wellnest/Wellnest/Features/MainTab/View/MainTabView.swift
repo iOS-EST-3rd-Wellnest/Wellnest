@@ -19,7 +19,6 @@ struct MainTabView: View {
                 switch selectedTab {
                 case .home:
                     HomeView()
-                        .environmentObject(scheduleVM) 
                 case .plan:
                     PlanView()
                 case .analysis:
@@ -33,10 +32,10 @@ struct MainTabView: View {
             CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .fullScreenCover(isPresented: $showScheduleMenu) {
-            ScheduleCreateView()
-                .environmentObject(scheduleVM)
-        }
+//        .fullScreenCover(isPresented: $showScheduleMenu) {
+//            ScheduleCreateView()
+//                .environmentObject(scheduleVM)
+//        }
     }
 }
 
