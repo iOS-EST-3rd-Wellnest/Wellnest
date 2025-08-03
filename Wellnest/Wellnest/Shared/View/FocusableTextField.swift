@@ -87,8 +87,3 @@ private struct TapToDismissView: UIViewRepresentable {
     }
 }
 
-extension View {
-    func tapToDismissKeyboard() -> some View {
-        self.modifier(TapToDismissKeyboard())
-    }
-}
