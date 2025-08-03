@@ -13,6 +13,8 @@ struct ManualScheduleInputView: View {
 
     @EnvironmentObject var viewModel: ManualScheduleViewModel
 
+    @Binding var selectedTab: TabBarItem
+
     var body: some View {
         NavigationView {
             ScrollView(.vertical) {
@@ -29,7 +31,6 @@ struct ManualScheduleInputView: View {
                     Spacer()
                 }
                 .padding()
-//                .tapToDismissKeyboard()
             }
             .onTapGesture {
                 hideKeyboard()
@@ -105,8 +106,6 @@ struct ManualScheduleInputView: View {
             isAllDay: $isAllDay
         )
     }
-
-
     // MARK: - repeatSection
 
     // 반복 종료 일
@@ -175,6 +174,7 @@ struct ManualScheduleInputView: View {
         FilledButton(title: "저장하기") {
             saveSchedule()
             viewModel.loadTodaySchedules()
+            selectedTab = .plan
             dismiss()
         }
         .disabled(title.isEmpty)
@@ -204,6 +204,4 @@ extension ManualScheduleInputView {
         try? CoreDataService.shared.saveContext()
     }
 }
-#Preview {
-    ManualScheduleInputView()
-}
+

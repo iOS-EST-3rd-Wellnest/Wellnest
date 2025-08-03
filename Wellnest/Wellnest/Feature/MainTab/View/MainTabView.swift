@@ -34,7 +34,7 @@ struct MainTabView: View {
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .fullScreenCover(isPresented: $showScheduleMenu) {
-            ManualScheduleInputView()
+            ManualScheduleInputView(selectedTab: $selectedTab) 
                 .environmentObject(scheduleVM)
         }
     }
