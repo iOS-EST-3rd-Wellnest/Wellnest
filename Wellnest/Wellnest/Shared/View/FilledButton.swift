@@ -31,6 +31,7 @@ struct FilledButton: View {
                     Capsule()
                         .fill(backgroundColor)
                 )
+                .defaultShadow()
         }
     }
     
