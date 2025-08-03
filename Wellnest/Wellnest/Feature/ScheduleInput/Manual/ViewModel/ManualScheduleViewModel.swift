@@ -50,10 +50,10 @@ final class ManualScheduleViewModel: ObservableObject {
 
     private static func mapToItem(entity: ScheduleEntity) -> ScheduleItem {
         ScheduleItem(
-            id: entity.id,
-            title: entity.title,
-            startDate: entity.startDate,
-            endDate: entity.endDate
+            id: entity.id ?? UUID(),
+            title: entity.title ?? "",
+            startDate: entity.startDate ?? Date(),
+            endDate: entity.endDate ?? Date()
         )
     }
 }

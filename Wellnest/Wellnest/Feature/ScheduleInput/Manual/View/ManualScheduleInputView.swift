@@ -183,7 +183,7 @@ extension ManualScheduleInputView {
         newSchedule.detail = detail
         newSchedule.startDate = startDate
         newSchedule.endDate = endDate
-        newSchedule.isAllDay = isAllDay
+        newSchedule.isAllDay = isAllDay as NSNumber
         newSchedule.isCompleted = false
         newSchedule.repeatRule = selectedRepeatRule?.name
         newSchedule.alarm = alarmRule?.name
