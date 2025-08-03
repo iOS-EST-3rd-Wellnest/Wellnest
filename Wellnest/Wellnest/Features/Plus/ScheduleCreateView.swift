@@ -28,13 +28,7 @@ struct ScheduleCreateView: View {
                     Divider()
                     alarmSection
                     Spacer()
-                    FilledButton(title: "저장하기") {
-                        saveSchedule()
-                        viewModel.loadTodaySchedules()
-                        dismiss()
-                    }
-                    .disabled(title.isEmpty)
-                    .opacity(title.isEmpty ? 0.5 : 1.0)
+                    saveButton
                 }
                 .padding()
                 .tapToDismissKeyboard()
@@ -167,6 +161,16 @@ struct ScheduleCreateView: View {
             showDetail: false,
             detailContent: nil
         )
+    }
+
+    private var saveButton: some View {
+        FilledButton(title: "저장하기") {
+            saveSchedule()
+            viewModel.loadTodaySchedules()
+            dismiss()
+        }
+        .disabled(title.isEmpty)
+        .opacity(title.isEmpty ? 0.5 : 1.0)
     }
 
 }
