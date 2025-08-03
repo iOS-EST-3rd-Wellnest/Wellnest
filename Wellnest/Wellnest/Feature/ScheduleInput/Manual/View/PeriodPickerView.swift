@@ -74,6 +74,7 @@ struct PeriodPickerView: View {
                 .datePickerStyle(.wheel)
                 .transition(.opacity)
                 .frame(maxWidth: .infinity)
+                .padding(.top, -25)
             }
         }
         .animation(.easeInOut, value: activePicker)
@@ -95,7 +96,7 @@ extension PeriodPickerView {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
             Button {
-                hideKeyboard() // 👈 키보드 강제 내려주기
+                hideKeyboard()
                 onTap()
             } label: {
                 HStack {

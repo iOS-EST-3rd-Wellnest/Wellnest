@@ -29,6 +29,7 @@ struct ManualScheduleInputView: View {
                     Spacer()
                 }
                 .padding()
+//                .tapToDismissKeyboard()
             }
             .onTapGesture {
                 hideKeyboard()
@@ -47,6 +48,7 @@ struct ManualScheduleInputView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
+                            .foregroundColor(.black)
                     }
                 }
             }
