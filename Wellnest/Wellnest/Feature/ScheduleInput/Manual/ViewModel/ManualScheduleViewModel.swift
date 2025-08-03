@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-final class ScheduleViewModel: ObservableObject {
+final class ManualScheduleViewModel: ObservableObject {
     @Published var todaySchedules: [ScheduleItem] = []
 
     func loadTodaySchedules() {
@@ -56,11 +56,4 @@ final class ScheduleViewModel: ObservableObject {
             endDate: entity.endDate
         )
     }
-}
-
-struct ScheduleItem: Identifiable {
-    let id: UUID
-    let title: String
-    let startDate: Date
-    let endDate: Date
 }

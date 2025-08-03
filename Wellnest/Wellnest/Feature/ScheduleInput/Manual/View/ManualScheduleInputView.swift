@@ -7,12 +7,11 @@
 
 import SwiftUI
 
-
-struct ScheduleCreateView: View {
+struct ManualScheduleInputView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @EnvironmentObject var viewModel: ScheduleViewModel
+    @EnvironmentObject var viewModel: ManualScheduleViewModel
 
     var body: some View {
         NavigationView {
@@ -175,7 +174,7 @@ struct ScheduleCreateView: View {
 
 }
 
-extension ScheduleCreateView {
+extension ManualScheduleInputView {
 
     private func saveSchedule() {
         let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
@@ -197,5 +196,5 @@ extension ScheduleCreateView {
     }
 }
 #Preview {
-    ScheduleCreateView()
+    ManualScheduleInputView()
 }

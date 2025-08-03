@@ -11,7 +11,7 @@ struct MainTabView: View {
     
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
-    @StateObject private var scheduleVM = ScheduleViewModel()
+    @StateObject private var scheduleVM = ManualScheduleViewModel()
 
     var body: some View {
         ZStack(alignment: .bottom) {

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ScheduleRowView: View {
+struct ScheduleItemView: View {
     let schedule: ScheduleItem
 
     var body: some View {
