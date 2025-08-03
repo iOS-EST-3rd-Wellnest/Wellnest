@@ -7,8 +7,13 @@
 
 import SwiftUI
 
+/// 단일 태그를 시각적으로 표현하는 뷰
 struct TagView<Model: TagModel>: View {
+
+    /// 렌더링할 태그 모델
     let tag: Model
+
+    /// 선택 상태 여부 (선택되었을 경우 스타일 변경)
     var isSelected: Bool = false
 
     var body: some View {
