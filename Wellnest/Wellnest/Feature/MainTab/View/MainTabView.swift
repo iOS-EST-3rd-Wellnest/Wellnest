@@ -8,15 +8,18 @@
 import SwiftUI
 
 struct MainTabView: View {
+
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
+    @StateObject private var scheduleVM = ManualScheduleViewModel()
 
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
                 switch selectedTab {
                 case .home:
-                    PlanView()
+                    HomeView()
+                        .environmentObject(scheduleVM)
                 case .plan:
                     PlanView()
                 case .analysis:
@@ -30,6 +33,10 @@ struct MainTabView: View {
             CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .fullScreenCover(isPresented: $showScheduleMenu) {
+            ManualScheduleInputView()
+                .environmentObject(scheduleVM)
+        }
     }
 }
 
