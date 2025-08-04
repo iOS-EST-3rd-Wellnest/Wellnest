@@ -40,7 +40,7 @@ struct SettingsView: View {
                             .foregroundStyle(.primary)
                     }
                     
-                    // TODO: 헬스킷 동기화
+                    // TODO: 헬스킷 연동
                     NavigationLink {
                         HealthKitInterworkView()
                     } label: {

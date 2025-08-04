@@ -37,13 +37,7 @@
 		B05A1F4D2E3B255200AA8F36 /* Exceptions for "Wellnest" folder in "Wellnest" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Onboarding/Model/.gitkeep,
-				Features/Onboarding/View/.gitkeep,
-				Features/Onboarding/ViewModel/.gitkeep,
 				Secrets.plist,
-				Shared/Common/Extensions/.gitkeep,
-				Shared/Common/Utils/.gitkeep,
-				Shared/Models/.gitkeep,
 				Shared/Persistence/UserDefault/.gitkeep,
 			);
 			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;
@@ -424,6 +418,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
@@ -453,6 +448,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
