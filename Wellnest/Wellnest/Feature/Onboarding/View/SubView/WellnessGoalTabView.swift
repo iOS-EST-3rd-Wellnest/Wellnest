@@ -44,7 +44,7 @@ struct WellnessGoalTabView: View {
                             category.isSelected.toggle()
                             // TODO: Core Data 저장 처리
                         } label: {
-                            HStack(spacing: 12) {
+                            HStack {
                                 Text(category.title)
                                     .font(.body)
                                     .foregroundColor(.primary)
@@ -55,8 +55,9 @@ struct WellnessGoalTabView: View {
                             .frame(height: 58)
                             .background(category.isSelected ? .accentCardGreen : .customSecondary)
                             .cornerRadius(CornerRadius.large)
-                            .padding(.bottom, Spacing.content)
                         }
+                        .padding(.bottom, Spacing.content)
+                        .defaultShadow()
                     }
                 }
 
