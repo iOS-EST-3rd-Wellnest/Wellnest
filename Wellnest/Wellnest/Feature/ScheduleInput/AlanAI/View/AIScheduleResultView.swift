@@ -176,7 +176,7 @@ struct AIScheduleResultView: View {
         .cornerRadius(12)
     }
 
-    private func schedulesSection(_ schedules: [ScheduleItem]) -> some View {
+    private func schedulesSection(_ schedules: [AIScheduleItem]) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("일정")
                 .font(.title3)
@@ -332,7 +332,7 @@ struct RawResponseView: View {
 // MARK: - Supporting Views (기존과 동일)
 
 struct ScheduleCard: View {
-    let schedule: ScheduleItem
+    let schedule: AIScheduleItem
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
