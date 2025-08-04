@@ -238,6 +238,7 @@ extension ManualScheduleInputView {
         let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
         newSchedule.id = UUID()
         newSchedule.title = title
+        newSchedule.location = location
         newSchedule.detail = detail
         newSchedule.startDate = startDate
         newSchedule.endDate = endDate

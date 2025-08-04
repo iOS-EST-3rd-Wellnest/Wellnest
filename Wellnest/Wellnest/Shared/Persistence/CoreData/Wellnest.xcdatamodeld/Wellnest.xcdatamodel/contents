@@ -21,6 +21,7 @@
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isAllDay" attributeType="Boolean" usesScalarValueType="NO"/>
         <attribute name="isCompleted" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="repeatEndDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="repeatRule" optional="YES" attributeType="String"/>
         <attribute name="scheduleType" attributeType="String"/>
