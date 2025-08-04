@@ -54,19 +54,19 @@ struct OnboardingTabView: View {
     var body: some View {
         VStack {
             TabView(selection: $currentPage) {
-                MotivationTab(currentPage: $currentPage)
+                MotivationTabView(currentPage: $currentPage)
                     .tag(0)
 
-                IntroductionTab(currentPage: $currentPage)
+                IntroductionTabView(currentPage: $currentPage)
                     .tag(1)
 
-                IntroductionTab(currentPage: $currentPage)
+                IntroductionTabView(currentPage: $currentPage)
                     .tag(2)
 
-                UserInfoTab(currentPage: $currentPage)
+                UserInfoTabView(currentPage: $currentPage)
                     .tag(3)
 
-                WellnessGoalTab(currentPage: $currentPage)
+                WellnessGoalTabView(currentPage: $currentPage)
                     .tag(4)
 
                 VStack {

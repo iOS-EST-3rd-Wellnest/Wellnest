@@ -1,5 +1,5 @@
 //
-//  WellnessGoalTab.swift
+//  WellnessGoalTabView.swift
 //  Wellnest
 //
 //  Created by 정소이 on 8/4/25.
@@ -13,7 +13,7 @@ struct WellnessGoal: Identifiable {
     var isSelected: Bool = false
 }
 
-struct WellnessGoalTab: View {
+struct WellnessGoalTabView: View {
     @Binding var currentPage: Int
     
     @State private var goals: [WellnessGoal] = [
@@ -96,6 +96,6 @@ private struct Preview: View {
     @State private var currentPage = 0
 
     var body: some View {
-        WellnessGoalTab(currentPage: $currentPage)
+        WellnessGoalTabView(currentPage: $currentPage)
     }
 }

@@ -1,5 +1,5 @@
 //
-//  UserInfoTab.swift
+//  UserInfoTabView.swift
 //  Wellnest
 //
 //  Created by 정소이 on 8/4/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct UserInfoTab: View {
+struct UserInfoTabView: View {
     @Binding var currentPage: Int
 
     @State private var nickname: String = ""
@@ -201,6 +201,6 @@ private struct Preview: View {
     @State private var currentPage = 0
 
     var body: some View {
-        UserInfoTab(currentPage: $currentPage)
+        UserInfoTabView(currentPage: $currentPage)
     }
 }
