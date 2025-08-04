@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// TODO: 희정님이 만들어두신 Shared/View/FilledButton.swift 사용하기
-
 struct OnboardingTitle: View {
     let title: String
     let description: String?
@@ -44,7 +42,8 @@ struct UserInfoSectionTitle: View {
 }
 
 struct OnboardingTabView: View {
-    @AppStorage("isOnboarding") var isOnboarding: Bool = false
+//    @AppStorage("isOnboarding") var isOnboarding: Bool = false
+    @ObservedObject var userDefaultsManager: UserDefaultsManager
 
     @State private var currentPage: Int = 0
 
@@ -115,7 +114,7 @@ struct OnboardingTabView: View {
                     Spacer()
 
                     FilledButton(title: "완료") {
-                        isOnboarding = true
+                        userDefaultsManager.isOnboarding = true
                     }
                     .padding(.horizontal)
                     .padding(.bottom)
@@ -139,5 +138,5 @@ struct OnboardingTabView: View {
 }
 
 #Preview {
-    OnboardingTabView()
+    OnboardingTabView(userDefaultsManager: UserDefaultsManager.shared)
 }
