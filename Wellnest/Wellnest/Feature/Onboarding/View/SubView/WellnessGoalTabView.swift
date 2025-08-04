@@ -75,7 +75,7 @@ struct WellnessGoalTabView: View {
             Spacer()
 
             FilledButton(title: "다음") {
-                currentPage = 5
+                currentPage += 1
             }
             .padding(.horizontal)
             .padding(.bottom)

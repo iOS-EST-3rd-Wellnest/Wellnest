@@ -18,11 +18,13 @@ struct UserInfoTabView: View {
     @State var selectedGender = ""
     var genderOptions = ["여자", "남자"]
 
-    @State private var selectedHeight = ""
-    let heightOptions = ["140대 이하", "150대", "160대", "170대", "180대", "190대 이상"]
+    @State private var height: Double?
+//    @State private var selectedHeight = ""
+//    let heightOptions = ["140대 이하", "150대", "160대", "170대", "180대", "190대 이상"]
 
-    @State private var selectedWeight = ""
-    let weightOptions = ["20kg대 이하", "30kg대", "40kg대", "50kg대", "60kg대", "70kg대", "80kg대", "90kg대", "100kg대 이상"]
+    @State private var weight: Double?
+//    @State private var selectedWeight = ""
+//    let weightOptions = ["20kg대 이하", "30kg대", "40kg대", "50kg대", "60kg대", "70kg대", "80kg대", "90kg대", "100kg대 이상"]
 
     var body: some View {
         VStack {
@@ -111,33 +113,69 @@ struct UserInfoTabView: View {
                 .cornerRadius(CornerRadius.large)
                 .padding(.bottom, Spacing.content)
 
+//                HStack {
+//                    UserInfoSectionTitle(title: "키")
+//
+//                    Menu {
+//                        ForEach(heightOptions, id: \.self) { height in
+//                            Button(action: {
+//                                selectedHeight = height
+//                            }) {
+//                                Text(height)
+//                            }
+//                        }
+//                    } label: {
+//                        HStack {
+//                            Text(selectedHeight.isEmpty ? "키를 선택해주세요." : selectedHeight)
+//                                .foregroundColor(selectedHeight.isEmpty ? .gray : .primary)
+//                                .font(selectedHeight.isEmpty ? .footnote : .body)
+//
+//                            Spacer()
+//
+//                            Image(systemName: "chevron.down")
+//                                .foregroundColor(.primary)
+//                                .imageScale(.small)
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                    }
+//                    .padding(.trailing)
+//                    .padding(.leading, 60)
+//                }
+//                .frame(maxWidth: .infinity)
+//                .frame(height: 58)
+//                .background(.customSecondary)
+//                .cornerRadius(CornerRadius.large)
+//                .padding(.bottom, Spacing.content)
+
                 HStack {
                     UserInfoSectionTitle(title: "키")
 
-                    Menu {
-                        ForEach(heightOptions, id: \.self) { height in
-                            Button(action: {
-                                selectedHeight = height
-                            }) {
-                                Text(height)
+                    // TODO: 입력 제한 추가
+                    TextField(
+                        "",
+                        text: Binding(
+                            get: {
+                                if let height = height {
+                                    return String(format: "%.0f", height)
+                                } else {
+                                    return ""
+                                }
+                            },
+                            set: { newValue in
+                                if let value = Double(newValue) {
+                                    height = value
+                                } else {
+                                    height = nil
+                                }
                             }
-                        }
-                    } label: {
-                        HStack {
-                            Text(selectedHeight.isEmpty ? "키를 선택해주세요." : selectedHeight)
-                                .foregroundColor(selectedHeight.isEmpty ? .gray : .primary)
-                                .font(selectedHeight.isEmpty ? .footnote : .body)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.down")
-                                .foregroundColor(.primary)
-                                .imageScale(.small)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.trailing)
-                    .padding(.leading, 60)
+                        ),
+                        prompt: Text("키를 입력해주세요.")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    )
+                    .keyboardType(.decimalPad)
+                    .padding(.horizontal)
+                    .padding(.leading, 42)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
@@ -145,33 +183,69 @@ struct UserInfoTabView: View {
                 .cornerRadius(CornerRadius.large)
                 .padding(.bottom, Spacing.content)
 
+//                HStack {
+//                    UserInfoSectionTitle(title: "몸무게")
+//
+//                    Menu {
+//                        ForEach(weightOptions, id: \.self) { weight in
+//                            Button(action: {
+//                                selectedWeight = weight
+//                            }) {
+//                                Text(weight)
+//                            }
+//                        }
+//                    } label: {
+//                        HStack {
+//                            Text(selectedWeight.isEmpty ? "몸무게를 선택해주세요." : selectedWeight)
+//                                .foregroundColor(selectedWeight.isEmpty ? .gray : .primary)
+//                                .font(selectedWeight.isEmpty ? .footnote : .body)
+//
+//                            Spacer()
+//
+//                            Image(systemName: "chevron.down")
+//                                .foregroundColor(.primary)
+//                                .imageScale(.small)
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                    }
+//                    .padding(.trailing)
+//                    .padding(.leading, 30)
+//                }
+//                .frame(maxWidth: .infinity)
+//                .frame(height: 58)
+//                .background(.customSecondary)
+//                .cornerRadius(CornerRadius.large)
+//                .padding(.bottom, Spacing.content)
+
                 HStack {
                     UserInfoSectionTitle(title: "몸무게")
 
-                    Menu {
-                        ForEach(weightOptions, id: \.self) { weight in
-                            Button(action: {
-                                selectedWeight = weight
-                            }) {
-                                Text(weight)
+                    // TODO: 입력 제한 추가
+                    TextField(
+                        "",
+                        text: Binding(
+                            get: {
+                                if let weight = weight {
+                                    return String(format: "%.0f", weight)
+                                } else {
+                                    return ""
+                                }
+                            },
+                            set: { newValue in
+                                if let value = Double(newValue) {
+                                    weight = value
+                                } else {
+                                    weight = nil
+                                }
                             }
-                        }
-                    } label: {
-                        HStack {
-                            Text(selectedWeight.isEmpty ? "몸무게를 선택해주세요." : selectedWeight)
-                                .foregroundColor(selectedWeight.isEmpty ? .gray : .primary)
-                                .font(selectedWeight.isEmpty ? .footnote : .body)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.down")
-                                .foregroundColor(.primary)
-                                .imageScale(.small)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.trailing)
-                    .padding(.leading, 30)
+                        ),
+                        prompt: Text("몸무게를 입력해주세요.")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    )
+                    .keyboardType(.decimalPad)
+                    .padding(.horizontal)
+                    .padding(.leading, 14)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
@@ -185,7 +259,7 @@ struct UserInfoTabView: View {
 
             FilledButton(title: "다음") {
                 // TODO: 코어 데이터 추가 처리
-                currentPage = 4
+                currentPage += 1
             }
             .padding(.horizontal)
             .padding(.bottom)
