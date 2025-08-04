@@ -94,8 +94,8 @@ struct ManualScheduleInputView: View {
 
     // MARK: - locationSection
 
-    // 일정 상세 정보 - 위치 또는 영상 통화
-    @State private var detail: String = ""
+    // 위치
+    @State private var location: String = ""
 
     @State private var showLocationPicker: Bool = false
 
@@ -107,7 +107,7 @@ struct ManualScheduleInputView: View {
         VStack(alignment: .leading) {
             HStack {
                 FocusableTextField(
-                    text: $detail,
+                    text: $location,
                     placeholder: "장소",
                     isFirstResponder: currentFocus == .detail,
                     returnKeyType: .done,
@@ -131,7 +131,7 @@ struct ManualScheduleInputView: View {
             }
         }
         .sheet(isPresented: $showLocationSearchSheet) {
-            LocationSearchView(selectedLocation: $detail, isPresented: $showLocationSearchSheet)
+            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
         }
     }
 
@@ -216,6 +216,9 @@ struct ManualScheduleInputView: View {
             detailContent: nil
         )
     }
+
+    // 일정 상세 정보 - 아직 미정
+    @State private var detail: String = ""
 
     private var saveButton: some View {
         FilledButton(title: "저장하기") {
