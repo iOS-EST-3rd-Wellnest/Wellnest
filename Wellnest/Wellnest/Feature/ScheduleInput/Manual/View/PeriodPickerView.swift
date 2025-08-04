@@ -50,9 +50,9 @@ struct PeriodPickerView: View {
             }()
 
             if let picker = activePicker {
-                DatePicker(
-                    "",
-                    selection: Binding(
+
+                MinuteIntervalWheelDatePicker(
+                    date: Binding(
                         get: {
                             picker == .start ? startDate : endDate
                         },
@@ -67,13 +67,13 @@ struct PeriodPickerView: View {
                             }
                         }
                     ),
-                    in: dateRange ?? Date.distantPast...Date.distantFuture,
-                    displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute]
+                    minuteInterval: 5,
+                    isAllDay: isAllDay,
+                    minimumDate: dateRange?.lowerBound,
+                    maximumDate: dateRange?.upperBound
                 )
-                .labelsHidden()
-                .datePickerStyle(.wheel)
+                .frame(maxWidth: .infinity, maxHeight: 200)
                 .transition(.opacity)
-                .frame(maxWidth: .infinity)
                 .padding(.top, -25)
             }
         }
@@ -96,7 +96,7 @@ extension PeriodPickerView {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
             Button {
-                hideKeyboard()
+                UIApplication.hideKeyboard()
                 onTap()
             } label: {
                 HStack {

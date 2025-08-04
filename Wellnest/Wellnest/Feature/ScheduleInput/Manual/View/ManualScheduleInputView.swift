@@ -29,10 +29,10 @@ struct ManualScheduleInputView: View {
                 .padding()
             }
             .onDisappear {
-                hideKeyboard()
+                UIApplication.hideKeyboard()
             }
             .onTapGesture {
-                hideKeyboard()
+                UIApplication.hideKeyboard()
             }
             .safeAreaInset(edge: .bottom) {
                 saveButton
@@ -116,7 +116,7 @@ struct ManualScheduleInputView: View {
                         DispatchQueue.main.async {
                             currentFocus = nil
                         }
-                        hideKeyboard()
+                        UIApplication.hideKeyboard()
                     }
                 )
                 .padding(.bottom, Spacing.inline)
@@ -191,6 +191,9 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 )
+            },
+            onTagTap: { _ in
+                currentFocus = nil 
             }
         )
     }

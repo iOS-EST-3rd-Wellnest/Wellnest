@@ -12,20 +12,22 @@ struct TagToggleSection<Model: TagModel>: View {
     let tags: [Model]
     @Binding var isOn: Bool
     @Binding var selectedTag: Model?
+    
     let showDetail: Bool
     let detailContent: (() -> AnyView)?
+    var onTagTap: ((Model) -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading) {
             Toggle(title, isOn: $isOn)
 
             if isOn {
-                HStack(spacing: 12) {
+                HStack(spacing: Spacing.content) {
                     FlexibleView(data: tags, spacing: Spacing.content, alignment: .leading) { tag in
                         TagView(tag: tag, isSelected: tag == selectedTag)
                             .onTapGesture {
-                                hideKeyboard()
                                 selectedTag = tag
+                                onTagTap?(tag)
                             }
                     }
                 }
