@@ -28,6 +28,9 @@ struct ManualScheduleInputView: View {
                 }
                 .padding()
             }
+            .onDisappear {
+                hideKeyboard()
+            }
             .onTapGesture {
                 hideKeyboard()
             }
@@ -63,17 +66,29 @@ struct ManualScheduleInputView: View {
     // 초기에 첫번째 텍스트 필드에 focus.
     @State private var isTextFieldFocused: Bool = true
 
+    @State private var currentFocus: InputField? = .title
+
+    enum InputField: Hashable {
+        case title
+        case detail
+    }
+
     private var inputSection: some View {
         VStack(alignment: .leading) {
             HStack {
                 FocusableTextField(
                     text: $title,
-                    placeholder: "일정을 입력하세요.",
-                    isFirstResponder: isTextFieldFocused
+                    placeholder: "일정을 입력하세요",
+                    isFirstResponder: currentFocus == .title,
+                    returnKeyType: .next,
+                    keyboardType: .default,
+                    onReturn: {
+                        DispatchQueue.main.async {
+                            currentFocus = .detail
+                        }
+                    }
                 )
-                .padding(.bottom, Spacing.inline)
             }
-
         }
     }
 
@@ -91,9 +106,21 @@ struct ManualScheduleInputView: View {
     private var locationSection: some View {
         VStack(alignment: .leading) {
             HStack {
-                TextField("장소", text: $detail)
-                    .padding(.bottom, Spacing.inline)
-                    .padding(.top, Spacing.inline)
+                FocusableTextField(
+                    text: $detail,
+                    placeholder: "장소",
+                    isFirstResponder: currentFocus == .detail,
+                    returnKeyType: .done,
+                    keyboardType: .default,
+                    onReturn: {
+                        DispatchQueue.main.async {
+                            currentFocus = nil
+                        }
+                        hideKeyboard()
+                    }
+                )
+                .padding(.bottom, Spacing.inline)
+                .padding(.top, Spacing.inline)
 
                 Button {
                     showLocationSearchSheet = true
@@ -107,7 +134,6 @@ struct ManualScheduleInputView: View {
             LocationSearchView(selectedLocation: $detail, isPresented: $showLocationSearchSheet)
         }
     }
-
 
     // MARK: - periodSection
 

@@ -12,19 +12,13 @@ struct FocusableTextField: UIViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var isFirstResponder: Bool
+    
+    // 키보드 설정 옵션
+    var returnKeyType: UIReturnKeyType = .default
+    var keyboardType: UIKeyboardType = .default
+    var isSecureTextEntry: Bool = false
 
-    class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: FocusableTextField
-        weak var textField: UITextField?
-
-        init(_ parent: FocusableTextField) {
-            self.parent = parent
-        }
-
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
-        }
-    }
+    var onReturn: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -32,58 +26,47 @@ struct FocusableTextField: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UITextField {
         let textField = UITextField()
-        textField.placeholder = placeholder
-        textField.font = UIFont.systemFont(ofSize: 17)
         textField.delegate = context.coordinator
-        context.coordinator.textField = textField
+        textField.placeholder = placeholder
+        textField.returnKeyType = returnKeyType
+        textField.keyboardType = keyboardType
+        textField.autocorrectionType = .no // 자동완성 비활성화
+        textField.spellCheckingType = .no // 철자검사 비활성화
         return textField
     }
 
     func updateUIView(_ uiView: UITextField, context: Context) {
         uiView.text = text
+        
+        DispatchQueue.main.async {
+            if isFirstResponder && !uiView.isFirstResponder {
+                uiView.becomeFirstResponder()
+            } else if !isFirstResponder && uiView.isFirstResponder {
+                uiView.resignFirstResponder()
+            }
+        }
 
-        if isFirstResponder, !uiView.isFirstResponder {
-            uiView.becomeFirstResponder()
-        } else if !isFirstResponder, uiView.isFirstResponder {
-            uiView.resignFirstResponder()
+        // 업데이트 시에도 키보드 설정 동기화
+        uiView.returnKeyType = returnKeyType
+        uiView.keyboardType = keyboardType
+
+        uiView.isSecureTextEntry = isSecureTextEntry
+    }
+
+    class Coordinator: NSObject, UITextFieldDelegate {
+        let parent: FocusableTextField
+
+        init(_ parent: FocusableTextField) {
+            self.parent = parent
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            parent.onReturn?()
+            return true
+        }
+
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            parent.text = textField.text ?? ""
         }
     }
 }
-
-struct TapToDismissKeyboard: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                TapToDismissView().allowsHitTesting(true)
-            )
-    }
-}
-
-private struct TapToDismissView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        let tap = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.dismissKeyboard)
-        )
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    class Coordinator {
-        @objc func dismissKeyboard() {
-            UIApplication.shared.sendAction(
-                #selector(UIResponder.resignFirstResponder),
-                to: nil, from: nil, for: nil
-            )
-        }
-    }
-}
-
