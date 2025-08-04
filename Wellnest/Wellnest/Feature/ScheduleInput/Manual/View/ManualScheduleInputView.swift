@@ -32,9 +32,6 @@ struct ManualScheduleInputView: View {
             .onDisappear {
                 UIApplication.hideKeyboard()
             }
-            .onTapGesture {
-                UIApplication.hideKeyboard()
-            }
             .safeAreaInset(edge: .bottom) {
                 saveButton
                     .padding()
