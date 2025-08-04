@@ -65,12 +65,15 @@ struct ManualScheduleInputView: View {
 
     private var inputSection: some View {
         VStack(alignment: .leading) {
-            FocusableTextField(
-                text: $title,
-                placeholder: "일정을 입력하세요",
-                isFirstResponder: isTextFieldFocused
-            )
-            .frame(height: 20)
+            HStack {
+                FocusableTextField(
+                    text: $title,
+                    placeholder: "일정을 입력하세요.",
+                    isFirstResponder: isTextFieldFocused
+                )
+                .padding(.bottom, Spacing.inline)
+            }
+
         }
     }
 
@@ -79,10 +82,29 @@ struct ManualScheduleInputView: View {
     // 일정 상세 정보 - 위치 또는 영상 통화
     @State private var detail: String = ""
 
+    @State private var showLocationPicker: Bool = false
+
+    @State private var showLocationSearchIcon: Bool = false
+
+    @State private var showLocationSearchSheet = false
+
     private var locationSection: some View {
         VStack(alignment: .leading) {
-            TextField("위치 또는 영상 통화", text: $detail)
-                .textContentType(.location)
+            HStack {
+                TextField("장소", text: $detail)
+                    .padding(.bottom, Spacing.inline)
+                    .padding(.top, Spacing.inline)
+
+                Button {
+                    showLocationSearchSheet = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.black)
+                }
+            }
+        }
+        .sheet(isPresented: $showLocationSearchSheet) {
+            LocationSearchView(selectedLocation: $detail, isPresented: $showLocationSearchSheet)
         }
     }
 
