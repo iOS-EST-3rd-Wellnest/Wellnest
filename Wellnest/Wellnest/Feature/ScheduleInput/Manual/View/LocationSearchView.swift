@@ -17,14 +17,22 @@ struct LocationSearchView: View {
 
     var body: some View {
         NavigationView {
-            VStack {
-                TextField("장소 검색", text: $query)
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-                    .onChange(of: query) { newValue in
+            VStack(alignment: .leading) {
+                FocusableTextField(
+                    text: $query,
+                    placeholder: "장소를 입력해주세요.",
+                    isFirstResponder: true,
+                    clearButtonMode: .whileEditing
+                )
+                .frame(height: 20)
+                .onChange(of: query) { newValue in
+                    if !newValue.isEmpty {
                         completerWrapper.updateQuery(newValue)
+                    } else {
+                        completerWrapper.clearResults()
                     }
-
+                }
+                Divider()
                 List(completerWrapper.completions, id: \.self) { completion in
                     VStack(alignment: .leading) {
                         Text(completion.title).bold()
@@ -32,14 +40,19 @@ struct LocationSearchView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    .contentShape(Rectangle())
+                    .listRowBackground(Color.clear)
                     .onTapGesture {
                         selectedLocation = completion.title
                         isPresented = false
                         dismiss()
                     }
                 }
+                .listStyle(.plain)
+
+
+                Spacer()
             }
+            .padding()
             .navigationTitle("위치 검색")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -68,7 +81,7 @@ class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print("🔴 검색 오류:", error.localizedDescription)
+        print("Search Error", error.localizedDescription)
     }
 }
 
@@ -87,11 +100,15 @@ class SearchCompleterWrapper: NSObject, ObservableObject, MKLocalSearchCompleter
         completer.queryFragment = query
     }
 
+    func clearResults() {
+        completions = []
+    }
+
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         self.completions = completer.results
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print("🔴 검색 실패:", error.localizedDescription)
+        print("Search Failure", error.localizedDescription)
     }
 }

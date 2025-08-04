@@ -17,6 +17,7 @@ struct FocusableTextField: UIViewRepresentable {
     var returnKeyType: UIReturnKeyType = .default
     var keyboardType: UIKeyboardType = .default
     var isSecureTextEntry: Bool = false
+    var clearButtonMode: UITextField.ViewMode = .never
 
     var onReturn: (() -> Void)? = nil
 
@@ -32,6 +33,7 @@ struct FocusableTextField: UIViewRepresentable {
         textField.keyboardType = keyboardType
         textField.autocorrectionType = .no // 자동완성 비활성화
         textField.spellCheckingType = .no // 철자검사 비활성화
+        textField.clearButtonMode = clearButtonMode
         return textField
     }
 
@@ -70,3 +72,4 @@ struct FocusableTextField: UIViewRepresentable {
         }
     }
 }
+
