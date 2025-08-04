@@ -37,7 +37,12 @@
 		B05A1F4D2E3B255200AA8F36 /* Exceptions for "Wellnest" folder in "Wellnest" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Feature/Onboarding/Model/.gitkeep,
+				Feature/Onboarding/View/.gitkeep,
+				Feature/Onboarding/ViewModel/.gitkeep,
 				Secrets.plist,
+				Shared/Common/Util/.gitkeep,
+				Shared/Model/.gitkeep,
 				Shared/Persistence/UserDefault/.gitkeep,
 			);
 			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;
