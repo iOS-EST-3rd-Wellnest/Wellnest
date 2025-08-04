@@ -50,11 +50,6 @@ struct WellnessGoalTabView: View {
                                     .foregroundColor(.primary)
 
                                 Spacer()
-
-                                if category.isSelected {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.white)
-                                }
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 58)
