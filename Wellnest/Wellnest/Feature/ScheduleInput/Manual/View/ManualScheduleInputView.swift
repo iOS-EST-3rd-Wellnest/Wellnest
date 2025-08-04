@@ -10,6 +10,7 @@ import SwiftUI
 struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
 
     var body: some View {
         NavigationView {
@@ -42,6 +43,7 @@ struct ManualScheduleInputView: View {
             .toolbar {
                 ToolbarItem(placement: .destructiveAction) {
                     Button {
+                        selectedCreationType = nil
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
@@ -170,6 +172,7 @@ struct ManualScheduleInputView: View {
         FilledButton(title: "저장하기") {
             saveSchedule()
             selectedTab = .plan
+            selectedCreationType = nil
             dismiss()
         }
         .disabled(title.isEmpty)
