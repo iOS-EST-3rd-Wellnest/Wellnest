@@ -21,7 +21,7 @@ struct MainTabView: View {
                 case .plan:
                     PlanView()
                 case .analysis:
-                    PlanView()
+                    TestAnalyticsView()
                 case .settings:
                     SettingsView()
                 }
@@ -41,12 +41,12 @@ struct MainTabView: View {
         .fullScreenCover(item: $selectedCreationType) { type in
             switch type {
             case .createByAI:
-                AIScheduleCreationView(
+                TestAIInputView(
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType
                 )
             case .createByUser:
-                ManualScheduleCreationView(
+                ManualScheduleInputView(
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType
                 )
