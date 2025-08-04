@@ -9,15 +9,15 @@ import SwiftUI
 
 struct HomeView: View {
     @State var name: String = "홍길동"
-    
+
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
         df.dateFormat = "M월 d일"
-        
+
         return df.string(from: Date.now)
     }
-    
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading) {
@@ -26,26 +26,26 @@ struct HomeView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
-                    
+
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text(name)
                             .font(.title3)
                             .bold()
-                        
+
                         Text("#20대 #아침형 #식단관리")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Spacer()
                 }
                 .padding()
-                
+
                 Text(today)
                     .font(.title2)
                     .bold()
                     .padding(.horizontal, Spacing.content)
-                
+
                 HStack(spacing: 0) {
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(.white)
@@ -57,7 +57,7 @@ struct HomeView: View {
                                     .font(.title3)
                                     .bold()
                                     .padding(.vertical, Spacing.content)
-                                
+
                                 Text("1,000kcal 태우기")
                                     .font(.footnote)
 
@@ -67,26 +67,26 @@ struct HomeView: View {
                             .padding()
                         }
                         .padding(.horizontal, Spacing.content)
-                    
+
                     ZStack {
                         Circle()
                             .padding(.horizontal, Spacing.content)
                             .frame(minWidth: 170)
                             .foregroundStyle(.accentButton)
-                        
+
                         Circle()
                             .frame(maxWidth: 140)
                             .foregroundStyle(.gray)
-                        
+
                         VStack(spacing: 0) {
                             Group {
                                 Text("Today")
                                     .font(.footnote)
                                     .bold()
-                                
+
                                 Text("schedule")
                                     .font(.footnote)
-                                
+
                                 Text("attainment")
                                     .font(.footnote)
 
@@ -94,7 +94,7 @@ struct HomeView: View {
                                     .font(.title)
                                     .bold()
                                     .padding(Spacing.content)
-                                
+
                             }
                             .multilineTextAlignment(.center)
                         }
