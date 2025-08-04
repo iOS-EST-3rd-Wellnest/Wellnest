@@ -11,4 +11,8 @@ extension View {
     func defaultShadow() -> some View {
         self.shadow(radius: 6, x: 2, y: 2)
     }
+
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 }

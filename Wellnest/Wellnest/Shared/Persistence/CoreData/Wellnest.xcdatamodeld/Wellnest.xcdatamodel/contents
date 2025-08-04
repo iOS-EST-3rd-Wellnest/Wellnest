@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="DailySummaryEntity" representedClassName="DailySummaryEntity" syncable="YES">
+    <entity name="DailySummaryEntity" representedClassName="DailySummaryEntity" syncable="YES" codeGenerationType="class">
         <attribute name="articleRecommendation" optional="YES" attributeType="String"/>
         <attribute name="completeRate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
@@ -12,10 +12,7 @@
         <attribute name="weatherSummary" optional="YES" attributeType="String"/>
         <relationship name="schedules" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="ScheduleEntity" inverseName="parentSummary" inverseEntity="ScheduleEntity"/>
     </entity>
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-    </entity>
-    <entity name="ScheduleEntity" representedClassName="ScheduleEntity" syncable="YES">
+    <entity name="ScheduleEntity" representedClassName="ScheduleEntity" syncable="YES" codeGenerationType="class">
         <attribute name="alarm" optional="YES" attributeType="String"/>
         <attribute name="category" optional="YES" attributeType="String"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
@@ -31,7 +28,7 @@
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="parentSummary" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DailySummaryEntity" inverseName="schedules" inverseEntity="DailySummaryEntity"/>
     </entity>
-    <entity name="UserEntity" representedClassName="UserEntity" syncable="YES">
+    <entity name="UserEntity" representedClassName="UserEntity" syncable="YES" codeGenerationType="class">
         <attribute name="activityPreferences" optional="YES" attributeType="String"/>
         <attribute name="ageRange" attributeType="String"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>

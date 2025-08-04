@@ -26,7 +26,7 @@ struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
+
             CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
