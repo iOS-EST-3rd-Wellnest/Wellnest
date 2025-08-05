@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct AppRouter: View {
-//    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
 
     var body: some View {
