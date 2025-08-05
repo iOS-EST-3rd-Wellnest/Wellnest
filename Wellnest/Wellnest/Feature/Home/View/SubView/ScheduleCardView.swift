@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct ScheduleCardView: View {
-    @EnvironmentObject private var viewModel: ManualScheduleViewModel
+    //@StateObject private var viewModel = ManualScheduleViewModel()
     
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
@@ -55,10 +55,12 @@ struct ScheduleCardView: View {
                         Spacer()
                         
                         Button {
-                            withAnimation(.easeIn(duration: 0.3)) {
-                                isDeleting = true
-                                deleteOffset = -geo.size.width
-                            }
+                            print("삭제: \(schedule.id)")
+                            
+                            //withAnimation(.easeIn(duration: 0.3)) {
+                            //    isDeleting = true
+                            //    deleteOffset = -geo.size.width
+                            //}
                             
                             //Task {
                             //    try? await Task.sleep(nanoseconds: 300_000_000)
