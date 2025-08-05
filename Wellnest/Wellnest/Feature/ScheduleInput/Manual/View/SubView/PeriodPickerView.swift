@@ -13,10 +13,30 @@ struct PeriodPickerView: View {
     @Binding var isAllDay: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading) {
+            Divider()
             Toggle("하루 종일", isOn: $isAllDay)
+            Divider()
             DatePickerView(date: $startDate, text: "시작", isAllDay: isAllDay)
+                .padding(.top, 5)
+
             DatePickerView(date: $endDate, text: "종료", isAllDay: isAllDay)
+                .padding(.bottom, 5)
+            Divider()
+            Spacer()
         }
+        .padding()
     }
+}
+
+#Preview {
+    @State var startDate = Date()
+    @State var endDate = Date().addingTimeInterval(3600)
+    @State var isAllDay = false
+
+    return PeriodPickerView(
+        startDate: $startDate,
+        endDate: $endDate,
+        isAllDay: $isAllDay
+    )
 }
