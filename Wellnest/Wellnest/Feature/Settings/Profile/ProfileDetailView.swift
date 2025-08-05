@@ -6,13 +6,19 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ProfileDetailView: View {
     @Binding var name: String
-    @State private var selectedAge: UserAgeRange? = nil
     @Binding var height: String
     @Binding var weight: String
-    @State private var selectedGender: UserGender? = nil
+    @State private var selectedAge: UserAgeRange? = nil // 임시
+    @State private var selectedGender: UserGender? = nil // 임시
+    
+    @State private var tempImage: UIImage? = nil
+    @State private var isImagePickerPresented: Bool = false
+    
+    @Binding var profileImage: UIImage?
     
     @Environment(\.dismiss) var dismiss
     
@@ -21,14 +27,40 @@ struct ProfileDetailView: View {
             Form {
                 HStack {
                     Spacer()
-                    Circle()
-                        .foregroundStyle(.indigo)
-                        .frame(width: 150, height: 150)
+                    ZStack {
+                        if let image = tempImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 150, height: 150)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.gray)
+                                .frame(width: 150, height: 150)
+                                .overlay {
+                                    Text("프로필 사진 수정")
+                                        .foregroundStyle(.white)
+                                }
+                        }
+                    }
+                    .onTapGesture {
+                        isImagePickerPresented = true
+                    }
+                    
                     Spacer()
                 }
                 .padding(.bottom)
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
+                .sheet(isPresented: $isImagePickerPresented) {
+                    ImagePicker(selectedImage: $tempImage)
+                }
+                .onAppear {
+                    if tempImage == nil {
+                        tempImage = profileImage
+                    }
+                }
                 
                 Section {
                     HStack {
@@ -112,7 +144,9 @@ struct ProfileDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         // TODO: 수정버튼 누르면 변경 항목들 저장
-                        
+                        if let selectedImage = tempImage {
+                            profileImage = selectedImage
+                        }
                         dismiss()
                     } label: {
                         Text("수정")
@@ -124,5 +158,5 @@ struct ProfileDetailView: View {
 }
 
 #Preview {
-    ProfileDetailView(name: .constant("홍길동"), height: .constant("180"), weight: .constant("75"))
+    ProfileDetailView(name: .constant("홍길동"), height: .constant("180"), weight: .constant("75"), profileImage: .constant(nil))
 }

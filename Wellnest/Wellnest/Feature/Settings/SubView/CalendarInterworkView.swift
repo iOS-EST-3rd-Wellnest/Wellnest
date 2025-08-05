@@ -9,8 +9,8 @@ import SwiftUI
 import EventKit
 
 struct CalendarInterworkView: View {
-    @State private var isOn = false // TODO: 추후 UserDefault로 값 저장
-    @State private var showSettingAlert = false
+    @State private var isOn: Bool = false // TODO: 추후 UserDefault로 값 저장
+    @State private var showSettingAlert: Bool = false
     
     
     var body: some View {
