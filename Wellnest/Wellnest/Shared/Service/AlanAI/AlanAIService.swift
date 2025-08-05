@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class AlanAIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String = ""
@@ -29,42 +30,58 @@ final class AlanAIService: ObservableObject {
         }
     }
 
-    // MARK: - Generic Request Methods
+    // MARK: - Generic Request Methods (async/await 버전)
+
+    func requestString(prompt: String) async throws -> String {
+        isLoading = true
+        resetState()
+
+        guard !clientID.isEmpty else {
+            isLoading = false
+            throw NSError(domain: "AlanAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
+        }
+
+        do {
+            let content = try await networkManager.requestString(
+                url: "https://kdt-api-function.azurewebsites.net/api/v1/question",
+                parameters: [
+                    "content": prompt,
+                    "client_id": clientID
+                ]
+            )
+
+            isLoading = false
+            rawResponse = content
+            return content
+
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            throw error
+        }
+    }
+
+    func request<T: Codable>(
+        prompt: String,
+        responseType: T.Type,
+        jsonExtractor: ((String) -> String?)? = nil
+    ) async throws -> T {
+        let content = try await requestString(prompt: prompt)
+        return try parseResponse(content, responseType: responseType, jsonExtractor: jsonExtractor)
+    }
+
+    // MARK: - Callback 호환성을 위한 메소드들 (기존 코드와의 호환성)
 
     func requestString(
         prompt: String,
         completion: @escaping (Result<String, Error>) -> Void
     ) {
-        isLoading = true
-        resetState()
-
-        guard !clientID.isEmpty else {
-            let error = NSError(domain: "AlanAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
-            DispatchQueue.main.async {
-                self.isLoading = false
+        Task {
+            do {
+                let result = try await requestString(prompt: prompt)
+                completion(.success(result))
+            } catch {
                 completion(.failure(error))
-            }
-            return
-        }
-
-        networkManager.requestString(
-            url: "https://kdt-api-function.azurewebsites.net/api/v1/question",
-            parameters: [
-                "content": prompt,
-                "client_id": clientID
-            ]
-        ) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-
-                switch result {
-                case .success(let content):
-                    self?.rawResponse = content
-                    completion(.success(content))
-                case .failure(let error):
-                    self?.errorMessage = error.localizedDescription
-                    completion(.failure(error))
-                }
             }
         }
     }
@@ -75,11 +92,11 @@ final class AlanAIService: ObservableObject {
         jsonExtractor: ((String) -> String?)? = nil,
         completion: @escaping (Result<T, Error>) -> Void
     ) {
-        requestString(prompt: prompt) { [weak self] result in
-            switch result {
-            case .success(let content):
-                self?.parseResponse(content, responseType: responseType, jsonExtractor: jsonExtractor, completion: completion)
-            case .failure(let error):
+        Task {
+            do {
+                let result = try await request(prompt: prompt, responseType: responseType, jsonExtractor: jsonExtractor)
+                completion(.success(result))
+            } catch {
                 completion(.failure(error))
             }
         }
@@ -95,9 +112,8 @@ final class AlanAIService: ObservableObject {
     private func parseResponse<T: Codable>(
         _ content: String,
         responseType: T.Type,
-        jsonExtractor: ((String) -> String?)?,
-        completion: @escaping (Result<T, Error>) -> Void
-    ) {
+        jsonExtractor: ((String) -> String?)?
+    ) throws -> T {
         let jsonString: String?
 
         if let customExtractor = jsonExtractor {
@@ -109,16 +125,14 @@ final class AlanAIService: ObservableObject {
         guard let validJSONString = jsonString else {
             let error = NSError(domain: "AlanAIService", code: -2, userInfo: [NSLocalizedDescriptionKey: "유효한 JSON 형식을 찾을 수 없습니다."])
             print("❌ JSON 추출 실패. 원본 응답:\n\(content)")
-            completion(.failure(error))
-            return
+            throw error
         }
 
         print("📋 추출된 JSON:\n\(validJSONString)\n==================")
 
         guard let jsonData = validJSONString.data(using: .utf8) else {
             let error = NSError(domain: "AlanAIService", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON 데이터 변환 실패"])
-            completion(.failure(error))
-            return
+            throw error
         }
 
         do {
@@ -126,10 +140,10 @@ final class AlanAIService: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             let decodedObject = try decoder.decode(T.self, from: jsonData)
             print("✅ JSON 파싱 성공!")
-            completion(.success(decodedObject))
+            return decodedObject
         } catch {
             print("❌ JSON 파싱 실패: \(error)")
-            completion(.failure(error))
+            throw error
         }
     }
 
