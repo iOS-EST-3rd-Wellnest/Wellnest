@@ -1,5 +1,5 @@
 //
-//  WellnessGoalTab.swift
+//  WellnessGoalTabView.swift
 //  Wellnest
 //
 //  Created by 정소이 on 8/4/25.
@@ -13,7 +13,7 @@ struct WellnessGoal: Identifiable {
     var isSelected: Bool = false
 }
 
-struct WellnessGoalTab: View {
+struct WellnessGoalTabView: View {
     @Binding var currentPage: Int
     
     @State private var goals: [WellnessGoal] = [
@@ -44,24 +44,20 @@ struct WellnessGoalTab: View {
                             category.isSelected.toggle()
                             // TODO: Core Data 저장 처리
                         } label: {
-                            HStack(spacing: 12) {
+                            HStack {
                                 Text(category.title)
                                     .font(.body)
                                     .foregroundColor(.primary)
 
                                 Spacer()
-
-                                if category.isSelected {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.white)
-                                }
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 58)
                             .background(category.isSelected ? .accentCardGreen : .customSecondary)
                             .cornerRadius(CornerRadius.large)
-                            .padding(.bottom, Spacing.content)
                         }
+                        .padding(.bottom, Spacing.content)
+                        .defaultShadow()
                     }
                 }
 
@@ -79,7 +75,7 @@ struct WellnessGoalTab: View {
             Spacer()
 
             FilledButton(title: "다음") {
-                currentPage = 5
+                currentPage += 1
             }
             .padding(.horizontal)
             .padding(.bottom)
@@ -96,6 +92,6 @@ private struct Preview: View {
     @State private var currentPage = 0
 
     var body: some View {
-        WellnessGoalTab(currentPage: $currentPage)
+        WellnessGoalTabView(currentPage: $currentPage)
     }
 }
