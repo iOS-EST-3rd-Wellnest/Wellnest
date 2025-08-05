@@ -35,6 +35,7 @@ struct DatePickerView: View {
                 // 날짜 텍스트 버튼
                 Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
+                        UIApplication.hideKeyboard()
                         if isPresented {
                             // 이미 보여짐
                             if showCalendar {
@@ -71,6 +72,7 @@ struct DatePickerView: View {
                 if !isAllDay {
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) {
+                            UIApplication.hideKeyboard()
                             if isPresented {
                                 // 이미 보여짐
                                 if showTimePicker {
@@ -106,7 +108,7 @@ struct DatePickerView: View {
 
             }
 
-            if isAllDay && isPresented || selectedDate {
+            if (isAllDay && isPresented) || selectedDate {
                 DatePicker(
                     "",
                     selection: $date,
