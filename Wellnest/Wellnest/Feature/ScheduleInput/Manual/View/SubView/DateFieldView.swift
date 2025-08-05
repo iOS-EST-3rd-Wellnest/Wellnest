@@ -24,7 +24,7 @@ struct DatePickerView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.content) {
             HStack(spacing: Spacing.content) {
                 Text(text)
                     .font(.subheadline)
@@ -32,7 +32,6 @@ struct DatePickerView: View {
                 Spacer()
                 // 날짜 텍스트 버튼
                 Button {
-
                     withAnimation(.easeInOut(duration: 0.25)) {
                         if isPresented {
                             // 이미 보여짐
@@ -122,7 +121,7 @@ struct DatePickerView: View {
                 // 시간 선택용 Wheel Picker (5분 간격)
                 MinuteIntervalWheelDatePicker(date: $date, minuteInterval: 5, isAllDay: false)
                     .frame(height: 200)
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
                     .transition(.dropFromButton)
             }
         }
