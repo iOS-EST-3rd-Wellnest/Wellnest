@@ -8,7 +8,12 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject private var viewModel: ManualScheduleViewModel
+    
     @State var name: String = "홍길동"
+    
+    @State private var swipedScheduleId: UUID? = nil
+    @State private var swipedDirection: SwipeDirection? = nil
 
     var today: String {
         let df = DateFormatter()
@@ -94,18 +99,80 @@ struct HomeView: View {
                                     .font(.title)
                                     .bold()
                                     .padding(Spacing.content)
-
                             }
                             .multilineTextAlignment(.center)
                         }
                     }
                 }
+                
+                HStack {
+                    Spacer()
+                    
+                    VStack {
+                        if viewModel.todaySchedules.isEmpty {
+                        Text("일정을 추가 해주세요.")
+                            .padding(.vertical, 25)
+                            .background(
+                                RoundedRectangle(cornerRadius: CornerRadius.large)
+                                    .fill(.white)
+                                    .frame(width: UIScreen.main.bounds.width - 46, height: 90)
+                                    .defaultShadow()
+                            )
+                        } else {
+                            ForEach(viewModel.todaySchedules) { schedule in
+                                ScheduleCardView(
+                                    schedule: schedule,
+                                    swipedScheduleId: swipedScheduleId,
+                                    swipedDirection: swipedDirection) { id, direction in
+                                        withAnimation {
+                                            swipedScheduleId = id
+                                            swipedDirection = direction
+                                        }
+                                    }
+                            }
+                        }
+                    }
+                    .padding(.vertical, Spacing.layout)
+                    .padding(.horizontal, Spacing.inline)
+                    .onAppear {
+                        viewModel.loadTodaySchedules()
+                    }
+                    
+                    Spacer()
+                }
+                
+                Text("오늘의 한마디")
+                    .font(.title2)
+                    .bold()
+                    .padding(Spacing.content)
+
+                Text("날씨")
+                    .font(.title2)
+                    .bold()
+                    .padding(Spacing.content)
+
+                Text("추천 식단")
+                    .font(.title2)
+                    .bold()
+                    .padding(Spacing.content)
+
+                Text("추천 영상")
+                    .font(.title2)
+                    .bold()
+                    .padding(Spacing.content)
+
+                Text("추천 글")
+                    .font(.title2)
+                    .bold()
+                    .padding(Spacing.content)
             }
             .padding()
+            .padding(.bottom, 80)
         }
     }
 }
 
 #Preview {
     HomeView()
+        .environmentObject(ManualScheduleViewModel())
 }
