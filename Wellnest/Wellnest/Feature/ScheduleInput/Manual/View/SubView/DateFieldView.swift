@@ -33,26 +33,23 @@ struct DatePickerView: View {
                 // 날짜 텍스트 버튼
                 Button {
 
-                    withAnimation {
-                        DispatchQueue.main.async {
-                            if isPresented {
-                                // 이미 보여짐
-                                if showCalendar {
-                                    // 만약 date라면?
-                                    showCalendar = false
-                                } else if showTimePicker {
-                                    // time이라면?
-                                    showCalendar = true
-                                    showTimePicker = false
-                                }
-                            } else {
-                                // 새로 열어야함
-                                isPresented = true
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if isPresented {
+                            // 이미 보여짐
+                            if showCalendar {
+                                // 만약 date라면?
+                                showCalendar = false
+                                isPresented = false
+                            } else if showTimePicker {
+                                // time이라면?
                                 showCalendar = true
                                 showTimePicker = false
-
                             }
-                            print("showCalendar: \(showCalendar), isPresented: \(isPresented)")
+                        } else {
+                            // 새로 열어야함
+                            isPresented = true
+                            showCalendar = true
+                            showTimePicker = false
                         }
                     }
                 } label: {
@@ -72,28 +69,24 @@ struct DatePickerView: View {
                 // 시간 텍스트 버튼
                 if !isAllDay {
                     Button {
-                        print("\(formattedTimeOnly(date)) Tapped")
-                        withAnimation {
-                            DispatchQueue.main.async {
-                                if isPresented {
-                                    // 이미 보여짐
-                                    if showTimePicker {
-                                        // 그게 만약 Time이라면?
-                                        showTimePicker = false
-                                    } else if showCalendar {
-                                        // Date라면?
-                                        showCalendar = false
-                                        showTimePicker = true
-                                    }
-                                } else {
-                                    // 보여지지 않음
-
-                                    isPresented = true
-                                    showTimePicker = true
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            if isPresented {
+                                // 이미 보여짐
+                                if showTimePicker {
+                                    // 그게 만약 Time이라면?
+                                    showTimePicker = false
+                                    isPresented = false
+                                } else if showCalendar {
+                                    // Date라면?
                                     showCalendar = false
+                                    showTimePicker = true
                                 }
+                            } else {
+                                // 보여지지 않음
+                                isPresented = true
+                                showTimePicker = true
+                                showCalendar = false
                             }
-
                         }
                     } label: {
                         Text(formattedTimeOnly(date))
@@ -123,16 +116,17 @@ struct DatePickerView: View {
                 .environment(\.locale, Locale(identifier: "ko_KR"))
                 .frame(minHeight: 350)
                 .background(Color.white)
-                .transition(.opacity)
+                .transition(.dropFromButton)
                 .zIndex(1)
             } else if selectedTime {
                 // 시간 선택용 Wheel Picker (5분 간격)
                 MinuteIntervalWheelDatePicker(date: $date, minuteInterval: 5, isAllDay: false)
                     .frame(height: 200)
-                    .transition(.opacity)
+                    .frame(maxHeight: .infinity)
+                    .transition(.dropFromButton)
             }
         }
-        .animation(.easeInOut, value: showCalendar || showTimePicker)
+        .animation(.easeInOut(duration: 0.25), value: showCalendar || showTimePicker)
     }
 
     // 날짜만 포맷
@@ -149,5 +143,25 @@ struct DatePickerView: View {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "a h:mm"
         return formatter.string(from: date)
+    }
+}
+
+extension AnyTransition {
+    static var dropFromButton: AnyTransition {
+        AnyTransition.modifier(
+            active: OffsetAndFade(offsetY: -10, opacity: 0),
+            identity: OffsetAndFade(offsetY: 0, opacity: 1)
+        )
+    }
+
+    private struct OffsetAndFade: ViewModifier {
+        let offsetY: CGFloat
+        let opacity: Double
+
+        func body(content: Content) -> some View {
+            content
+                .offset(y: offsetY)
+                .opacity(opacity)
+        }
     }
 }
