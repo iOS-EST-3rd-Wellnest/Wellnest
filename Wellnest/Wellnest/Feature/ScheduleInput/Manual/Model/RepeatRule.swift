@@ -10,7 +10,6 @@ import Foundation
 struct RepeatRule: TagModel {
     let id = UUID()
     let name: String
-    var endDate: Date?
 
     static let tags: [RepeatRule] = [
         RepeatRule(name: "매일"),
@@ -19,8 +18,7 @@ struct RepeatRule: TagModel {
         RepeatRule(name: "매년")
     ]
 
-    init(name: String, endDate: Date? = nil) {
+    init(name: String) {
         self.name = name
-        self.endDate = endDate
     }
 }
