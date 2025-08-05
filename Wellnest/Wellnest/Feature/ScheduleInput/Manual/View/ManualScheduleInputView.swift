@@ -14,7 +14,9 @@ struct ManualScheduleInputView: View {
 
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date().addingTimeInterval(3600)
+
     @State private var isAllDay: Bool = false
+
 
     @State private var currentFocus: InputField? = .title
 
@@ -30,20 +32,21 @@ struct ManualScheduleInputView: View {
                         .onChange(of: isAllDay) { newValue in
                             UIApplication.hideKeyboard()
                         }
-                    DatePickerView(date: $startDate, text: "시작", isAllDay: isAllDay)
-                        .padding(.top, 5)
-                        .onChange(of: startDate) { newValue in
-                            endDate = newValue.addingTimeInterval(3600)
-                            currentFocus = nil
-                        }
-
-                    DatePickerView(date: $endDate, text: "종료", isAllDay: isAllDay)
-                        .padding(.bottom, 5)
-                        .onChangeWithOldValue(of: endDate) { oldValue, newValue in
-                            if newValue.timeIntervalSince(startDate) < 0 {
-                                endDate = oldValue
-                            }
-                        }
+                    PeriodPickerView(startDate: $startDate, endDate: $endDate, isAllDay: $isAllDay)
+//                    DatePickerView(date: $startDate, text: "시작", isAllDay: isAllDay)
+//                        .padding(.top, 5)
+//                        .onChange(of: startDate) { newValue in
+//                            endDate = newValue.addingTimeInterval(3600)
+//                            currentFocus = nil
+//                        }
+//
+//                    DatePickerView(date: $endDate, text: "종료", isAllDay: isAllDay)
+//                        .padding(.bottom, 5)
+//                        .onChangeWithOldValue(of: endDate) { oldValue, newValue in
+//                            if newValue.timeIntervalSince(startDate) < 0 {
+//                                endDate = oldValue
+//                            }
+//                        }
                     Divider()
                     repeatSection
                     Divider()

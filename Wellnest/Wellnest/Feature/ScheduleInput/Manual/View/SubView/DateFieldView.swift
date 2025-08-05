@@ -13,12 +13,18 @@ struct DatePickerView: View {
     @State private var showTimePicker = false
     var text: String = ""
     var isAllDay: Bool = false
-    var isOpen: Bool = false
+    @Binding var isPresented: Bool
+
+    var selectedDate: Bool {
+        return isPresented && showCalendar
+    }
+
+    var selectedTime: Bool {
+        return isPresented && showTimePicker
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-
-
             HStack(spacing: Spacing.content) {
                 Text(text)
                     .font(.subheadline)
@@ -26,49 +32,87 @@ struct DatePickerView: View {
                 Spacer()
                 // 날짜 텍스트 버튼
                 Button {
+
                     withAnimation {
-                        showCalendar.toggle()
-                        showTimePicker = false
+                        DispatchQueue.main.async {
+                            if isPresented {
+                                // 이미 보여짐
+                                if showCalendar {
+                                    // 만약 date라면?
+                                    showCalendar = false
+                                } else if showTimePicker {
+                                    // time이라면?
+                                    showCalendar = true
+                                    showTimePicker = false
+                                }
+                            } else {
+                                // 새로 열어야함
+                                isPresented = true
+                                showCalendar = true
+                                showTimePicker = false
+
+                            }
+                            print("showCalendar: \(showCalendar), isPresented: \(isPresented)")
+                        }
                     }
                 } label: {
                     Text(formattedDateOnly(date))
-                        .foregroundColor(showCalendar ? .blue : .black)
+                        .foregroundColor(selectedDate ? .blue : .black)
                 }
                 .padding(.horizontal, Spacing.layout)
                 .padding(.vertical, Spacing.content)
-                .foregroundColor(showCalendar ? .blue : .primary)
-                .background(showCalendar ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                .foregroundColor(selectedDate ? .blue : .primary)
+                .background(selectedDate ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .stroke(showCalendar ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(selectedDate ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .cornerRadius(16)
 
                 // 시간 텍스트 버튼
                 if !isAllDay {
                     Button {
+                        print("\(formattedTimeOnly(date)) Tapped")
                         withAnimation {
-                            showTimePicker.toggle()
-                            showCalendar = false
+                            DispatchQueue.main.async {
+                                if isPresented {
+                                    // 이미 보여짐
+                                    if showTimePicker {
+                                        // 그게 만약 Time이라면?
+                                        showTimePicker = false
+                                    } else if showCalendar {
+                                        // Date라면?
+                                        showCalendar = false
+                                        showTimePicker = true
+                                    }
+                                } else {
+                                    // 보여지지 않음
+
+                                    isPresented = true
+                                    showTimePicker = true
+                                    showCalendar = false
+                                }
+                            }
+
                         }
                     } label: {
                         Text(formattedTimeOnly(date))
-                            .foregroundColor(showTimePicker ? .blue : .black)
+                            .foregroundColor( selectedTime ? .blue : .black)
                     }
                     .padding(.horizontal, Spacing.layout)
                     .padding(.vertical, Spacing.content)
-                    .foregroundColor(showTimePicker ? .blue : .primary)
-                    .background(showTimePicker ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                    .foregroundColor(selectedTime ? .blue : .primary)
+                    .background(selectedTime ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .stroke(showTimePicker ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                            .stroke(selectedTime ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
                     )
                     .cornerRadius(16)
                 }
+
             }
 
-            // 날짜 선택용 캘린더
-            if showCalendar {
+            if selectedDate {
                 DatePicker(
                     "",
                     selection: $date,
@@ -81,13 +125,11 @@ struct DatePickerView: View {
                 .background(Color.white)
                 .transition(.opacity)
                 .zIndex(1)
-            } else if showTimePicker {
+            } else if selectedTime {
                 // 시간 선택용 Wheel Picker (5분 간격)
-                if showTimePicker {
-                    MinuteIntervalWheelDatePicker(date: $date, minuteInterval: 5, isAllDay: false)
-                        .frame(height: 200)
-                        .transition(.opacity)
-                }
+                MinuteIntervalWheelDatePicker(date: $date, minuteInterval: 5, isAllDay: false)
+                    .frame(height: 200)
+                    .transition(.opacity)
             }
         }
         .animation(.easeInOut, value: showCalendar || showTimePicker)
