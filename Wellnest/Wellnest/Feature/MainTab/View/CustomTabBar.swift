@@ -16,28 +16,44 @@ struct CustomTabBar: View {
             HStack {
                 tabButton(tab: .home)
                 tabButton(tab: .plan)
-                 Spacer().frame(width: 60)
+                 Spacer()
+                    .frame(width: 40 + Spacing.layout*2)
                 tabButton(tab: .analysis)
                 tabButton(tab: .settings)
             }
             .padding(.vertical, Spacing.content)
             .padding(.horizontal)
-            .background(.ultraThinMaterial)
-            //        .background {
-            //            Color.accentCardBlue
-            //                .background(.ultraThinMaterial)
-            //        }
+//            .background(.ultraThinMaterial)
+            .background {
+                GeometryReader { geo in
+                    ZStack {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+
+                        Circle()
+                            .frame(width: 80, height: 80)
+                            .position(x: geo.size.width / 2, y: 0)
+                            .blendMode(.destinationOut)
+                    }
+                    .compositingGroup()
+                    .defaultShadow()
+                }
+            }
             .clipShape(Capsule())
             .defaultShadow()
             .padding(.horizontal)
-            .padding(.bottom)
 
             Button {
-                showScheduleMenu.toggle()
+                withAnimation {
+                    showScheduleMenu.toggle()
+                }
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 40, weight: .bold))
-                    .padding(Spacing.content)
+                    .resizable()
+                    .fontWeight(.semibold)
+                    .frame(width: 40, height: 40)
+//                    .font(.system(size: 40, weight: .bold))
+                    .padding(12)
                     .background {
                         Circle()
                             .fill(Color.accentColor)
@@ -45,7 +61,7 @@ struct CustomTabBar: View {
                     .foregroundStyle(.white)
                     .defaultShadow()
             }
-            .offset(y: -(Spacing.layout*2))
+            .offset(y: -(20 + Spacing.content))
         }
     }
 

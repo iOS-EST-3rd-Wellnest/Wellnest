@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject private var viewModel: ManualScheduleViewModel
+    @StateObject private var viewModel = ManualScheduleViewModel()
     
     @State var name: String = "홍길동"
     
@@ -110,14 +110,14 @@ struct HomeView: View {
                     
                     VStack {
                         if viewModel.todaySchedules.isEmpty {
-                        Text("일정을 추가 해주세요.")
-                            .padding(.vertical, 25)
-                            .background(
-                                RoundedRectangle(cornerRadius: CornerRadius.large)
-                                    .fill(.white)
-                                    .frame(width: UIScreen.main.bounds.width - 46, height: 90)
-                                    .defaultShadow()
-                            )
+                            Text("일정을 추가 해주세요.")
+                                .padding(.vertical, 25)
+                                .background(
+                                    RoundedRectangle(cornerRadius: CornerRadius.large)
+                                        .fill(.white)
+                                        .frame(width: UIScreen.main.bounds.width - 46, height: 90)
+                                        .defaultShadow()
+                                )
                         } else {
                             ForEach(viewModel.todaySchedules) { schedule in
                                 ScheduleCardView(
