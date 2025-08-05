@@ -13,12 +13,12 @@ final class UserDefaultsManager: ObservableObject {
 
     @Published var isOnboarding: Bool {
         didSet {
-            defaults.set(isOnboarding, forKey: Keys.isOnboarding)
+            defaults.set(isOnboarding, forKey: UserDefaultsKeys.Onboarding.isOnboarding)
         }
     }
 
     private init() {
-        self.isOnboarding = defaults.bool(forKey: Keys.isOnboarding)
+        self.isOnboarding = defaults.bool(forKey: UserDefaultsKeys.Onboarding.isOnboarding)
     }
 
     // Codable 저장
@@ -41,9 +41,5 @@ final class UserDefaultsManager: ObservableObject {
     // Codable 삭제
     func remove(forKey key: String) {
         defaults.removeObject(forKey: key)
-    }
-
-    struct Keys {
-        static let isOnboarding = "isOnboarding"
     }
 }
