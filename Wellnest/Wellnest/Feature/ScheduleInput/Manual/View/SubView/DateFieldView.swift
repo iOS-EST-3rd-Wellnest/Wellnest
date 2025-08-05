@@ -8,12 +8,14 @@
 import SwiftUI
 
 struct DatePickerView: View {
+    var text: String = ""
+    
     @Binding var date: Date
+    @Binding var isAllDay: Bool
+    @Binding var isPresented: Bool
+
     @State private var showCalendar = false
     @State private var showTimePicker = false
-    var text: String = ""
-    var isAllDay: Bool = false
-    @Binding var isPresented: Bool
 
     var selectedDate: Bool {
         return isPresented && showCalendar
@@ -104,7 +106,7 @@ struct DatePickerView: View {
 
             }
 
-            if selectedDate {
+            if isAllDay && isPresented || selectedDate {
                 DatePicker(
                     "",
                     selection: $date,

@@ -12,12 +12,6 @@ struct ManualScheduleInputView: View {
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
-    @State private var startDate: Date = Date()
-    @State private var endDate: Date = Date().addingTimeInterval(3600)
-
-    @State private var isAllDay: Bool = false
-
-
     @State private var currentFocus: InputField? = .title
 
     var body: some View {
@@ -28,25 +22,7 @@ struct ManualScheduleInputView: View {
                     Divider()
                     locationSection
                     Divider()
-                    Toggle("하루 종일", isOn: $isAllDay)
-                        .onChange(of: isAllDay) { newValue in
-                            UIApplication.hideKeyboard()
-                        }
-                    PeriodPickerView(startDate: $startDate, endDate: $endDate, isAllDay: $isAllDay)
-//                    DatePickerView(date: $startDate, text: "시작", isAllDay: isAllDay)
-//                        .padding(.top, 5)
-//                        .onChange(of: startDate) { newValue in
-//                            endDate = newValue.addingTimeInterval(3600)
-//                            currentFocus = nil
-//                        }
-//
-//                    DatePickerView(date: $endDate, text: "종료", isAllDay: isAllDay)
-//                        .padding(.bottom, 5)
-//                        .onChangeWithOldValue(of: endDate) { oldValue, newValue in
-//                            if newValue.timeIntervalSince(startDate) < 0 {
-//                                endDate = oldValue
-//                            }
-//                        }
+                    periodSection
                     Divider()
                     repeatSection
                     Divider()
@@ -160,7 +136,22 @@ struct ManualScheduleInputView: View {
 
     // MARK: - periodSection
 
+    // 시작 일
+    @State private var startDate: Date = Date()
+
+    // 종료 일
+    @State private var endDate: Date = Date().addingTimeInterval(3600)
+
     // 하루 종일 여부
+    @State private var isAllDay: Bool = false
+
+    private var periodSection: some View {
+        PeriodPickerView(
+            startDate: $startDate,
+            endDate: $endDate,
+            isAllDay: $isAllDay
+        )
+    }
 
     // MARK: - repeatSection
 
