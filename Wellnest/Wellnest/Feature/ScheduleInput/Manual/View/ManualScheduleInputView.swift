@@ -82,9 +82,10 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .next,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = .detail
-                        }
+                        currentFocus = .detail
+                    },
+                    onEditing: {
+                        currentFocus = .title
                     }
                 )
             }
@@ -112,10 +113,10 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .done,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = nil
-                        }
-                        UIApplication.hideKeyboard()
+                        currentFocus = nil
+                    },
+                    onEditing: {
+                        currentFocus = .detail
                     }
                 )
                 .padding(.bottom, Spacing.inline)
