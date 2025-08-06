@@ -8,10 +8,17 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State var name: String = "홍길동"
-    @State private var height: String = "185"
-    @State private var weight: String = "80"
-    @State var profileImage: UIImage? = nil
+    @State var name: String = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.name) ?? "홍길동"
+    @State private var height: String = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.height) ?? ""
+    @State private var weight: String = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.weight) ?? ""
+    @State private var age: String = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.age) ?? ""
+    @State private var gender: String = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.gender) ?? ""
+    @State var profileImage: UIImage? = {
+        if let data = UserDefaults.standard.data(forKey: UserDefaultsKeys.Settings.Profile.imageData) {
+            return UIImage(data: data)
+        }
+        return nil
+    }()
     
     var body: some View {
         NavigationStack {

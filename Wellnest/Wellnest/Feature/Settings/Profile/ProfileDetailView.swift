@@ -60,6 +60,14 @@ struct ProfileDetailView: View {
                     if tempImage == nil {
                         tempImage = profileImage
                     }
+                    
+                    if let saveAge = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.age), let ageEnum = UserAgeRange(rawValue: saveAge) {
+                        selectedAge = ageEnum
+                    }
+                    
+                    if let saveGender = UserDefaults.standard.string(forKey: UserDefaultsKeys.Settings.Profile.gender), let genderEnum = UserGender(rawValue: saveGender) {
+                        selectedGender = genderEnum
+                    }
                 }
                 
                 Section {
@@ -87,6 +95,11 @@ struct ProfileDetailView: View {
                                 Text(selectedAge?.rawValue ?? "나이를 선택해주세요.")
                                     .foregroundStyle(selectedAge == nil ? .gray.opacity(0.5) : .primary)
                                 
+                                Spacer()
+                                
+                                Image(systemName: "chevron.down")
+                                    .foregroundStyle(selectedAge == nil ? .gray.opacity(0.5) : .primary)
+                                
                             }
                         }
                     }
@@ -104,6 +117,11 @@ struct ProfileDetailView: View {
                             }
                         } label: {
                             Text(selectedGender?.rawValue ?? "성별을 선택해주세요.")
+                                .foregroundStyle(selectedGender == nil ? .gray.opacity(0.5) : .primary)
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.down")
                                 .foregroundStyle(selectedGender == nil ? .gray.opacity(0.5) : .primary)
                         }
                     }
@@ -146,7 +164,23 @@ struct ProfileDetailView: View {
                         // TODO: 수정버튼 누르면 변경 항목들 저장
                         if let selectedImage = tempImage {
                             profileImage = selectedImage
+                            if let imageData = selectedImage.jpegData(compressionQuality: 0.8) {
+                                UserDefaults.standard.set(imageData, forKey: UserDefaultsKeys.Settings.Profile.imageData)
+                            }
                         }
+                        
+                        if let age = selectedAge?.rawValue {
+                            UserDefaults.standard.set(age, forKey: UserDefaultsKeys.Settings.Profile.age)
+                        }
+                        
+                        if let gender = selectedGender?.rawValue {
+                            UserDefaults.standard.set(gender, forKey: UserDefaultsKeys.Settings.Profile.gender)
+                        }
+                        
+                        UserDefaults.standard.set(name, forKey: UserDefaultsKeys.Settings.Profile.name)
+                        UserDefaults.standard.set(height, forKey: UserDefaultsKeys.Settings.Profile.height)
+                        UserDefaults.standard.set(weight, forKey: UserDefaultsKeys.Settings.Profile.weight)
+                        
                         dismiss()
                     } label: {
                         Text("수정")
