@@ -12,11 +12,57 @@ struct PeriodPickerView: View {
     @Binding var endDate: Date
     @Binding var isAllDay: Bool
 
+    @State var date: Date = Date()
+    @State private var showCalendar = false
+    @State private var showTimePicker = false
+    var text: String = ""
+    @State private var isStartPickerOpen = false
+    @State private var isEndPickerOpen = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading) {
             Toggle("하루 종일", isOn: $isAllDay)
-            DatePickerView(date: $startDate, text: "시작", isAllDay: isAllDay)
-            DatePickerView(date: $endDate, text: "종료", isAllDay: isAllDay)
+                .onChange(of: isAllDay) { newValue in
+                    UIApplication.hideKeyboard()
+            }
+            DatePickerView(text: "시작", date: $startDate, isAllDay: $isAllDay, isPresented: $isStartPickerOpen)
+                .padding(.top, 5)
+                .onChange(of: startDate) { newValue in
+                    endDate = newValue.addingTimeInterval(3600)
+                }
+                .onChange(of: isStartPickerOpen) { newValue in
+                    if newValue {
+                        if isEndPickerOpen { isEndPickerOpen = false }
+                    } // 시작 열면 종료 닫기
+                }
+            DatePickerView(text: "종료", date: $endDate, isAllDay: $isAllDay, isPresented: $isEndPickerOpen)
+                .padding(.bottom, 5)
+                .onChangeWithOldValue(of: endDate) { oldValue, newValue in
+                    if newValue.timeIntervalSince(startDate) < 0 {
+                        endDate = oldValue
+                    }
+                }
+                .onChange(of: isEndPickerOpen) { newValue in
+                    if newValue {
+                        if isStartPickerOpen { isStartPickerOpen = false }
+                    } // 종료 열면 시작 닫기
+                }
         }
+    }
+
+    // 날짜만 포맷
+    func formattedDateOnly(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy. M. d"
+        return formatter.string(from: date)
+    }
+
+    // 시간만 포맷
+    func formattedTimeOnly(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "a h:mm"
+        return formatter.string(from: date)
     }
 }
