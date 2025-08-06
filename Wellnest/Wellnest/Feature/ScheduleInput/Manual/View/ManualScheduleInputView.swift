@@ -85,7 +85,9 @@ struct ManualScheduleInputView: View {
                         currentFocus = .detail
                     },
                     onEditing: {
-                        currentFocus = .title
+                        if currentFocus != .title {
+                            currentFocus = .title
+                        }
                     }
                 )
             }
@@ -116,7 +118,9 @@ struct ManualScheduleInputView: View {
                         currentFocus = nil
                     },
                     onEditing: {
-                        currentFocus = .detail
+                        if currentFocus != .detail {
+                            currentFocus = .detail
+                        }
                     }
                 )
                 .padding(.bottom, Spacing.inline)

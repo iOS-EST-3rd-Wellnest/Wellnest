@@ -64,7 +64,7 @@ struct FocusableTextField: UIViewRepresentable {
         }
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
-            print("textFieldDidBeginEditing")
+            parent.onEditing?()
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
