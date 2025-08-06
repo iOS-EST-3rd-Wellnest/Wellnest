@@ -7,21 +7,21 @@
 
 import CoreLocation
 
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+class LocationManager: NSObject, ObservableObject {
+    private let shared = CLLocationManager()
 
     @Published var location: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus?
 
     override init() {
         super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        shared.delegate = self
+        shared.desiredAccuracy = kCLLocationAccuracyBest
     }
 
     func requestLocation() {
-        manager.requestWhenInUseAuthorization() // 앱 사용 중 위치 권한 요청
-        manager.startUpdatingLocation() // 위치 업데이트 시작
+        shared.requestWhenInUseAuthorization() // 앱 사용 중 위치 권한 요청
+        shared.startUpdatingLocation() // 위치 업데이트 시작
     }
 
     // 권한 변경 시 호출
@@ -32,6 +32,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             manager.startUpdatingLocation()
         }
     }
+}
+
+extension LocationManager: CLLocationManagerDelegate {
 
     // 위치 업데이트 시 호출
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
