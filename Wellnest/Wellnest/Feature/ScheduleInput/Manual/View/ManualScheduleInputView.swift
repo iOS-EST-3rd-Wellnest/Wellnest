@@ -43,7 +43,7 @@ struct ManualScheduleInputView: View {
             .navigationTitle("새 일정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .destructiveAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button {
                         selectedCreationType = nil
                         dismiss()
