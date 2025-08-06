@@ -10,6 +10,7 @@ import SwiftUI
 struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
 
     var body: some View {
         NavigationView {
@@ -28,8 +29,8 @@ struct ManualScheduleInputView: View {
                 }
                 .padding()
             }
-            .onTapGesture {
-                hideKeyboard()
+            .onDisappear {
+                UIApplication.hideKeyboard()
             }
             .safeAreaInset(edge: .bottom) {
                 saveButton
@@ -42,6 +43,7 @@ struct ManualScheduleInputView: View {
             .toolbar {
                 ToolbarItem(placement: .destructiveAction) {
                     Button {
+                        selectedCreationType = nil
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
@@ -63,29 +65,74 @@ struct ManualScheduleInputView: View {
     // 초기에 첫번째 텍스트 필드에 focus.
     @State private var isTextFieldFocused: Bool = true
 
+    @State private var currentFocus: InputField? = .title
+
+    enum InputField: Hashable {
+        case title
+        case detail
+    }
+
     private var inputSection: some View {
         VStack(alignment: .leading) {
-            FocusableTextField(
-                text: $title,
-                placeholder: "일정을 입력하세요",
-                isFirstResponder: isTextFieldFocused
-            )
-            .frame(height: 20)
+            HStack {
+                FocusableTextField(
+                    text: $title,
+                    placeholder: "일정을 입력하세요",
+                    isFirstResponder: currentFocus == .title,
+                    returnKeyType: .next,
+                    keyboardType: .default,
+                    onReturn: {
+                        DispatchQueue.main.async {
+                            currentFocus = .detail
+                        }
+                    }
+                )
+            }
         }
     }
 
     // MARK: - locationSection
 
-    // 일정 상세 정보 - 위치 또는 영상 통화
-    @State private var detail: String = ""
+    // 위치
+    @State private var location: String = ""
+
+    @State private var showLocationPicker: Bool = false
+
+    @State private var showLocationSearchIcon: Bool = false
+
+    @State private var showLocationSearchSheet = false
 
     private var locationSection: some View {
         VStack(alignment: .leading) {
-            TextField("위치 또는 영상 통화", text: $detail)
-                .textContentType(.location)
+            HStack {
+                FocusableTextField(
+                    text: $location,
+                    placeholder: "장소",
+                    isFirstResponder: currentFocus == .detail,
+                    returnKeyType: .done,
+                    keyboardType: .default,
+                    onReturn: {
+                        DispatchQueue.main.async {
+                            currentFocus = nil
+                        }
+                        UIApplication.hideKeyboard()
+                    }
+                )
+                .padding(.bottom, Spacing.inline)
+                .padding(.top, Spacing.inline)
+
+                Button {
+                    showLocationSearchSheet = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.black)
+                }
+            }
+        }
+        .sheet(isPresented: $showLocationSearchSheet) {
+            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
         }
     }
-
 
     // MARK: - periodSection
 
@@ -104,17 +151,17 @@ struct ManualScheduleInputView: View {
     }
     // MARK: - repeatSection
 
-    // 반복 종료 일
-    @State private var repeatEndDate = Date()
-
     // 반복 여부
     @State private var isRepeated: Bool = false
 
-    // 반복 종료일 여부
-    @State private var hasRepeatedDone: Bool = false
-
     // 반복 주기
     @State private var selectedRepeatRule: RepeatRule? = nil
+
+    // 반복 종료일 여부
+    @State private var hasRepeatEndDate: Bool = false
+
+    // 반복 종료 일
+    @State private var repeatEndDate = Date()
 
     private var repeatSection: some View {
         TagToggleSection(
@@ -126,8 +173,8 @@ struct ManualScheduleInputView: View {
             detailContent: {
                 AnyView(
                     VStack(alignment: .leading) {
-                        Toggle("반복 종료", isOn: $hasRepeatedDone)
-                        if hasRepeatedDone {
+                        Toggle("반복 종료", isOn: $hasRepeatEndDate)
+                        if hasRepeatEndDate {
                             VStack(alignment: .leading) {
                                 Text("종료일")
                                     .font(.subheadline)
@@ -143,6 +190,9 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 )
+            },
+            onTagTap: { _ in
+                currentFocus = nil 
             }
         )
     }
@@ -166,10 +216,14 @@ struct ManualScheduleInputView: View {
         )
     }
 
+    // 일정 상세 정보 - 아직 미정
+    @State private var detail: String = ""
+
     private var saveButton: some View {
         FilledButton(title: "저장하기") {
             saveSchedule()
             selectedTab = .plan
+            selectedCreationType = nil
             dismiss()
         }
         .disabled(title.isEmpty)
@@ -184,12 +238,15 @@ extension ManualScheduleInputView {
         let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
         newSchedule.id = UUID()
         newSchedule.title = title
+        newSchedule.location = location
         newSchedule.detail = detail
         newSchedule.startDate = startDate
         newSchedule.endDate = endDate
         newSchedule.isAllDay = isAllDay as NSNumber
         newSchedule.isCompleted = false
         newSchedule.repeatRule = selectedRepeatRule?.name
+        newSchedule.hasRepeatEndDate = hasRepeatEndDate
+        newSchedule.repeatEndDate = repeatEndDate
         newSchedule.alarm = alarmRule?.name
         newSchedule.scheduleType = "custom"
         newSchedule.createdAt = Date()
