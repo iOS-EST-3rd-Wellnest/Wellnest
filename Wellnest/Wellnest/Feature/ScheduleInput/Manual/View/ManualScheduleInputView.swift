@@ -43,7 +43,7 @@ struct ManualScheduleInputView: View {
             .navigationTitle("새 일정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .destructiveAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button {
                         selectedCreationType = nil
                         dismiss()
@@ -82,8 +82,11 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .next,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = .detail
+                        currentFocus = .detail
+                    },
+                    onEditing: {
+                        if currentFocus != .title {
+                            currentFocus = .title
                         }
                     }
                 )
@@ -112,10 +115,12 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .done,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = nil
+                        currentFocus = nil
+                    },
+                    onEditing: {
+                        if currentFocus != .detail {
+                            currentFocus = .detail
                         }
-                        UIApplication.hideKeyboard()
                     }
                 )
                 .padding(.bottom, Spacing.inline)

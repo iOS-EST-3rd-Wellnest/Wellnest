@@ -86,6 +86,7 @@ struct DatePickerView: View {
                                 }
                             } else {
                                 // 보여지지 않음
+                                date = roundedUpToFiveMinutes(date)
                                 isPresented = true
                                 showTimePicker = true
                                 showCalendar = false
@@ -145,7 +146,16 @@ struct DatePickerView: View {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "a h:mm"
-        return formatter.string(from: date)
+        return formatter.string(from: roundedUpToFiveMinutes(date))
+    }
+
+    func roundedUpToFiveMinutes(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let minute = components.minute ?? 0
+        let remainder = minute % 5
+        let minutesToAdd = remainder == 0 ? 0 : (5 - remainder)
+        return calendar.date(byAdding: .minute, value: minutesToAdd, to: date) ?? date
     }
 }
 
