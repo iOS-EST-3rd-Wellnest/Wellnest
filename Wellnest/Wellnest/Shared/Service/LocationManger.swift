@@ -7,11 +7,15 @@
 
 import CoreLocation
 
-class LocationManager: NSObject, ObservableObject {
-    private let shared = CLLocationManager()
+enum LocationError: Error {
+    case denied
+    case restricted
+    case unableToFindLocation
+}
 
-    @Published var location: CLLocation?
-    @Published var authorizationStatus: CLAuthorizationStatus?
+final class LocationManager: NSObject {
+    private let shared = CLLocationManager()
+    private var continuation: CheckedContinuation<CLLocation, Error>?
 
     override init() {
         super.init()
@@ -19,30 +23,60 @@ class LocationManager: NSObject, ObservableObject {
         shared.desiredAccuracy = kCLLocationAccuracyBest
     }
 
-    func requestLocation() {
-        shared.requestWhenInUseAuthorization() // 앱 사용 중 위치 권한 요청
-        shared.startUpdatingLocation() // 위치 업데이트 시작
-    }
+    /// 비동기 현재 위치 요청
+    func requestLocation() async throws -> CLLocation {
+        // 권한 체크
+        switch shared.authorizationStatus {
+        case .notDetermined:
+            shared.requestWhenInUseAuthorization()
+            try await waitForAuthorization()
+        case .restricted:
+            throw LocationError.restricted
+        case .denied:
+            throw LocationError.denied
+        default:
+            break
+        }
 
-    // 권한 변경 시 호출
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
-
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
-            manager.startUpdatingLocation()
+        return try await withCheckedThrowingContinuation { continuation in
+            self.continuation = continuation
+            shared.requestLocation()
         }
     }
+
+    /// 권한 요청 대기
+    private func waitForAuthorization() async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            self.authContinuation = continuation
+        }
+    }
+
+    private var authContinuation: CheckedContinuation<Void, Error>?
 }
 
 extension LocationManager: CLLocationManagerDelegate {
-
-    // 위치 업데이트 시 호출
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        location = locations.first
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) {
+            authContinuation?.resume(returning: ())
+            authContinuation = nil
+        } else if shared.authorizationStatus == .denied {
+            authContinuation?.resume(throwing: LocationError.denied)
+            authContinuation = nil
+        }
     }
 
-    // 에러 처리
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            continuation?.resume(returning: location)
+            continuation = nil
+        } else {
+            continuation?.resume(throwing: LocationError.unableToFindLocation)
+            continuation = nil
+        }
+    }
+
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("위치 가져오기 실패: \(error.localizedDescription)")
+        continuation?.resume(throwing: error)
+        continuation = nil
     }
 }
