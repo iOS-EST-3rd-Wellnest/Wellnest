@@ -18,9 +18,17 @@ final class UserDefaultsManager: ObservableObject {
             defaults.set(isOnboarding, forKey: UserDefaultsKeys.Onboarding.isOnboarding)
         }
     }
+    
+    /// 건강 앱 동기화 토글 여부
+    @Published var isHealthKitEnabled: Bool {
+        didSet {
+            defaults.set(isHealthKitEnabled, forKey: UserDefaultsKeys.Settings.isHealthDataEnabled)
+        }
+    }
 
     private init() {
         self.isOnboarding = defaults.bool(forKey: UserDefaultsKeys.Onboarding.isOnboarding)
+        self.isHealthKitEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isHealthDataEnabled)
     }
 
     /// Codable 객체를 JSON으로 인코딩해 UserDefaults에 저장
