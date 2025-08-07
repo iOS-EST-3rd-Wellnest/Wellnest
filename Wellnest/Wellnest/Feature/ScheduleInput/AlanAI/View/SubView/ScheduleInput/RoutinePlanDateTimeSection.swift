@@ -32,10 +32,6 @@ struct RoutinePlanDateTimeSection: View {
             VStack(spacing: Spacing.layout) {
                 // 요일 선택
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    Text("요일 선택")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
 
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: Spacing.content) {
                         ForEach(0..<7, id: \.self) { index in
@@ -52,14 +48,10 @@ struct RoutinePlanDateTimeSection: View {
 
                 Divider()
 
-                // 운동 시간대
+                // 시간대
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    Text("운동 시간대")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
 
-                    DatePickerView(text: "시작 시간", date: $routineStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
+                    TimePickerView(text: "시작 시간", time: $routineStartTime, isPresented: $isStartTimeOpen)
                         .onChange(of: routineStartTime) { newValue in
                             onStartTimeChange(newValue)
                         }
@@ -71,7 +63,7 @@ struct RoutinePlanDateTimeSection: View {
                             }
                         }
 
-                    DatePickerView(text: "종료 시간", date: $routineEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                    TimePickerView(text: "종료 시간", time: $routineEndTime, isPresented: $isEndTimeOpen)
                         .onChangeWithOldValue(of: routineEndTime) { oldValue, newValue in
                             if newValue.timeIntervalSince(routineStartTime) < 0 {
                                 routineEndTime = oldValue
@@ -90,11 +82,6 @@ struct RoutinePlanDateTimeSection: View {
 
                 // 루틴 기간
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    Text("루틴 기간")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-
                     DatePickerView(text: "시작 날짜", date: $routineStartDate, isAllDay: .constant(true), isPresented: $isStartDateOpen)
                         .onChange(of: isStartDateOpen) { newValue in
                             if newValue {
@@ -119,9 +106,6 @@ struct RoutinePlanDateTimeSection: View {
                         }
                 }
             }
-            .padding(Spacing.layout)
-            .background(Color(.systemGray6))
-            .cornerRadius(CornerRadius.large)
         }
     }
 }

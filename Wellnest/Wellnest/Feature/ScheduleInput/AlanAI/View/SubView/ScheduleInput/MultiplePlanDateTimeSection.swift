@@ -26,7 +26,6 @@ struct MultiplePlanDateTimeSection: View {
                 .fontWeight(.semibold)
 
             VStack {
-
                 DatePickerView(text: "시작", date: $multipleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
                     .onChange(of: multipleStartTime) { newValue in
                         onStartTimeChange(newValue)
@@ -53,9 +52,6 @@ struct MultiplePlanDateTimeSection: View {
                         }
                     }
             }
-            .padding(Spacing.layout)
-            .background(Color(.systemGray6))
-            .cornerRadius(CornerRadius.large)
         }
     }
 }

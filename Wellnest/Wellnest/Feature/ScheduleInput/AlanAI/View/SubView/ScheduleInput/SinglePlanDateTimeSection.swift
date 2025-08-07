@@ -23,15 +23,7 @@ struct SinglePlanDateTimeSection: View {
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            VStack(spacing: Spacing.layout) {
-                DatePickerView(text: "날짜", date: $singleDate, isAllDay: .constant(true), isPresented: $isDateOpen)
-                    .onChange(of: isDateOpen) { newValue in
-                        if newValue {
-                            isStartTimeOpen = false
-                            isEndTimeOpen = false
-                        }
-                    }
-
+            VStack {
                 DatePickerView(text: "시작 시간", date: $singleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
                     .onChange(of: singleStartTime) { newValue in
                         onStartTimeChange(newValue)
@@ -56,9 +48,6 @@ struct SinglePlanDateTimeSection: View {
                         }
                     }
             }
-            .padding(Spacing.layout)
-            .background(Color(.systemGray6))
-            .cornerRadius(CornerRadius.large)
         }
     }
 }
