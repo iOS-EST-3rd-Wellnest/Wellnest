@@ -14,6 +14,7 @@ struct UserInfoSectionTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
+            .foregroundColor(.black)
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -67,6 +68,7 @@ struct UserInfoTabView: View {
                             .font(.footnote)
                             .foregroundColor(.gray)
                     )
+                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 10)
                     .focused($isNicknameFieldFocused)
@@ -107,7 +109,7 @@ struct UserInfoTabView: View {
                     } label: {
                         HStack {
                             Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
-                                .foregroundColor(selectedAge.isEmpty ? .gray : .primary)
+                                .foregroundColor(selectedAge.isEmpty ? .gray : .black)
                                 .font(selectedAge.isEmpty ? .footnote : .body)
 
                             Spacer()
@@ -128,6 +130,7 @@ struct UserInfoTabView: View {
                 .cornerRadius(CornerRadius.large)
                 .padding(.bottom, Spacing.content)
 
+                // TODO: picker 다크모드 대응
                 HStack {
                     UserInfoSectionTitle(title: "성별 *")
 
@@ -209,6 +212,7 @@ struct UserInfoTabView: View {
                             .foregroundColor(.gray)
                     )
                     .keyboardType(.decimalPad)
+                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 42)
 
@@ -282,6 +286,7 @@ struct UserInfoTabView: View {
                             .foregroundColor(.gray)
                     )
                     .keyboardType(.decimalPad)
+                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 14)
                 }

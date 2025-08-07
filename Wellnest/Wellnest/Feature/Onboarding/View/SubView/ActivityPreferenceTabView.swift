@@ -56,7 +56,7 @@ struct ActivityPreferenceTabView: View {
 
                                         Text(activity.category)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(.black)
                                     }
                                     .frame(width: cardWidth, height: cardWidth)
                                     .background(activity.isSelected ? .accentCardYellow : .customSecondary)

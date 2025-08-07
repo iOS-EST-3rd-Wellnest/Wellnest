@@ -57,7 +57,7 @@ struct HealthConditionTabView: View {
 
                                         Text(condition.category)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(.black)
                                     }
                                     .frame(width: cardWidth, height: cardWidth)
                                     .background(condition.isSelected ? .accentCardYellow : .customSecondary)

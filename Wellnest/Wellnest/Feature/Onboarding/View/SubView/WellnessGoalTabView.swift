@@ -38,7 +38,7 @@ struct WellnessGoalTabView: View {
                         HStack {
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.primary)
+                                .foregroundColor(.black)
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)

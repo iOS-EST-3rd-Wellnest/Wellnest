@@ -56,7 +56,7 @@ struct WeatherPreferenceTabView: View {
 
                                         Text(weather.category)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(.black)
                                     }
                                     .frame(width: cardWidth, height: cardWidth)
                                     .background(weather.isSelected ? .accentCardYellow : .customSecondary)

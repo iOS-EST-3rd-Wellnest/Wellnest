@@ -56,7 +56,7 @@ struct PreferredTimeSlotTabView: View {
 
                                         Text(timeSlot.category)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(.black)
                                     }
                                     .frame(width: cardWidth, height: cardWidth)
                                     .background(timeSlot.isSelected ? .accentCardYellow : .customSecondary)
