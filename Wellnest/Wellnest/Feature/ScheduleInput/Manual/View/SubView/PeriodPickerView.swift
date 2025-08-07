@@ -50,7 +50,6 @@ struct PeriodPickerView: View {
                 isAllDay: $isAllDay,
                 isPresented: $isEndPickerOpen
             )
-            .padding(.bottom, 5)
             .onChange(of: endDate) { newValue in
                 guard newValue.timeIntervalSince(startDate) <= 0 else { return }
                 startDate = newValue.addingTimeInterval(-3600)

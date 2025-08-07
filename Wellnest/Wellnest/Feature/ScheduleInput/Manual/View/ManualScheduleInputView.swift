@@ -23,8 +23,10 @@ struct ManualScheduleInputView: View {
                     locationSection
                     Divider()
                     periodSection
+                        .padding(.bottom, 5)
                     Divider()
                     repeatSection
+                        .padding(.bottom, 5)
                     Divider()
                     alarmSection
                     Spacer()
@@ -189,6 +191,7 @@ struct ManualScheduleInputView: View {
                             HStack {
                                 DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
                                     .padding(.top, 5)
+
                             }
                         }
                     }
@@ -197,6 +200,7 @@ struct ManualScheduleInputView: View {
             onTagTap: { _ in
                 currentFocus = nil 
             }
+
         )
     }
 
