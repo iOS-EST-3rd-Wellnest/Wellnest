@@ -257,7 +257,6 @@ struct UserInfoTabView: View {
 //                .cornerRadius(CornerRadius.large)
 //                .padding(.bottom, Spacing.content)
 
-                // TODO: 몸무게 입력할 때 키보드가 올라오는데, 백그라운드 누르면 키보드 내려가게 하기(시뮬에서 확인)
                 HStack {
                     UserInfoSectionTitle(title: "몸무게")
 
@@ -310,6 +309,22 @@ struct UserInfoTabView: View {
             .opacity(isButtonDisabled ? 0.5 : 1.0)
             .padding(.horizontal)
             .padding(.bottom)
+        }
+        .dismissKeyboardOnTap()
+    }
+}
+
+extension UIApplication {
+    /// 배경을 탭하면 키보드가 내려감
+    func endEditing() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+extension View {
+    func dismissKeyboardOnTap() -> some View {
+        self.onTapGesture {
+            UIApplication.shared.endEditing()
         }
     }
 }
