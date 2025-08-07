@@ -38,8 +38,8 @@ struct PeriodPickerView: View {
             DatePickerView(text: "종료", date: $endDate, isAllDay: $isAllDay, isPresented: $isEndPickerOpen)
                 .padding(.bottom, 5)
                 .onChangeWithOldValue(of: endDate) { oldValue, newValue in
-                    if newValue.timeIntervalSince(startDate) < 0 {
-                        endDate = oldValue
+                    if newValue.timeIntervalSince(startDate) <= 0 {
+                        startDate = newValue.addingTimeInterval(-3600)
                     }
                 }
                 .onChange(of: isEndPickerOpen) { newValue in
