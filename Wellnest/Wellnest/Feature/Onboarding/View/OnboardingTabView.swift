@@ -56,6 +56,25 @@ struct OnboardingTitle: View {
     }
 }
 
+struct OnboardingCardLayout {
+    static var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    static var columnCount: Int {
+        isIPad ? 3 : 2
+    }
+
+    static var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: Spacing.layout), count: columnCount)
+    }
+
+    static var cardWidth: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        return (screenWidth - (Spacing.layout * 3)) / CGFloat(columnCount)
+    }
+}
+
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager

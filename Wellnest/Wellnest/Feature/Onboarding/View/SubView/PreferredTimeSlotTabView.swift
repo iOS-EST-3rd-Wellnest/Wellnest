@@ -12,15 +12,8 @@ struct PreferredTimeSlotTabView: View {
 
     @State private var timeSlots = PreferredTimeSlot.timeSlots
 
-    private let columns = [
-        GridItem(.flexible(), spacing: Spacing.layout),
-        GridItem(.flexible(), spacing: Spacing.layout)
-    ]
-
-    private var cardWidth: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
-        return (screenWidth - (Spacing.layout * 3)) / 2
-    }
+    let columns = OnboardingCardLayout.columns
+    let cardWidth = OnboardingCardLayout.cardWidth
 
     var isButtonDisabled: Bool {
         !timeSlots.contains(where: { $0.isSelected })
@@ -67,7 +60,7 @@ struct PreferredTimeSlotTabView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 100)
+                    .padding(.bottom)
                 }
                 .scrollIndicators(.hidden)
                 .safeAreaInset(edge: .bottom) {
