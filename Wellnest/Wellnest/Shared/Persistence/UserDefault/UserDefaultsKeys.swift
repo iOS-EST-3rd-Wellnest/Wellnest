@@ -16,6 +16,7 @@ enum UserDefaultsKeys {
     /// 설정 화면 관련 키
     enum Settings {
         static let notificationEnabled = "notificationEnabled"
+        static let isHealthDataEnabled = "isHealthDataEnabled"
         // 설정 관련 키를 여기에 추가해주세요.
     }
 

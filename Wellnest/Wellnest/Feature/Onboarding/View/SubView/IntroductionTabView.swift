@@ -9,16 +9,17 @@ import SwiftUI
 
 struct IntroductionTabView: View {
     @Binding var currentPage: Int
-//    let onNext: () -> Void
     
     var body: some View {
         VStack {
-            OnboardingTitle(title: "앱 소개", description: "")
+            OnboardingTitle(title: "앱 소개", description: "", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
 
             Spacer()
 
             FilledButton(title: "다음") {
-                currentPage += 1
+                withAnimation {
+                    currentPage += 1
+                }
             }
             .padding()
         }

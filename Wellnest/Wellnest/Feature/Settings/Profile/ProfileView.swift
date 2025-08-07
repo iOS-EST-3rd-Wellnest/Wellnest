@@ -9,12 +9,25 @@ import SwiftUI
 
 struct ProfileView: View {
     @Binding var name: String
+    @Binding var profileImage: UIImage?
     
     var body: some View {
         HStack {
-            Circle()
-                .frame(width: 40, height: 40)
-                .foregroundStyle(.indigo)
+            if let image = profileImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+            } else {
+                Circle()
+                    .frame(width: 40, height: 40)
+                    .foregroundStyle(.gray)
+            }
+            
+            //            Circle()
+            //                .frame(width: 40, height: 40)
+            //                .foregroundStyle(.indigo)
             
             Text(name)
                 .font(.title3)
@@ -29,5 +42,5 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView(name: .constant("홍길동"))
+    ProfileView(name: .constant("홍길동"), profileImage: .constant(nil))
 }
