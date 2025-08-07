@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct PeriodPickerView: View {
+    var text: String = ""
+
     @Binding var startDate: Date
     @Binding var endDate: Date
     @Binding var isAllDay: Bool
@@ -15,7 +17,6 @@ struct PeriodPickerView: View {
     @State var date: Date = Date()
     @State private var showCalendar = false
     @State private var showTimePicker = false
-    var text: String = ""
     @State private var isStartPickerOpen = false
     @State private var isEndPickerOpen = false
 
@@ -24,31 +25,43 @@ struct PeriodPickerView: View {
             Toggle("하루 종일", isOn: $isAllDay)
                 .onChange(of: isAllDay) { newValue in
                     UIApplication.hideKeyboard()
+                }
+            DatePickerView(
+                text: "시작",
+                date: $startDate,
+                isAllDay: $isAllDay,
+                isPresented: $isStartPickerOpen
+            )
+            .padding(.top, 5)
+            .onChange(of: startDate) { newValue in
+                guard newValue.timeIntervalSince(endDate) >= 0 else { return }
+                endDate = newValue.addingTimeInterval(3600)
             }
-            DatePickerView(text: "시작", date: $startDate, isAllDay: $isAllDay, isPresented: $isStartPickerOpen)
-                .padding(.top, 5)
-                .onChange(of: startDate) { newValue in
-                    if newValue.timeIntervalSince(endDate) >= 0 {
-                        endDate = newValue.addingTimeInterval(3600)
+            .onChange(of: isStartPickerOpen) { newValue in
+                if newValue {
+                    if isEndPickerOpen {
+                        isEndPickerOpen = false
                     }
-                }
-                .onChange(of: isStartPickerOpen) { newValue in
-                    if newValue {
-                        if isEndPickerOpen { isEndPickerOpen = false }
-                    } // 시작 열면 종료 닫기
-                }
-            DatePickerView(text: "종료", date: $endDate, isAllDay: $isAllDay, isPresented: $isEndPickerOpen)
-                .padding(.bottom, 5)
-                .onChangeWithOldValue(of: endDate) { oldValue, newValue in
-                    if newValue.timeIntervalSince(startDate) <= 0 {
-                        startDate = newValue.addingTimeInterval(-3600)
+                } // 시작 열면 종료 닫기
+            }
+            DatePickerView(
+                text: "종료",
+                date: $endDate,
+                isAllDay: $isAllDay,
+                isPresented: $isEndPickerOpen
+            )
+            .padding(.bottom, 5)
+            .onChange(of: endDate) { newValue in
+                guard newValue.timeIntervalSince(startDate) <= 0 else { return }
+                startDate = newValue.addingTimeInterval(-3600)
+            }
+            .onChange(of: isEndPickerOpen) { newValue in
+                if newValue {
+                    if isStartPickerOpen {
+                        isStartPickerOpen = false
                     }
-                }
-                .onChange(of: isEndPickerOpen) { newValue in
-                    if newValue {
-                        if isStartPickerOpen { isStartPickerOpen = false }
-                    } // 종료 열면 시작 닫기
-                }
+                } // 종료 열면 시작 닫기
+            }
         }
     }
 
