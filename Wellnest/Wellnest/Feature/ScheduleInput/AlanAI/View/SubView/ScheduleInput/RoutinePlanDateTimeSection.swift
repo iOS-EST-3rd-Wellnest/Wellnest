@@ -13,34 +13,38 @@ struct RoutinePlanDateTimeSection: View {
     @Binding var routineEndDate: Date
     @Binding var routineStartTime: Date
     @Binding var routineEndTime: Date
-    
+    let onWeekdayToggle: (Int) -> Void
+    let onStartTimeChange: (Date) -> Void
+
+    @State private var isStartDateOpen = false
+    @State private var isEndDateOpen = false
+    @State private var isStartTimeOpen = false
+    @State private var isEndTimeOpen = false
+
     private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: Spacing.layout) {
             Text("루틴 설정")
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            VStack(spacing: 16) {
+            VStack(spacing: Spacing.layout) {
                 // 요일 선택
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
                     Text("요일 선택")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundColor(.secondary)
 
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: Spacing.content) {
                         ForEach(0..<7, id: \.self) { index in
                             WeekdayChip(
                                 weekday: weekdays[index],
                                 index: index,
                                 isSelected: selectedWeekdays.contains(index)
                             ) {
-                                if selectedWeekdays.contains(index) {
-                                    selectedWeekdays.remove(index)
-                                } else {
-                                    selectedWeekdays.insert(index)
-                                }
+                                onWeekdayToggle(index)
                             }
                         }
                     }
@@ -49,51 +53,92 @@ struct RoutinePlanDateTimeSection: View {
                 Divider()
 
                 // 운동 시간대
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
                     Text("운동 시간대")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundColor(.secondary)
 
-                    DatePicker("시작 시간", selection: $routineStartTime, displayedComponents: .hourAndMinute)
-                        .datePickerStyle(CompactDatePickerStyle())
+                    DatePickerView(text: "시작 시간", date: $routineStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
                         .onChange(of: routineStartTime) { newValue in
-                            // 시작 시간이 변경되면 종료 시간을 1시간 후로 자동 설정
-                            routineEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: newValue) ?? newValue
+                            onStartTimeChange(newValue)
+                        }
+                        .onChange(of: isStartTimeOpen) { newValue in
+                            if newValue {
+                                isStartDateOpen = false
+                                isEndDateOpen = false
+                                isEndTimeOpen = false
+                            }
                         }
 
-                    DatePicker("종료 시간", selection: $routineEndTime, in: routineStartTime..., displayedComponents: .hourAndMinute)
-                        .datePickerStyle(CompactDatePickerStyle())
+                    DatePickerView(text: "종료 시간", date: $routineEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                        .onChangeWithOldValue(of: routineEndTime) { oldValue, newValue in
+                            if newValue.timeIntervalSince(routineStartTime) < 0 {
+                                routineEndTime = oldValue
+                            }
+                        }
+                        .onChange(of: isEndTimeOpen) { newValue in
+                            if newValue {
+                                isStartDateOpen = false
+                                isEndDateOpen = false
+                                isStartTimeOpen = false
+                            }
+                        }
                 }
 
                 Divider()
 
                 // 루틴 기간
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
                     Text("루틴 기간")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundColor(.secondary)
 
-                    DatePicker("시작 날짜", selection: $routineStartDate, displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
+                    DatePickerView(text: "시작 날짜", date: $routineStartDate, isAllDay: .constant(true), isPresented: $isStartDateOpen)
+                        .onChange(of: isStartDateOpen) { newValue in
+                            if newValue {
+                                isEndDateOpen = false
+                                isStartTimeOpen = false
+                                isEndTimeOpen = false
+                            }
+                        }
 
-                    DatePicker("종료 날짜", selection: $routineEndDate, in: routineStartDate..., displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
+                    DatePickerView(text: "종료 날짜", date: $routineEndDate, isAllDay: .constant(true), isPresented: $isEndDateOpen)
+                        .onChangeWithOldValue(of: routineEndDate) { oldValue, newValue in
+                            if newValue.timeIntervalSince(routineStartDate) < 0 {
+                                routineEndDate = oldValue
+                            }
+                        }
+                        .onChange(of: isEndDateOpen) { newValue in
+                            if newValue {
+                                isStartDateOpen = false
+                                isStartTimeOpen = false
+                                isEndTimeOpen = false
+                            }
+                        }
                 }
             }
-            .padding()
+            .padding(Spacing.layout)
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.large)
         }
     }
 }
 
 #Preview {
     RoutinePlanDateTimeSection(
-        selectedWeekdays: .constant(Set([1, 3, 5])),
+        selectedWeekdays: .constant(Set([1, 3, 5])), // 월, 수, 금 선택
         routineStartDate: .constant(Date()),
         routineEndDate: .constant(Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()),
         routineStartTime: .constant(Date()),
-        routineEndTime: .constant(Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date())
+        routineEndTime: .constant(Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()),
+        onWeekdayToggle: { weekdayIndex in
+            print("요일 토글: \(weekdayIndex)")
+        },
+        onStartTimeChange: { newTime in
+            print("시작 시간 변경: \(newTime)")
+        }
     )
     .padding()
 }

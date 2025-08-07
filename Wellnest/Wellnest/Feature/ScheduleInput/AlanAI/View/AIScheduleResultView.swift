@@ -8,24 +8,25 @@
 import SwiftUI
 
 struct AIScheduleResultView: View {
-    let healthPlan: HealthPlanResponse?
-    let isLoading: Bool
-    let errorMessage: String
-    let rawResponse: String
-
+    @StateObject var viewModel: AIScheduleResultViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showRawResponse = false
 
     var body: some View {
         NavigationView {
             Group {
-                if isLoading {
+                switch viewModel.currentViewState {
+                case .loading:
                     LoadingView()
-                } else if !errorMessage.isEmpty {
-                    ErrorView(errorMessage: errorMessage, rawResponse: rawResponse)
-                } else if let plan = healthPlan {
-                    PlanContentView(plan: plan)
-                } else {
+                case .error:
+                    ErrorView(
+                        errorMessage: viewModel.errorMessage,
+                        rawResponse: viewModel.rawResponse
+                    )
+                case .content:
+                    if let plan = viewModel.healthPlan {
+                        PlanContentView(plan: plan)
+                    }
+                case .empty:
                     EmptyPlanView()
                 }
             }
@@ -33,9 +34,9 @@ struct AIScheduleResultView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if !errorMessage.isEmpty && !rawResponse.isEmpty {
+                    if viewModel.shouldShowRawResponseButton {
                         Button("원본 응답") {
-                            showRawResponse = true
+                            viewModel.showRawResponseSheet()
                         }
                         .font(.caption)
                     }
@@ -47,8 +48,8 @@ struct AIScheduleResultView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showRawResponse) {
-                RawResponseView(rawResponse: rawResponse)
+            .sheet(isPresented: $viewModel.showRawResponse) {
+                RawResponseView(rawResponse: viewModel.rawResponse)
             }
         }
     }
@@ -56,22 +57,24 @@ struct AIScheduleResultView: View {
 
 #Preview {
     AIScheduleResultView(
-        healthPlan: HealthPlanResponse(
-            planType: "routine",
-            title: "주 3회 헬스 루틴",
-            description: "근력 증진을 위한 체계적인 운동 계획입니다.",
-            schedules: [
-                AIScheduleItem(
-                    day: "월요일",
-                    date: nil,
-                    time: "09:00 - 10:00",
-                    activity: "상체 근력 운동",
-                    notes: "벤치프레스, 덤벨 플라이 위주로 진행"
-                )
-            ]
-        ),
-        isLoading: false,
-        errorMessage: "",
-        rawResponse: ""
+        viewModel: AIScheduleResultViewModel(
+            healthPlan: HealthPlanResponse(
+                planType: "routine",
+                title: "주 3회 헬스 루틴",
+                description: "근력 증진을 위한 체계적인 운동 계획입니다.",
+                schedules: [
+                    AIScheduleItem(
+                        day: "월요일",
+                        date: nil,
+                        time: "09:00 - 10:00",
+                        activity: "상체 근력 운동",
+                        notes: "벤치프레스, 덤벨 플라이 위주로 진행"
+                    )
+                ]
+            ),
+            isLoading: false,
+            errorMessage: "",
+            rawResponse: ""
+        )
     )
 }

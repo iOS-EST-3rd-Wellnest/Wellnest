@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PlanHeaderSection: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.layout) {
             HStack {
                 Image(systemName: "heart.fill")
                     .foregroundColor(.red)
