@@ -7,10 +7,23 @@
 
 import SwiftUI
 
+struct UserInfoSectionTitle: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.callout)
+            .fontWeight(.semibold)
+            .padding(.vertical)
+            .padding(.leading, 28)
+    }
+}
+
 struct UserInfoTabView: View {
     @Binding var currentPage: Int
 
     @State private var nickname: String = ""
+    @FocusState private var isNicknameFieldFocused: Bool
 
     @State private var selectedAge = ""
     let ageOptions = ["10대", "20대", "30대", "40대", "50대", "60대 이상"]
@@ -18,46 +31,67 @@ struct UserInfoTabView: View {
     @State var selectedGender = ""
     var genderOptions = ["여자", "남자"]
 
-    @State private var height: Double?
+    @State private var height: Int?
 //    @State private var selectedHeight = ""
 //    let heightOptions = ["140대 이하", "150대", "160대", "170대", "180대", "190대 이상"]
 
-    @State private var weight: Double?
+    @State private var weight: Int?
 //    @State private var selectedWeight = ""
 //    let weightOptions = ["20kg대 이하", "30kg대", "40kg대", "50kg대", "60kg대", "70kg대", "80kg대", "90kg대", "100kg대 이상"]
 
+    var isButtonDisabled: Bool {
+        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
+    }
+
     var body: some View {
         VStack {
-            OnboardingTitle(title: "사용자 정보", description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
+            OnboardingTitle(title: "사용자 정보", description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
 
             VStack {
                 HStack {
                     Text("* 필수항목")
                         .font(.caption2)
+
                     Spacer()
                 }
                 .padding(.horizontal, Spacing.content)
-                .padding(.bottom, Spacing.inline)
+                .padding(.bottom, Spacing.content)
 
                 HStack {
                     UserInfoSectionTitle(title: "닉네임 *")
 
-                    // TODO: 5글자 이하 제한 추가
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("닉네임을 입력해주세요.")
+                        prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     )
                     .padding(.horizontal)
                     .padding(.leading, 10)
+                    .focused($isNicknameFieldFocused)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .onChange(of: nickname) { newValue in
+                        let filtered = newValue
+                            .filter { $0.isLetter || $0.isNumber }
+                            .prefix(10)
+
+                        if nickname != String(filtered) {
+                            nickname = String(filtered)
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
                 .background(.customSecondary)
                 .cornerRadius(CornerRadius.large)
                 .padding(.bottom, Spacing.content)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isNicknameFieldFocused = true
+                    }
+                }
 
                 HStack {
                     UserInfoSectionTitle(title: "연령대 *")
@@ -97,7 +131,6 @@ struct UserInfoTabView: View {
                 HStack {
                     UserInfoSectionTitle(title: "성별 *")
 
-                    // TODO: 피커 목록 폰트 크기 바디로 동일하게 바꾸기
                     Picker("", selection: $selectedGender) {
                         ForEach(genderOptions, id: \.self) {
                             Text($0)
@@ -150,32 +183,35 @@ struct UserInfoTabView: View {
                 HStack {
                     UserInfoSectionTitle(title: "키")
 
-                    // TODO: 입력 제한 추가
                     TextField(
                         "",
                         text: Binding(
                             get: {
                                 if let height = height {
-                                    return String(format: "%.0f", height)
+                                    return String(height)
                                 } else {
                                     return ""
                                 }
                             },
                             set: { newValue in
-                                if let value = Double(newValue) {
+                                let filtered = newValue.filter { $0.isNumber }
+                                let limited = String(filtered.prefix(3))
+
+                                if let value = Int(limited) {
                                     height = value
                                 } else {
                                     height = nil
                                 }
                             }
                         ),
-                        prompt: Text("키를 입력해주세요.")
+                        prompt: Text("cm 단위로 정수만 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     )
                     .keyboardType(.decimalPad)
                     .padding(.horizontal)
                     .padding(.leading, 42)
+
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
@@ -220,26 +256,28 @@ struct UserInfoTabView: View {
                 HStack {
                     UserInfoSectionTitle(title: "몸무게")
 
-                    // TODO: 입력 제한 추가
                     TextField(
                         "",
                         text: Binding(
                             get: {
                                 if let weight = weight {
-                                    return String(format: "%.0f", weight)
+                                    return String(weight)
                                 } else {
                                     return ""
                                 }
                             },
                             set: { newValue in
-                                if let value = Double(newValue) {
+                                let filtered = newValue.filter { $0.isNumber }
+                                let limited = String(filtered.prefix(3))
+
+                                if let value = Int(limited) {
                                     weight = value
                                 } else {
                                     weight = nil
                                 }
                             }
                         ),
-                        prompt: Text("몸무게를 입력해주세요.")
+                        prompt: Text("kg 단위로 정수만 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     )
@@ -258,9 +296,12 @@ struct UserInfoTabView: View {
             Spacer()
 
             FilledButton(title: "다음") {
-                // TODO: 코어 데이터 추가 처리
-                currentPage += 1
+                withAnimation {
+                    currentPage += 1
+                }
             }
+            .disabled(isButtonDisabled)
+            .opacity(isButtonDisabled ? 0.5 : 1.0)
             .padding(.horizontal)
             .padding(.bottom)
         }

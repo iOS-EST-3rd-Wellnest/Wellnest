@@ -12,12 +12,14 @@ struct MotivationTabView: View {
 
     var body: some View {
         VStack {
-            OnboardingTitle(title: "동기부여 문구", description: "")
+            OnboardingTitle(title: "동기부여 문구", description: "", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
 
             Spacer()
 
             FilledButton(title: "다음") {
-                currentPage += 1
+                withAnimation {
+                    currentPage += 1
+                }
             }
             .padding()
         }
