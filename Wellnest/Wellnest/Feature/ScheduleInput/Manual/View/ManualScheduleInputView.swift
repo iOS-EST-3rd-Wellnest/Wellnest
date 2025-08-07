@@ -66,6 +66,8 @@ struct ManualScheduleInputView: View {
     // 일정 제목
     @State private var title: String = ""
 
+    @State private var selectedColor: Color = .blue
+
     // 초기에 첫번째 텍스트 필드에 focus.
     @State private var isTextFieldFocused: Bool = true
 
@@ -92,6 +94,8 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 )
+                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                    .labelsHidden()
             }
         }
     }
