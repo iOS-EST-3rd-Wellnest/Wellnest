@@ -41,7 +41,7 @@ struct MainTabView: View {
         .fullScreenCover(item: $selectedCreationType) { type in
             switch type {
             case .createByAI:
-                TestAIInputView(
+                AIScheduleInputView(
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType
                 )

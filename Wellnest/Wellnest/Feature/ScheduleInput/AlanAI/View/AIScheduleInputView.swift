@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct AIScheduleInputView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
     @StateObject private var viewModel = AIScheduleViewModel()
 
     var body: some View {
@@ -36,13 +39,29 @@ struct AIScheduleInputView: View {
             }
             .navigationTitle("플랜 생성")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        selectedCreationType = nil
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.black)
+                    }
+                }
+            }
             .sheet(isPresented: $viewModel.showResult) {
-                AIScheduleResultView(viewModel: AIScheduleResultViewModel(
-                    healthPlan: viewModel.healthPlan,
-                    isLoading: viewModel.isLoading,
-                    errorMessage: viewModel.errorMessage,
-                    rawResponse: viewModel.rawResponse
-                ))
+                AIScheduleResultView(
+                    viewModel: AIScheduleResultViewModel(
+                        healthPlan: viewModel.healthPlan,
+                        isLoading: viewModel.isLoading,
+                        errorMessage: viewModel.errorMessage,
+                        rawResponse: viewModel.rawResponse
+                    ),
+                    selectedTab: $selectedTab,
+                    selectedCreationType: $selectedCreationType,
+                    parentDismiss: dismiss
+                )
             }
         }
     }
@@ -92,8 +111,4 @@ struct AIScheduleInputView: View {
 
 extension Spacing {
     static let section: CGFloat = 24
-}
-
-#Preview {
-    AIScheduleInputView()
 }

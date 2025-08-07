@@ -10,6 +10,9 @@ import SwiftUI
 struct AIScheduleResultView: View {
     @StateObject var viewModel: AIScheduleResultViewModel
     @Environment(\.dismiss) private var dismiss
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
+    let parentDismiss: DismissAction
 
     var body: some View {
         NavigationView {
@@ -43,9 +46,17 @@ struct AIScheduleResultView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("완료") {
+                    Button("취소") {
                         dismiss()
                     }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if viewModel.currentViewState == .content, let _ = viewModel.healthPlan {
+                    saveButtonsSection
+                        .padding()
+                        .background(.white)
+                        .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
             }
             .sheet(isPresented: $viewModel.showRawResponse) {
@@ -53,28 +64,30 @@ struct AIScheduleResultView: View {
             }
         }
     }
-}
 
-#Preview {
-    AIScheduleResultView(
-        viewModel: AIScheduleResultViewModel(
-            healthPlan: HealthPlanResponse(
-                planType: "routine",
-                title: "주 3회 헬스 루틴",
-                description: "근력 증진을 위한 체계적인 운동 계획입니다.",
-                schedules: [
-                    AIScheduleItem(
-                        day: "월요일",
-                        date: nil,
-                        time: "09:00 - 10:00",
-                        activity: "상체 근력 운동",
-                        notes: "벤치프레스, 덤벨 플라이 위주로 진행"
-                    )
-                ]
-            ),
-            isLoading: false,
-            errorMessage: "",
-            rawResponse: ""
-        )
-    )
+    // MARK: - Save Buttons Section
+    private var saveButtonsSection: some View {
+        HStack(spacing: Spacing.layout) {
+            Button {
+                dismiss()
+            } label: {
+                Text("취소")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
+            }
+
+            FilledButton(title: "저장하기") {
+                saveAISchedules()
+                selectedTab = .plan
+                selectedCreationType = nil
+                dismiss()
+                parentDismiss()
+            }
+        }
+    }
 }
