@@ -71,14 +71,15 @@ struct HealthConditionTabView: View {
                     .padding(.bottom, 100)
                 }
                 .scrollIndicators(.hidden)
-
-                FilledButton(title: "완료") {
-                    userDefaultsManager.isOnboarding = true
+                .safeAreaInset(edge: .bottom) {
+                    FilledButton(title: "완료") {
+                        userDefaultsManager.isOnboarding = true
+                    }
+                    .disabled(isButtonDisabled)
+                    .opacity(isButtonDisabled ? 0.5 : 1.0)
+                    .padding()
+                    .background(.white)
                 }
-                .disabled(isButtonDisabled)
-                .opacity(isButtonDisabled ? 0.5 : 1.0)
-                .padding(.horizontal)
-                .padding(.bottom)
             }
         }
     }

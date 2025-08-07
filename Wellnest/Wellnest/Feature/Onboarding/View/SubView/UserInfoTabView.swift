@@ -257,6 +257,7 @@ struct UserInfoTabView: View {
 //                .cornerRadius(CornerRadius.large)
 //                .padding(.bottom, Spacing.content)
 
+                // TODO: 몸무게 입력할 때 키보드가 올라오는데, 백그라운드 누르면 키보드 내려가게 하기(시뮬에서 확인)
                 HStack {
                     UserInfoSectionTitle(title: "몸무게")
 

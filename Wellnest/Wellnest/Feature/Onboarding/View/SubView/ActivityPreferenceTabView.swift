@@ -71,16 +71,17 @@ struct ActivityPreferenceTabView: View {
                     .padding(.bottom, 100)
                 }
                 .scrollIndicators(.hidden)
-
-                FilledButton(title: "다음") {
-                    withAnimation {
-                        currentPage += 1
+                .safeAreaInset(edge: .bottom) {
+                    FilledButton(title: "다음") {
+                        withAnimation {
+                            currentPage += 1
+                        }
                     }
+                    .disabled(isButtonDisabled)
+                    .opacity(isButtonDisabled ? 0.5 : 1.0)
+                    .padding()
+                    .background(.white)
                 }
-                .disabled(isButtonDisabled)
-                .opacity(isButtonDisabled ? 0.5 : 1.0)
-                .padding(.horizontal)
-                .padding(.bottom)
             }
         }
     }
