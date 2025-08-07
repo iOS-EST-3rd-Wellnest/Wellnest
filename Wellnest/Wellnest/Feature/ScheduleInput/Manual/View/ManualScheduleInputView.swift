@@ -169,8 +169,8 @@ struct ManualScheduleInputView: View {
     // 반복 종료일 여부
     @State private var hasRepeatEndDate: Bool = false
 
-    // 반복 종료 일
-    @State private var repeatEndDate = Date()
+    // 반복 종료 일 (default value: 오늘로부터 7일 뒤의 날짜)
+    @State private var repeatEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
 
     @State private var isRepeatEndDateOpen: Bool = false
 
@@ -189,7 +189,6 @@ struct ManualScheduleInputView: View {
                             HStack {
                                 DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
                                     .padding(.top, 5)
-
                             }
                         }
                     }
