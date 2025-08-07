@@ -21,23 +21,26 @@ struct VideoView: View {
                 Link(destination: url) {
                     VStack {
                         Spacer()
-                        
-                        // 1) 캐시된 이미지가 있으면 사용
-                        if let uiImage = homeVM.images[video.id] {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFill()
-                                .cornerRadius(CornerRadius.large)
-                                .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 8), height: 160)
-                                .defaultShadow()
+
+                        Group {
+                            // 1) 캐시된 이미지가 있으면 사용
+                            if let uiImage = homeVM.images[video.id] {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .cornerRadius(CornerRadius.large)
+                                    .defaultShadow()
+                            }
+                            // 2) 아직 없으면 로딩 인디케이터 + 로드 트리거
+                            else {
+                                ProgressView()
+                                    .task {
+                                        await homeVM.loadImage(for: video)
+                                    }
+                            }
+                            
                         }
-                        // 2) 아직 없으면 로딩 인디케이터 + 로드 트리거
-                        else {
-                            ProgressView()
-                                .task {
-                                    await homeVM.loadImage(for: video)
-                                }
-                        }
+                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 7))
                         
                         Spacer()
                         
@@ -50,7 +53,7 @@ struct VideoView: View {
                     
                 }
                 .tint(.black)
-                .padding(.horizontal, Spacing.layout * 1.5)
+                .padding(.horizontal, Spacing.layout)
             }
         }
     }

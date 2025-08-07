@@ -43,27 +43,32 @@ struct RecommendView: View {
                 Spacer()
             }
             
-            VStack(alignment: .leading) {
-                Text("오늘 날씨는 비가 내리네요.\n실내에서 할 수 있는 일정을 추천해드릴게요.")
-                    .font(.callout)
-                    .padding(.horizontal, Spacing.content)
-                
-                Button {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("오늘 날씨는 비가 내리네요.\n실내에서 할 수 있는 일정을 추천해드릴게요.")
+                        .font(.callout)
+                        .padding(.horizontal, Spacing.content)
                     
-                } label: {
-                    Text("· 헬스장")
-                        .font(.footnote)
-                        .foregroundStyle(.blue)
-                        .padding(.vertical, Spacing.inline)
-                        .padding(.horizontal)
+                    Button {
+                        
+                    } label: {
+                        Text("· 헬스장")
+                            .font(.footnote)
+                            .foregroundStyle(.blue)
+                            .padding(.vertical, Spacing.inline)
+                            .padding(.horizontal)
+                    }
+                    
                 }
+                .padding(.horizontal)
                 
+                Spacer()
             }
             .padding()
-            .padding(.horizontal, Spacing.inline)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.large)
                     .fill(Color(.systemGray6))
+                    .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 4))
             )
             
             HStack {
