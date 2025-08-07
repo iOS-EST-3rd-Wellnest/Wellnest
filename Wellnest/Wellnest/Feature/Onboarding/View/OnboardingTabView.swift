@@ -10,13 +10,40 @@ import SwiftUI
 struct OnboardingTitle: View {
     let title: String
     let description: String?
+    let currentPage: Int
+    let onBack: () -> Void
 
     var body: some View {
-        Text(title)
-            .font(.title2)
-            .fontWeight(.bold)
-            .padding(.horizontal)
-            .padding(.top)
+        HStack {
+            if currentPage > 0 {
+                Button {
+                    onBack()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .font(.title2)
+                        .foregroundColor(.primary)
+                }
+            } else {
+                Image(systemName: "chevron.backward")
+                    .font(.title2)
+                    .opacity(0)
+            }
+
+            Spacer()
+
+            Text(title)
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Spacer()
+
+            // 타이틀을 가운데에 배치하기 위함
+            Image(systemName: "chevron.backward")
+                    .opacity(0)
+                    .font(.title2)
+        }
+        .padding(.horizontal)
+        .padding(.top)
 
         if let description {
             Text(description)
@@ -26,18 +53,6 @@ struct OnboardingTitle: View {
                 .padding(.horizontal)
                 .padding(.bottom, 60)
         }
-    }
-}
-
-struct UserInfoSectionTitle: View {
-    let title: String
-
-    var body: some View {
-        Text(title)
-            .font(.callout)
-            .fontWeight(.semibold)
-            .padding(.vertical)
-            .padding(.leading, 28)
     }
 }
 
@@ -53,75 +68,58 @@ struct OnboardingTabView: View {
 
     var body: some View {
         VStack {
-            TabView(selection: $currentPage) {
+            // 사용자 입력을 받지 않아도 페이징이 되는 걸 막기 위함
+            switch currentPage {
+            case 0:
                 MotivationTabView(currentPage: $currentPage)
-                    .tag(0)
-
+            case 1:
                 IntroductionTabView(currentPage: $currentPage)
-                    .tag(1)
-
+            case 2:
                 IntroductionTabView(currentPage: $currentPage)
-                    .tag(2)
-
+            case 3:
                 UserInfoTabView(currentPage: $currentPage)
-                    .tag(3)
-
+            case 4:
                 WellnessGoalTabView(currentPage: $currentPage)
-                    .tag(4)
-
-                VStack {
-                    OnboardingTitle(title: "선호 활동", description: "평소에 선호하는 운동이나 활동을 골라주세요.")
-
-                    Spacer()
-
-                    FilledButton(title: "다음") {
-                        currentPage = 6
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
-                .tag(5)
-
-                VStack {
-                    OnboardingTitle(title: "활동 시간대", description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
-
-                    Spacer()
-
-                    FilledButton(title: "다음") {
-                        currentPage = 7
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
-                .tag(6)
-
-                VStack {
-                    OnboardingTitle(title: "선호 날씨", description: "평소에 어떤 날씨를 좋아하시나요?")
-
-                    Spacer()
-
-                    FilledButton(title: "다음") {
-                        currentPage = 8
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
-                .tag(7)
-
-                VStack {
-                    OnboardingTitle(title: "현재 건강 상태", description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
-
-                    Spacer()
-
-                    FilledButton(title: "완료") {
-                        userDefaultsManager.isOnboarding = true
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
-                .tag(8)
+            case 5:
+                ActivityPreferenceTabView(currentPage: $currentPage)
+            case 6:
+                PreferredTimeSlotTabView(currentPage: $currentPage)
+            case 7:
+                WeatherPreferenceTabView(currentPage: $currentPage)
+            case 8:
+                HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage)
+            default:
+                EmptyView()
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+//            TabView(selection: $currentPage) {
+//                MotivationTabView(currentPage: $currentPage)
+//                    .tag(0)
+//
+//                IntroductionTabView(currentPage: $currentPage)
+//                    .tag(1)
+//
+//                IntroductionTabView(currentPage: $currentPage)
+//                    .tag(2)
+//
+//                UserInfoTabView(currentPage: $currentPage)
+//                    .tag(3)
+//
+//                WellnessGoalTabView(currentPage: $currentPage)
+//                    .tag(4)
+//
+//                ActivityPreferenceTabView(currentPage: $currentPage)
+//                    .tag(5)
+//
+//                PreferredTimeSlotTabView(currentPage: $currentPage)
+//                    .tag(6)
+//
+//                WeatherPreferenceTabView(currentPage: $currentPage)
+//                    .tag(7)
+//
+//                HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage)
+//                    .tag(8)
+//            }
+//            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
             // Custom Indicator
 //            if currentPage < totalPages {
@@ -134,6 +132,7 @@ struct OnboardingTabView: View {
 //                }
 //            }
         }
+//        .ignoresSafeArea()
     }
 }
 
