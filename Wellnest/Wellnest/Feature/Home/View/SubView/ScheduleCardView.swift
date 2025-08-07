@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct ScheduleCardView: View {
-    //@StateObject private var viewModel = ManualScheduleViewModel()
+    @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
@@ -99,6 +99,7 @@ struct ScheduleCardView: View {
                     Text(schedule.title)
                         .font(.caption)
                         .bold()
+                        .padding(.horizontal, Spacing.inline)
                 }
                 .padding()
                 .background(
@@ -106,7 +107,7 @@ struct ScheduleCardView: View {
                         .fill(Color(.systemGray6))
                         .defaultShadow()
                 )
-                .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : 32))
+                .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 2))
                 .offset(x: isDeleting ? deleteOffset : currentOffset)
                 .gesture(
                     DragGesture(minimumDistance: 30)
@@ -116,7 +117,7 @@ struct ScheduleCardView: View {
                             
                             guard abs(horizontal) > abs(vertical) else { return }
                             
-                            let direction: SwipeDirection = horizontal > 0 ? .right : .left
+                            let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
                             if swipedScheduleId != schedule.id || swipedDirection != direction {
                                 onSwiped(schedule.id, direction)
                             }
@@ -131,7 +132,7 @@ struct ScheduleCardView: View {
                             }
                             
                             if abs(horizontal) > maxSwipeDistance / 2 {
-                                let direction: SwipeDirection = horizontal > 0 ? .right : .left
+                                let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
                                 onSwiped(schedule.id, direction)
                             } else {
                                 onSwiped(nil, nil)
