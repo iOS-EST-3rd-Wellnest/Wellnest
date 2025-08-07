@@ -20,6 +20,7 @@ struct FocusableTextField: UIViewRepresentable {
     var clearButtonMode: UITextField.ViewMode = .never
 
     var onReturn: (() -> Void)? = nil
+    var onEditing: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -60,6 +61,10 @@ struct FocusableTextField: UIViewRepresentable {
 
         init(_ parent: FocusableTextField) {
             self.parent = parent
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.onEditing?()
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {

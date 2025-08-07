@@ -44,6 +44,3 @@ protocol TagModel: Identifiable, Hashable {
     var name: String { get }
     static var tags: [Self] { get }
 }
-
-
-
