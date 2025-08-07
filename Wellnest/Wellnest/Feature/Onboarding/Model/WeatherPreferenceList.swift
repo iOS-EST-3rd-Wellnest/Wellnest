@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct WeatherPreference: Identifiable {
+struct WeatherPreference: SelectableItem {
     let id = UUID()
     let icon: String?
     let category: String

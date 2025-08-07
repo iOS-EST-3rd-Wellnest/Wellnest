@@ -40,6 +40,8 @@ struct UserInfoTabView: View {
 //    @State private var selectedWeight = ""
 //    let weightOptions = ["20kg대 이하", "30kg대", "40kg대", "50kg대", "60kg대", "70kg대", "80kg대", "90kg대", "100kg대 이상"]
 
+    let spacing = OnboardingCardLayout.spacing
+
     var isButtonDisabled: Bool {
         nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
     }
@@ -296,7 +298,7 @@ struct UserInfoTabView: View {
                 .cornerRadius(CornerRadius.large)
                 .padding(.bottom, Spacing.content)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, spacing)
 
             Spacer()
 
@@ -307,8 +309,7 @@ struct UserInfoTabView: View {
             }
             .disabled(isButtonDisabled)
             .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding(.horizontal)
-            .padding(.bottom)
+            .padding()
         }
         .dismissKeyboardOnTap()
     }

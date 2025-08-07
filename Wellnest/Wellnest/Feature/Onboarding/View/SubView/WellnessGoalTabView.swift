@@ -12,6 +12,8 @@ struct WellnessGoalTabView: View {
     
     @State private var goals = WellnessGoal.goals
 
+    let spacing = OnboardingCardLayout.spacing
+
     var isButtonDisabled: Bool {
         !goals.contains(where: { $0.isSelected })
     }
@@ -49,7 +51,7 @@ struct WellnessGoalTabView: View {
                     .defaultShadow()
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, spacing)
 
             Spacer()
 
@@ -60,8 +62,7 @@ struct WellnessGoalTabView: View {
             }
             .disabled(isButtonDisabled)
             .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding(.horizontal)
-            .padding(.bottom)
+            .padding()
         }
     }
 }
