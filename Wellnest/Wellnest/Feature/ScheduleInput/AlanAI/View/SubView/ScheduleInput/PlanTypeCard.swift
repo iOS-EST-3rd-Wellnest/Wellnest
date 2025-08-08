@@ -14,7 +14,7 @@ struct PlanTypeCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: Spacing.content) {
                 Image(systemName: planType.icon)
                     .font(.title2)
                     .foregroundColor(isSelected ? .white : .blue)
@@ -27,9 +27,9 @@ struct PlanTypeCard: View {
             .frame(height: 80)
             .frame(maxWidth: .infinity)
             .background(isSelected ? Color.blue : Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.large)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.large)
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
             )
         }
