@@ -17,8 +17,6 @@ struct AIScheduleInputView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: Spacing.section) {
-                    PlanHeaderSection()
-
                     PlanTypeSelectionSection(
                         selectedPlanType: $viewModel.selectedPlanType,
                         onPlanTypeChanged: { viewModel.selectPlanType($0) }
@@ -30,15 +28,12 @@ struct AIScheduleInputView: View {
                         selectedPreferences: $viewModel.selectedPreferences,
                         onPreferenceToggle: viewModel.togglePreference
                     )
-
-                    generateButton
-                        .padding(.top, Spacing.layout)
                 }
                 .padding(.horizontal, Spacing.layout)
                 .padding(.vertical, Spacing.layout)
             }
             .navigationTitle("플랜 생성")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -50,18 +45,19 @@ struct AIScheduleInputView: View {
                     }
                 }
             }
-            .sheet(isPresented: $viewModel.showResult) {
+            .fullScreenCover(isPresented: $viewModel.showResult) {
                 AIScheduleResultView(
-                    viewModel: AIScheduleResultViewModel(
-                        healthPlan: viewModel.healthPlan,
-                        isLoading: viewModel.isLoading,
-                        errorMessage: viewModel.errorMessage,
-                        rawResponse: viewModel.rawResponse
-                    ),
+                    viewModel: viewModel,
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType,
                     parentDismiss: dismiss
                 )
+            }
+            .safeAreaInset(edge: .bottom) {
+                generateButton
+                    .padding()
+                    .background(.white)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
             }
         }
     }
