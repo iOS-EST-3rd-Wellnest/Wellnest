@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct ActivityPreference: Identifiable {
+struct ActivityPreference: SelectableItem {
     let id = UUID()
     let icon: String?
     let category: String
@@ -46,4 +46,10 @@ struct ActivityPreference: Identifiable {
         ActivityPreference(icon: "🔍", category: "기타"),
         ActivityPreference(icon: "", category: "특별히 없음")
     ]
+}
+
+protocol SelectableItem: Identifiable, Equatable {
+    var icon: String? { get }
+    var category: String { get }
+    var isSelected: Bool { get set }
 }

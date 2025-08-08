@@ -56,6 +56,80 @@ struct OnboardingTitle: View {
     }
 }
 
+struct OnboardingCardLayout {
+    static var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    static var columnCount: Int {
+        isIPad ? 3 : 2
+    }
+
+    static var spacing: CGFloat {
+        isIPad ? 25 : Spacing.layout
+    }
+
+    static var spacingCount: CGFloat {
+        isIPad ? 4 : 3
+    }
+
+    static var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount)
+    }
+
+    static var cardWidth: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        return (screenWidth - (spacing * spacingCount)) / CGFloat(columnCount)
+    }
+}
+
+struct OnboardingCardContent<Item: SelectableItem>: View {
+    @Binding var items: [Item]
+
+    let columns = OnboardingCardLayout.columns
+    let cardWidth = OnboardingCardLayout.cardWidth
+    let spacing = OnboardingCardLayout.spacing
+
+    var body: some View {
+        VStack {
+            HStack {
+                Text("* 중복 선택 가능")
+                    .font(.caption2)
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.content)
+            .padding(.bottom, Spacing.content)
+
+            LazyVGrid(columns: columns, spacing: spacing) {
+                ForEach($items, id: \.id) { $item in
+                    Button {
+                        withAnimation(.easeInOut) {
+                            item.isSelected.toggle()
+                        }
+                    } label: {
+                        VStack(spacing: Spacing.inline) {
+                            if let icon = item.icon, !icon.isEmpty {
+                                Text(icon)
+                                    .font(.system(size: 60))
+                            }
+
+                            Text(item.category)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.black)
+                        }
+                        .frame(width: cardWidth, height: cardWidth)
+                        .background(item.isSelected ? .accentCardYellow : .customSecondary)
+                        .cornerRadius(CornerRadius.large)
+                    }
+                    .defaultShadow()
+                }
+            }
+        }
+        .padding(.horizontal, spacing)
+        .padding(.bottom)
+    }
+}
+
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
