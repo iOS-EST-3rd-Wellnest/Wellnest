@@ -26,10 +26,8 @@ struct HealthConditionTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
-                withAnimation {
-                    currentPage += 1
-                }
+            FilledButton(title: "완료") {
+                userDefaultsManager.isOnboarding = true
             }
             .disabled(isButtonDisabled)
             .opacity(isButtonDisabled ? 0.5 : 1.0)
