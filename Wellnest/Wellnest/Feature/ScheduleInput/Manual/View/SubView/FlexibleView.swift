@@ -38,7 +38,7 @@ struct FlexibleView<Data: Collection, Content: View>: View where Data.Element: H
         return ZStack(alignment: Alignment(horizontal: alignment, vertical: .top)) {
             ForEach(Array(data), id: \.self) { item in
                 content(item)
-                    .padding([.horizontal, .vertical], Spacing.inline)
+                    .padding([.horizontal, .vertical], .zero)
                     .alignmentGuide(.leading, computeValue: { d in
                         if abs(width - d.width) > geometry.size.width {
                             width = 0
