@@ -16,18 +16,14 @@ struct ManualScheduleInputView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView(.vertical) {
-                VStack(alignment: .leading) {
+            ScrollView(.vertical, ) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
                     inputSection
-                    Divider()
                     locationSection
-                    Divider()
                     periodSection
                         .padding(.bottom, 5)
-                    Divider()
                     repeatSection
                         .padding(.bottom, 5)
-                    Divider()
                     alarmSection
                     Spacer()
                 }
@@ -45,13 +41,13 @@ struct ManualScheduleInputView: View {
             .navigationTitle("새 일정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         selectedCreationType = nil
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .foregroundColor(.black)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -96,7 +92,15 @@ struct ManualScheduleInputView: View {
                 )
                 ColorPicker("배경 색상 선택", selection: $selectedColor)
                     .labelsHidden()
+
             }
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(red: 239/255, green: 239/255, blue: 239/255))
+            )
+            .cornerRadius(12)
+
         }
     }
 
@@ -139,6 +143,11 @@ struct ManualScheduleInputView: View {
                         .foregroundColor(.black)
                 }
             }
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(red: 239/255, green: 239/255, blue: 239/255))
+            )
         }
         .sheet(isPresented: $showLocationSearchSheet) {
             LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
