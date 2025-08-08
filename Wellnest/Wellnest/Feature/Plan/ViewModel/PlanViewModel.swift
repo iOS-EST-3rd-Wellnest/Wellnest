@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 final class PlanViewModel: ObservableObject {
     @Published var selectedDate: Date
@@ -34,12 +35,37 @@ final class PlanViewModel: ObservableObject {
 }
 
 extension PlanViewModel {
+    func calenderHeight(
+        width: CGFloat = UIScreen.main.bounds.width,
+        rows: Int,
+        columns: Int = 7,
+        spacing: CGFloat = 4,
+        padding: CGFloat = 16
+    ) -> CGFloat {
+        let screenWidth = width - padding * 2
+
+        let totalSpacingWidth = spacing * CGFloat(columns - 1)
+        let totalSpacingHeight = spacing * CGFloat(rows - 1)
+
+        let itemWidth = (screenWidth - totalSpacingWidth) / CGFloat(columns)
+
+        let itemHeight: CGFloat = {
+            if rows == 1 {
+                itemWidth - spacing * 2
+            } else {
+				itemWidth * CGFloat(rows) + totalSpacingHeight
+            }
+        }()
+
+        return itemHeight
+    }
+
     private func updateDisplayedMonth() {
         calendarDates = displayedMonth.filledDatesOfMonth()
 
-//        if !calendar.isDate(selectedDate, equalTo: displayedMonth, toGranularity: .month) {
-//             selectedDate = displayedMonth
-//         }
+        if !calendar.isDate(selectedDate, equalTo: displayedMonth, toGranularity: .month) {
+             selectedDate = displayedMonth
+         }
     }
 
     private func expandMonthsIfNeeded(from month: Date) {
