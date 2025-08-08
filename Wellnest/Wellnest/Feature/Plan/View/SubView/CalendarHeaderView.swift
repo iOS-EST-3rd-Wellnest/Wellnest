@@ -10,29 +10,30 @@ import SwiftUI
 struct CalendarHeaderView: View {
     @ObservedObject var planVM: PlanViewModel
 
-    @State private var showPicker = false
+    @Binding var showDatePicker: Bool
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Button {
-                withAnimation(.easeInOut) {
-                    showPicker.toggle()
+                withAnimation(.spring) {
+                    showDatePicker.toggle()
                 }
             } label: {
                 HStack(spacing: 4) {
                     Text(planVM.displayedMonth.dateFormat("YYYY년 M월"))
                         .font(.title2)
-                    Image(systemName: showPicker ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                    Image(systemName:"arrowtriangle.down.fill")
                         .font(.body)
+                        .rotationEffect(.degrees(showDatePicker ? 180 : 0))
                 }
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
         }
+
     }
 }
 
 #Preview {
-    CalendarHeaderView(planVM: PlanViewModel())
+    CalendarHeaderView(planVM: PlanViewModel(), showDatePicker: .constant(true))
 }
