@@ -12,30 +12,12 @@ struct CalendarLayoutView: View {
     let calendar = Calendar.current
 
     var body: some View {
-        GeometryReader { geo in
-            let totalHeight = geo.size.width * 5 / 7
-
-            VStack(spacing: Spacing.layout) {
-                CalendarLayout {
-                    ForEach(Date.weekdays.indices, id: \.self) { index in
-                        Text(Date.weekdays[index])
-                            .font(.subheadline)
-                            .foregroundColor(Date.weekdayColor(at: index))
-                    }
-                }
-                .frame(height: 16)
-
-                CalendarLayout {
-                    ForEach(planVM.calendarDates, id: \.self) { date in
-                        dateCell(date: date)
-                    }
-                }
-                .frame(height: totalHeight)
-//                .background(Color.gray)
+        CalendarLayout {
+            ForEach(planVM.calendarDates, id: \.self) { date in
+                dateCell(date: date)
             }
-            .padding(.horizontal)
-
         }
+//        .background(Color.red)
     }
 
     @ViewBuilder
@@ -74,11 +56,11 @@ struct CalendarLayoutView: View {
                 ForEach(0..<3, id: \.self) { _ in
                     Circle()
                         .frame(width: 4, height: 4)
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
