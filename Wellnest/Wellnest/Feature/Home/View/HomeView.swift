@@ -137,11 +137,11 @@ struct HomeView: View {
                                             swipedDirection = direction
                                         }
                                     }
+                                    .padding(.vertical, Spacing.content * 1.5)
                             }
                         }
                     }
                     .padding(.vertical, Spacing.layout)
-                    .padding(.horizontal, Spacing.inline)
                     .onAppear {
                         manualScheduleVM.loadTodaySchedules()
                     }
@@ -149,10 +149,11 @@ struct HomeView: View {
                     Spacer()
                 }
                 
-                RecommendView(homeVM: homeVM)
             }
             .padding()
-            .padding(.bottom, 85)
+    
+            RecommendView(homeVM: homeVM)
+                .padding(.bottom, 100)
         }
         .onAppear {
 //            homeVM.videoRequest()

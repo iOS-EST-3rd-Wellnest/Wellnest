@@ -18,7 +18,7 @@ struct ScheduleCardView: View {
     let swipedDirection: SwipeDirection?
     let onSwiped: (UUID?, SwipeDirection?) -> Void
 
-    let maxSwipeDistance: CGFloat = 35
+    let maxSwipeDistance: CGFloat = 27
     
     var currentOffset: CGFloat {
         guard swipedScheduleId == schedule.id, let direction = swipedDirection else {
@@ -35,19 +35,18 @@ struct ScheduleCardView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                HStack {
+                HStack(spacing: 0) {
                     if currentOffset > 0 {
                         Button {
                             print("완료: \(schedule.id)")
                         } label: {
                             Image(systemName: "checkmark")
-                                .frame(width: 60, height: 70)
+                                .frame(width: 45, height: 70)
                                 .foregroundStyle(.black)
                         }
                         .background(
                             Capsule()
                                 .fill(Color(.systemGray6))
-                                .padding(.horizontal, Spacing.content)
                         )
                         
                         Spacer()
@@ -70,36 +69,32 @@ struct ScheduleCardView: View {
                         } label: {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.white)
-                                .frame(width: 60, height: 70)
+                                .frame(width: 45, height: 70)
                         }
                         .background(
                             Capsule()
                                 .fill(.red)
-                                .padding(.horizontal, Spacing.content)
                         )
                     }
                 }
                 
                 //            ScheduleItemView(schedule: schedule)
-                VStack(alignment: .leading, spacing: Spacing.inline) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
                     HStack {
                         Image(systemName: "clock.fill")
+                            .opacity(0.75)
                         
                         Text("\(schedule.startDate.formattedTime) ~ \(schedule.endDate.formattedTime)")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                         
-                        Rectangle()
-                            .fill(.gray)
-                            .frame(width: 2, height: 15)
-                        
                         Spacer()
                     }
                     
                     Text(schedule.title)
-                        .font(.caption)
+                        .font(.headline)
                         .bold()
-                        .padding(.horizontal, Spacing.inline)
+                        .padding(.horizontal, Spacing.content)
                 }
                 .padding()
                 .background(
@@ -107,10 +102,10 @@ struct ScheduleCardView: View {
                         .fill(Color(.systemGray6))
                         .defaultShadow()
                 )
-                .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 2))
+                .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
                 .offset(x: isDeleting ? deleteOffset : currentOffset)
                 .gesture(
-                    DragGesture(minimumDistance: 30)
+                    DragGesture(minimumDistance: 35)
                         .onChanged { value in
                             let horizontal = value.translation.width
                             let vertical = value.translation.height

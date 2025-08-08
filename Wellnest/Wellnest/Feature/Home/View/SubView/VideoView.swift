@@ -10,7 +10,16 @@ import SwiftUI
 struct VideoView: View {
     @ObservedObject var homeVM: HomeViewModel
     
-    let videoListTemp = VideoRecommendModel.videoList
+    @Environment(\.sizeCategory) private var sizeCategory   // 다이내믹 타입 대응
+
+    private let videoListTemp = VideoRecommendModel.videoList
+    
+    // .callout 두 줄 높이
+    private var twoLineHeight: CGFloat {
+        let base = UIFont.preferredFont(forTextStyle: .callout)
+        let scaled = UIFontMetrics(forTextStyle: .callout).scaledFont(for: base)
+        return ceil(scaled.lineHeight * 2)
+    }
     
     var body: some View {
         HStack(spacing: 0) {
@@ -20,40 +29,43 @@ struct VideoView: View {
                 
                 Link(destination: url) {
                     VStack {
-                        Spacer()
-
+                        
                         Group {
                             // 1) 캐시된 이미지가 있으면 사용
                             if let uiImage = homeVM.images[video.id] {
                                 Image(uiImage: uiImage)
                                     .resizable()
-                                    .scaledToFit()
                                     .cornerRadius(CornerRadius.large)
                                     .defaultShadow()
                             }
                             // 2) 아직 없으면 로딩 인디케이터 + 로드 트리거
                             else {
-                                ProgressView()
-                                    .task {
-                                        await homeVM.loadImage(for: video)
-                                    }
+                                Rectangle()
+                                    .fill(.clear)
+                                    .overlay(
+                                        ProgressView()
+                                            .task {
+                                                await homeVM.loadImage(for: video)
+                                            }
+                                    )
                             }
                             
                         }
-                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 7))
+                        .aspectRatio(16/9, contentMode: .fill)
+                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 6))
                         
-                        Spacer()
                         
                         Text(video.title)
+                            .multilineTextAlignment(.leading)
                             .font(.callout)
-                            .lineLimit(1)
-                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 10))
+                            .lineLimit(2)
+                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 8), minHeight: twoLineHeight, alignment: .leading)
                             .padding(.vertical, Spacing.inline)
                     }
                     
                 }
                 .tint(.black)
-                .padding(.horizontal, Spacing.layout)
+                .padding(.horizontal, Spacing.layout * 1.5)
             }
         }
     }
