@@ -8,70 +8,121 @@
 import SwiftUI
 
 struct AIScheduleResultView: View {
-    let healthPlan: HealthPlanResponse?
-    let isLoading: Bool
-    let errorMessage: String
-    let rawResponse: String
-
+    @ObservedObject var viewModel: AIScheduleViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showRawResponse = false
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
+    let parentDismiss: DismissAction
 
     var body: some View {
         NavigationView {
             Group {
-                if isLoading {
+                switch viewModel.currentViewState {
+                case .loading:
                     LoadingView()
-                } else if !errorMessage.isEmpty {
-                    ErrorView(errorMessage: errorMessage, rawResponse: rawResponse)
-                } else if let plan = healthPlan {
-                    PlanContentView(plan: plan)
-                } else {
+                case .error:
+                    VStack(spacing: 16) {
+                        if viewModel.errorMessage.contains("I'm sorry, I can't assist") {
+                            VStack(spacing: 12) {
+                                Text("AI 서비스가 일시적으로 요청을 처리할 수 없습니다.")
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.secondary)
+
+                                Text("잠시 후 다시 시도해주세요.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Button("다시 시도") {
+                                    dismiss()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .padding(.top)
+                            }
+                        } else {
+                            ErrorView(
+                                errorMessage: viewModel.errorMessage,
+                                rawResponse: viewModel.rawResponse
+                            )
+                        }
+                    }
+                    .padding()
+                case .content:
+                    if let plan = viewModel.healthPlan {
+                        PlanContentView(plan: plan)
+                    }
+                case .empty:
                     EmptyPlanView()
                 }
             }
             .navigationTitle("생성된 플랜")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if !errorMessage.isEmpty && !rawResponse.isEmpty {
-                        Button("원본 응답") {
-                            showRawResponse = true
-                        }
-                        .font(.caption)
-                    }
-                }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("완료") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.secondary)
                     }
                 }
             }
-            .sheet(isPresented: $showRawResponse) {
-                RawResponseView(rawResponse: rawResponse)
+            .safeAreaInset(edge: .bottom) {
+                if viewModel.currentViewState == .content, let _ = viewModel.healthPlan {
+                    saveButtonsSection
+                        .padding()
+                        .background(.white)
+                        .ignoresSafeArea(.keyboard, edges: .bottom)
+                }
             }
+            .alert("저장 완료", isPresented: $viewModel.saveSuccess) {
+                Button("확인") {
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                    parentDismiss()
+                }
+            } message: {
+                Text("AI 플랜이 성공적으로 저장되었습니다.")
+            }
+            .alert("저장 실패", isPresented: .constant(!viewModel.saveError.isEmpty)) {
+                Button("확인") {
+                    viewModel.saveError = ""
+                }
+            } message: {
+                Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
+            }
+        }
+        .onAppear {
+            print("📱 AIScheduleResultView 나타남 - healthPlan: \(viewModel.healthPlan?.title ?? "없음")")
+        }
+    }
+
+    // MARK: - Save Buttons Section
+    private var saveButtonsSection: some View {
+        HStack(spacing: Spacing.layout) {
+
+            FilledButton(title: viewModel.isSaving ? "저장 중..." : "저장하기") {
+                viewModel.saveAISchedules()
+            }
+            .disabled(viewModel.isSaving)
+            .opacity(viewModel.isSaving ? 0.6 : 1.0)
         }
     }
 }
 
 #Preview {
-    AIScheduleResultView(
-        healthPlan: HealthPlanResponse(
-            planType: "routine",
-            title: "주 3회 헬스 루틴",
-            description: "근력 증진을 위한 체계적인 운동 계획입니다.",
-            schedules: [
-                AIScheduleItem(
-                    day: "월요일",
-                    date: nil,
-                    time: "09:00 - 10:00",
-                    activity: "상체 근력 운동",
-                    notes: "벤치프레스, 덤벨 플라이 위주로 진행"
-                )
-            ]
-        ),
-        isLoading: false,
-        errorMessage: "",
-        rawResponse: ""
-    )
+    struct PreviewWrapper: View {
+        @Environment(\.dismiss) private var dismiss
+
+        var body: some View {
+            AIScheduleResultView(
+                viewModel: AIScheduleViewModel(),
+                selectedTab: .constant(.plan),
+                selectedCreationType: .constant(nil),
+                parentDismiss: dismiss
+            )
+        }
+    }
+
+    return PreviewWrapper()
 }

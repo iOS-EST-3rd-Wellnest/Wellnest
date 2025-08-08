@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PreferredTimeSlot: Identifiable {
+struct PreferredTimeSlot: SelectableItem {
     let id = UUID()
     let icon: String?
     let category: String

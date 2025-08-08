@@ -9,22 +9,21 @@ import SwiftUI
 
 struct PlanTypeSelectionSection: View {
     @Binding var selectedPlanType: PlanType
-    let onPlanTypeChanged: () -> Void
-    
+    let onPlanTypeChanged: (PlanType) -> Void
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.layout) {
             Text("플랜 유형을 선택해주세요")
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: Spacing.layout) {
                 ForEach(PlanType.allCases, id: \.self) { planType in
                     PlanTypeCard(
                         planType: planType,
                         isSelected: selectedPlanType == planType
                     ) {
-                        selectedPlanType = planType
-                        onPlanTypeChanged()
+                        onPlanTypeChanged(planType)
                     }
                 }
             }
@@ -35,7 +34,7 @@ struct PlanTypeSelectionSection: View {
 #Preview {
     PlanTypeSelectionSection(
         selectedPlanType: .constant(.single),
-        onPlanTypeChanged: { }
+        onPlanTypeChanged: { _ in }
     )
     .padding()
 }
