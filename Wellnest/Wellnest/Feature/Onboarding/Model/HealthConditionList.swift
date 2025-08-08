@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct HealthCondition: Identifiable {
+struct HealthCondition: SelectableItem {
     let id = UUID()
     let icon: String?
     let category: String
