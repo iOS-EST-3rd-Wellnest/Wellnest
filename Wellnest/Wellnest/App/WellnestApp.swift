@@ -18,6 +18,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct WellnestApp: App {
+    init() {
+        LocalNotiManager.shared.localNotiDelegate()
+    }
+    
     var body: some Scene {
         WindowGroup {
             AppRouter()
