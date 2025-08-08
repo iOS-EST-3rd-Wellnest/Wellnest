@@ -62,7 +62,7 @@ struct AIScheduleResultView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .foregroundColor(.black)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
