@@ -68,7 +68,6 @@ struct HealthKitInterworkView: View {
                     bodyFatPercentage = 0.0
                 }
             }
-            
             .alert("건강 앱 연동 실패", isPresented: $showSettingAlert) {
                 Button("설정으로 이동") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
