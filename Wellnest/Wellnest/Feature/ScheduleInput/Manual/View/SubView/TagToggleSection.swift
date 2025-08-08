@@ -22,7 +22,7 @@ struct TagToggleSection<Model: TagModel>: View {
             Toggle(title, isOn: $isOn)
 
             if isOn {
-                HStack(spacing: Spacing.content) {
+                HStack {
                     FlexibleView(data: tags, spacing: Spacing.content, alignment: .leading) { tag in
                         TagView(tag: tag, isSelected: tag == selectedTag)
                             .onTapGesture {
@@ -44,6 +44,3 @@ protocol TagModel: Identifiable, Hashable {
     var name: String { get }
     static var tags: [Self] { get }
 }
-
-
-

@@ -12,6 +12,8 @@ struct ManualScheduleInputView: View {
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
+    @State private var currentFocus: InputField? = .title
+
     var body: some View {
         NavigationView {
             ScrollView(.vertical) {
@@ -21,8 +23,10 @@ struct ManualScheduleInputView: View {
                     locationSection
                     Divider()
                     periodSection
+                        .padding(.bottom, 5)
                     Divider()
                     repeatSection
+                        .padding(.bottom, 5)
                     Divider()
                     alarmSection
                     Spacer()
@@ -41,7 +45,7 @@ struct ManualScheduleInputView: View {
             .navigationTitle("새 일정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .destructiveAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button {
                         selectedCreationType = nil
                         dismiss()
@@ -62,10 +66,10 @@ struct ManualScheduleInputView: View {
     // 일정 제목
     @State private var title: String = ""
 
+    @State private var selectedColor: Color = .blue
+
     // 초기에 첫번째 텍스트 필드에 focus.
     @State private var isTextFieldFocused: Bool = true
-
-    @State private var currentFocus: InputField? = .title
 
     enum InputField: Hashable {
         case title
@@ -82,11 +86,16 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .next,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = .detail
+                        currentFocus = .detail
+                    },
+                    onEditing: {
+                        if currentFocus != .title {
+                            currentFocus = .title
                         }
                     }
                 )
+                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                    .labelsHidden()
             }
         }
     }
@@ -112,10 +121,12 @@ struct ManualScheduleInputView: View {
                     returnKeyType: .done,
                     keyboardType: .default,
                     onReturn: {
-                        DispatchQueue.main.async {
-                            currentFocus = nil
+                        currentFocus = nil
+                    },
+                    onEditing: {
+                        if currentFocus != .detail {
+                            currentFocus = .detail
                         }
-                        UIApplication.hideKeyboard()
                     }
                 )
                 .padding(.bottom, Spacing.inline)
@@ -136,7 +147,10 @@ struct ManualScheduleInputView: View {
 
     // MARK: - periodSection
 
+    // 시작 일
     @State private var startDate: Date = Date()
+
+    // 종료 일
     @State private var endDate: Date = Date().addingTimeInterval(3600)
 
     // 하루 종일 여부
@@ -149,6 +163,7 @@ struct ManualScheduleInputView: View {
             isAllDay: $isAllDay
         )
     }
+
     // MARK: - repeatSection
 
     // 반복 여부
@@ -160,8 +175,10 @@ struct ManualScheduleInputView: View {
     // 반복 종료일 여부
     @State private var hasRepeatEndDate: Bool = false
 
-    // 반복 종료 일
-    @State private var repeatEndDate = Date()
+    // 반복 종료 일 (default value: 오늘로부터 7일 뒤의 날짜)
+    @State private var repeatEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+
+    @State private var isRepeatEndDateOpen: Bool = false
 
     private var repeatSection: some View {
         TagToggleSection(
@@ -175,17 +192,10 @@ struct ManualScheduleInputView: View {
                     VStack(alignment: .leading) {
                         Toggle("반복 종료", isOn: $hasRepeatEndDate)
                         if hasRepeatEndDate {
-                            VStack(alignment: .leading) {
-                                Text("종료일")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                DatePicker(
-                                    "",
-                                    selection: $repeatEndDate,
-                                    in: Date()...,
-                                    displayedComponents: .date
-                                )
-                                .labelsHidden()
+                            HStack {
+                                DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
+                                    .padding(.top, 5)
+
                             }
                         }
                     }
@@ -194,6 +204,7 @@ struct ManualScheduleInputView: View {
             onTagTap: { _ in
                 currentFocus = nil 
             }
+
         )
     }
 
@@ -254,6 +265,10 @@ extension ManualScheduleInputView {
 
         print(newSchedule)
         try? CoreDataService.shared.saveContext()
+        
+        if isAlarm {
+            LocalNotiManager.shared.scheduleLocalNotification(for: newSchedule)
+        }
     }
 }
 
