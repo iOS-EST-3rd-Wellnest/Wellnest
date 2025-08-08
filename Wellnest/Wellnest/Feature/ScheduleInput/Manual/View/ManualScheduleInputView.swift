@@ -274,6 +274,10 @@ extension ManualScheduleInputView {
 
         print(newSchedule)
         try? CoreDataService.shared.saveContext()
+        
+        if isAlarm {
+            LocalNotiManager.shared.scheduleLocalNotification(for: newSchedule)
+        }
     }
 }
 
