@@ -55,19 +55,14 @@ struct AIScheduleResultView: View {
                 }
             }
             .navigationTitle("생성된 플랜")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if !viewModel.errorMessage.isEmpty && !viewModel.rawResponse.isEmpty {
-                        Button("원본 응답") {
-                            // Show raw response
-                        }
-                        .font(.caption)
-                    }
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("취소") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.black)
                     }
                 }
             }
@@ -105,18 +100,6 @@ struct AIScheduleResultView: View {
     // MARK: - Save Buttons Section
     private var saveButtonsSection: some View {
         HStack(spacing: Spacing.layout) {
-            Button {
-                dismiss()
-            } label: {
-                Text("취소")
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(12)
-            }
 
             FilledButton(title: viewModel.isSaving ? "저장 중..." : "저장하기") {
                 viewModel.saveAISchedules()
@@ -125,4 +108,21 @@ struct AIScheduleResultView: View {
             .opacity(viewModel.isSaving ? 0.6 : 1.0)
         }
     }
+}
+
+#Preview {
+    struct PreviewWrapper: View {
+        @Environment(\.dismiss) private var dismiss
+
+        var body: some View {
+            AIScheduleResultView(
+                viewModel: AIScheduleViewModel(),
+                selectedTab: .constant(.plan),
+                selectedCreationType: .constant(nil),
+                parentDismiss: dismiss
+            )
+        }
+    }
+
+    return PreviewWrapper()
 }

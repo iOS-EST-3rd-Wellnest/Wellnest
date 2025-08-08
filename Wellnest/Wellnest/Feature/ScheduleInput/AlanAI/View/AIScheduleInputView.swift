@@ -35,7 +35,7 @@ struct AIScheduleInputView: View {
             .navigationTitle("플랜 생성")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         selectedCreationType = nil
                         dismiss()

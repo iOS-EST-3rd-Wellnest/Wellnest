@@ -21,7 +21,7 @@ struct MultiplePlanDateTimeSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.layout) {
-            Text("기간 설정")
+            Text("일정 설정")
                 .font(.headline)
                 .fontWeight(.semibold)
 
