@@ -12,14 +12,20 @@ final class ManualScheduleViewModel: ObservableObject {
     @Published var todaySchedules: [ScheduleItem] = []
 
     func loadTodaySchedules() {
-        let (now, startOfTomorrow) = Self.todayBounds()
+        let calendar = Calendar.current
+        let now = Date()
+
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
+
+        print("📅 오늘 스케줄 로드 - 범위: \(startOfToday) ~ \(startOfTomorrow)")
 
         let predicate = NSPredicate(
-            format: "endDate != nil AND endDate > %@ AND startDate < %@",
-            now as NSDate,
-            startOfTomorrow as NSDate
+            format: "startDate >= %@ AND startDate < %@",
+            startOfToday as NSDate,     // 오늘 00:00부터
+            startOfTomorrow as NSDate   // 내일 00:00까지 (오늘 23:59까지)
         )
-        
+
 
         let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
 
