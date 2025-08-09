@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PreferredTimeSlotTabView: View {
     @Binding var currentPage: Int
+    @Binding var title: String
 
     @State private var timeSlots = PreferredTimeSlot.timeSlots
 
@@ -18,7 +19,7 @@ struct PreferredTimeSlotTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitle(title: "활동 시간대", description: "앞에서 선택하신 활동은 주로 언제 하시나요?", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
+            OnboardingTitleDescription(description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
 
             OnboardingCardContent(items: $timeSlots)
         }
@@ -34,6 +35,9 @@ struct PreferredTimeSlotTabView: View {
             .padding()
             .background(.white)
         }
+        .onAppear {
+            title = "활동 시간대"
+        }
     }
 }
 
@@ -43,8 +47,9 @@ struct PreferredTimeSlotTabView: View {
 
 private struct Preview: View {
     @State private var currentPage = 0
+    @State private var title = ""
 
     var body: some View {
-        PreferredTimeSlotTabView(currentPage: $currentPage)
+        PreferredTimeSlotTabView(currentPage: $currentPage, title: $title)
     }
 }

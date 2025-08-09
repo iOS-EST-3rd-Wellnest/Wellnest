@@ -9,11 +9,10 @@ import SwiftUI
 
 struct MotivationTabView: View {
     @Binding var currentPage: Int
+    @Binding var title: String
 
     var body: some View {
         VStack {
-            OnboardingTitle(title: "동기부여 문구", description: "", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
-
             Spacer()
 
             FilledButton(title: "다음") {
@@ -22,6 +21,9 @@ struct MotivationTabView: View {
                 }
             }
             .padding()
+        }
+        .onAppear {
+            title = "동기부여 문구"
         }
     }
 }
@@ -32,8 +34,9 @@ struct MotivationTabView: View {
 
 private struct Preview: View {
     @State private var currentPage = 0
+    @State private var title = "동기부여 문구"
 
     var body: some View {
-        MotivationTabView(currentPage: $currentPage)
+        MotivationTabView(currentPage: $currentPage, title: $title)
     }
 }

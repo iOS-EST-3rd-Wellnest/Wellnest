@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WeatherPreferenceTabView: View {
     @Binding var currentPage: Int
+    @Binding var title: String
 
     @State private var weathers = WeatherPreference.weathers
 
@@ -18,7 +19,7 @@ struct WeatherPreferenceTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitle(title: "선호 날씨", description: "평소에 어떤 날씨를 좋아하시나요?", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
+            OnboardingTitleDescription(description: "평소에 어떤 날씨를 좋아하시나요?")
 
             OnboardingCardContent(items: $weathers)
         }
@@ -34,6 +35,9 @@ struct WeatherPreferenceTabView: View {
             .padding()
             .background(.white)
         }
+        .onAppear {
+            title = "선호 날씨"
+        }
     }
 }
 
@@ -43,8 +47,9 @@ struct WeatherPreferenceTabView: View {
 
 private struct Preview: View {
     @State private var currentPage = 0
+    @State private var title = ""
 
     var body: some View {
-        WeatherPreferenceTabView(currentPage: $currentPage)
+        WeatherPreferenceTabView(currentPage: $currentPage, title: $title)
     }
 }

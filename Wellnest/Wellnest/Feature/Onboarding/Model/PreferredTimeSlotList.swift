@@ -9,7 +9,7 @@ import Foundation
 
 struct PreferredTimeSlot: SelectableItem {
     let id = UUID()
-    let icon: String?
+    let icon: String
     let category: String
     var isSelected: Bool = false
 
@@ -18,7 +18,7 @@ struct PreferredTimeSlot: SelectableItem {
         PreferredTimeSlot(icon: "🕛", category: "점심"),
         PreferredTimeSlot(icon: "🕖", category: "오후"),
         PreferredTimeSlot(icon: "🌜", category: "밤/새벽"),
-        PreferredTimeSlot(icon: "🔍", category: "기타"),
-        PreferredTimeSlot(icon: "", category: "특별히 없음")
+        PreferredTimeSlot(icon: "❔", category: "기타"),
+        PreferredTimeSlot(icon: "💬", category: "특별히 없음")
     ]
 }

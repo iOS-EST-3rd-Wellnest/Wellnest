@@ -18,6 +18,6 @@ struct WellnessGoal: Identifiable {
         WellnessGoal(title: "💤  수면과 회복의 질 향상"),
         WellnessGoal(title: "🥗  건강한 식습관 형성"),
         WellnessGoal(title: "🏋🏻‍♀️  체중 감량 또는 증가"),
-        WellnessGoal(title: "특별히 없음")
+        WellnessGoal(title: "💬  특별히 없음")
     ]
 }

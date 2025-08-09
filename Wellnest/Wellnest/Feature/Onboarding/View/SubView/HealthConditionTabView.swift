@@ -11,6 +11,7 @@ struct HealthConditionTabView: View {
     @ObservedObject var userDefaultsManager: UserDefaultsManager
     
     @Binding var currentPage: Int
+    @Binding var title: String
 
     @State private var conditions = HealthCondition.conditions
 
@@ -20,19 +21,24 @@ struct HealthConditionTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitle(title: "현재 건강 상태", description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
+            OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
 
             OnboardingCardContent(items: $conditions)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             FilledButton(title: "완료") {
-                userDefaultsManager.isOnboarding = true
+                withAnimation {
+                    userDefaultsManager.isOnboarding = true
+                }
             }
             .disabled(isButtonDisabled)
             .opacity(isButtonDisabled ? 0.5 : 1.0)
             .padding()
             .background(.white)
+        }
+        .onAppear {
+            title = "현재 건강 상태"
         }
     }
 }
@@ -43,8 +49,9 @@ struct HealthConditionTabView: View {
 
 private struct Preview: View {
     @State private var currentPage = 0
+    @State private var title = ""
 
     var body: some View {
-        HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage)
+        HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
     }
 }
