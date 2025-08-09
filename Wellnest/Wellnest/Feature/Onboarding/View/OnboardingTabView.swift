@@ -12,6 +12,7 @@ struct OnboardingTitleDescription: View {
 
     var body: some View {
         Text(description)
+            .foregroundColor(.primary.opacity(0.7))
             .multilineTextAlignment(.center)
             .padding(.top, Spacing.content)
             .padding(.horizontal)
