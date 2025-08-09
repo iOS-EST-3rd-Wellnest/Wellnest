@@ -16,7 +16,18 @@ extension AlanAIService {
         guard !clientID.isEmpty else {
             print("⚠️ Client ID가 없어 테스트 데이터를 생성합니다.")
 
-            // 테스트용 더미 데이터 즉시 생성
+            // ⭐️ 오늘 날짜를 기준으로 테스트 데이터 생성
+            let calendar = Calendar.current
+            let today = Date()
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+
+            let todayString = dateFormatter.string(from: today)
+            let tomorrowString = dateFormatter.string(from: tomorrow)
+
+            // 테스트용 더미 데이터를 오늘 날짜로 생성
             let testPlan = HealthPlanResponse(
                 planType: request.planType.rawValue,
                 title: "🧪 테스트 \(request.planType.displayName) 플랜",
@@ -24,14 +35,14 @@ extension AlanAIService {
                 schedules: [
                     AIScheduleItem(
                         day: request.planType == .routine ? "월요일" : nil,
-                        date: request.planType != .routine ? "2025-08-05" : nil,
+                        date: request.planType != .routine ? todayString : nil, // 오늘 날짜
                         time: "09:00-10:00",
                         activity: "테스트 운동 - \(request.preferences.first ?? "기본 운동")",
                         notes: "테스트용 운동입니다. 실제 API 연결 후 개인맞춤 운동이 생성됩니다."
                     ),
                     AIScheduleItem(
                         day: request.planType == .routine ? "수요일" : nil,
-                        date: request.planType != .routine ? "2025-08-06" : nil,
+                        date: request.planType != .routine ? tomorrowString : nil, // 내일 날짜
                         time: "14:00-15:00",
                         activity: "테스트 운동 2 - 유산소",
                         notes: "심폐지구력 향상을 위한 운동입니다."
