@@ -11,19 +11,95 @@ struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
-
     @State private var currentFocus: InputField? = .title
 
     var body: some View {
         NavigationView {
-            ScrollView(.vertical, ) {
-                VStack(alignment: .leading, spacing: Spacing.content) {
-                    inputSection
-                    locationSection
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: Spacing.layout) {
+                    VStack {
+                        HStack {
+                            FocusableTextField(
+                                text: $title,
+                                placeholder: "일정을 입력하세요.",
+                                isFirstResponder: currentFocus == .title,
+                                returnKeyType: .next,
+                                keyboardType: .default,
+                                onReturn: {
+                                    currentFocus = .detail
+                                },
+                                onEditing: {
+                                    if currentFocus != .title {
+                                        currentFocus = .title
+                                    }
+                                }
+                            )
+                            ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                .labelsHidden()
+                        }
+                        Divider()
+                        HStack {
+                            FocusableTextField(
+                                text: $location,
+                                placeholder: "장소",
+                                isFirstResponder: currentFocus == .detail,
+                                returnKeyType: .done,
+                                keyboardType: .default,
+                                onReturn: {
+                                    currentFocus = nil
+                                },
+                                onEditing: {
+                                    if currentFocus != .detail {
+                                        currentFocus = .detail
+                                    }
+                                }
+                            )
+
+                            Button {
+                                showLocationSearchSheet = true
+                            } label: {
+                                Image(systemName: "magnifyingglass")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(.black)
+                            }
+                        }
+                        .sheet(isPresented: $showLocationSearchSheet) {
+                            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
+                        }
+                        Divider()
+                    }
+
+
                     periodSection
                         .padding(.bottom, 5)
-                    repeatSection
-                        .padding(.bottom, 5)
+//                    repeatSection
+                    TagToggleSection(
+                        title: "반복",
+                        tags: RepeatRule.tags,
+                        isOn: $isRepeated,
+                        selectedTag: $selectedRepeatRule,
+                        showDetail: selectedRepeatRule != nil,
+                        detailContent: {
+                            AnyView(
+                                VStack(alignment: .leading) {
+            //                        Toggle("반복 종료", isOn: $hasRepeatEndDate)
+
+                                }
+                            )
+                        },
+                        onTagTap: { _ in
+                            currentFocus = nil
+                        }
+                    )
+                    if isRepeated {
+                        HStack {
+                            DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
+                                .padding(.top, 5)
+
+                        }
+                    }
                     alarmSection
                     Spacer()
                 }
@@ -72,37 +148,6 @@ struct ManualScheduleInputView: View {
         case detail
     }
 
-    private var inputSection: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                FocusableTextField(
-                    text: $title,
-                    placeholder: "일정을 입력하세요",
-                    isFirstResponder: currentFocus == .title,
-                    returnKeyType: .next,
-                    keyboardType: .default,
-                    onReturn: {
-                        currentFocus = .detail
-                    },
-                    onEditing: {
-                        if currentFocus != .title {
-                            currentFocus = .title
-                        }
-                    }
-                )
-                ColorPicker("배경 색상 선택", selection: $selectedColor)
-                    .labelsHidden()
-
-            }
-            .padding(5)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(red: 239/255, green: 239/255, blue: 239/255))
-            )
-            .cornerRadius(12)
-
-        }
-    }
 
     // MARK: - locationSection
 
@@ -115,44 +160,6 @@ struct ManualScheduleInputView: View {
 
     @State private var showLocationSearchSheet = false
 
-    private var locationSection: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                FocusableTextField(
-                    text: $location,
-                    placeholder: "장소",
-                    isFirstResponder: currentFocus == .detail,
-                    returnKeyType: .done,
-                    keyboardType: .default,
-                    onReturn: {
-                        currentFocus = nil
-                    },
-                    onEditing: {
-                        if currentFocus != .detail {
-                            currentFocus = .detail
-                        }
-                    }
-                )
-                .padding(.bottom, Spacing.inline)
-                .padding(.top, Spacing.inline)
-
-                Button {
-                    showLocationSearchSheet = true
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.black)
-                }
-            }
-            .padding(5)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(red: 239/255, green: 239/255, blue: 239/255))
-            )
-        }
-        .sheet(isPresented: $showLocationSearchSheet) {
-            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
-        }
-    }
 
     // MARK: - periodSection
 
@@ -182,7 +189,7 @@ struct ManualScheduleInputView: View {
     @State private var selectedRepeatRule: RepeatRule? = nil
 
     // 반복 종료일 여부
-    @State private var hasRepeatEndDate: Bool = false
+    @State private var hasRepeatEndDate: Bool = true
 
     // 반복 종료 일 (default value: 오늘로부터 7일 뒤의 날짜)
     @State private var repeatEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
@@ -190,6 +197,8 @@ struct ManualScheduleInputView: View {
     @State private var isRepeatEndDateOpen: Bool = false
 
     private var repeatSection: some View {
+   
+
         TagToggleSection(
             title: "반복",
             tags: RepeatRule.tags,
@@ -199,8 +208,8 @@ struct ManualScheduleInputView: View {
             detailContent: {
                 AnyView(
                     VStack(alignment: .leading) {
-                        Toggle("반복 종료", isOn: $hasRepeatEndDate)
-                        if hasRepeatEndDate {
+//                        Toggle("반복 종료", isOn: $hasRepeatEndDate)
+                        if isRepeated {
                             HStack {
                                 DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
                                     .padding(.top, 5)
@@ -213,8 +222,8 @@ struct ManualScheduleInputView: View {
             onTagTap: { _ in
                 currentFocus = nil 
             }
-
         )
+
     }
 
     // MARK: - alarmSection
