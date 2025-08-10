@@ -137,7 +137,7 @@ struct HomeView: View {
                                             swipedDirection = direction
                                         }
                                     }
-                                    .padding(.vertical, Spacing.content * 1.5)
+                                    .padding(.vertical, Spacing.content)
                             }
                         }
                     }
@@ -148,7 +148,6 @@ struct HomeView: View {
                     
                     Spacer()
                 }
-                
             }
             .padding()
     

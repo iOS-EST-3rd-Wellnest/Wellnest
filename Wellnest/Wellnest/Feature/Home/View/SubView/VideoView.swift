@@ -22,14 +22,13 @@ struct VideoView: View {
     }
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: Spacing.layout * 1.5) {
             //ForEach(homeVM.videoList) { video in
             ForEach(videoListTemp) { video in
                 let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
                 
                 Link(destination: url) {
                     VStack {
-                        
                         Group {
                             // 1) 캐시된 이미지가 있으면 사용
                             if let uiImage = homeVM.images[video.id] {
@@ -49,25 +48,23 @@ struct VideoView: View {
                                             }
                                     )
                             }
-                            
                         }
                         .aspectRatio(16/9, contentMode: .fill)
-                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 6))
+                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 4))
                         
                         
                         Text(video.title)
                             .multilineTextAlignment(.leading)
                             .font(.callout)
                             .lineLimit(2)
-                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 8), minHeight: twoLineHeight, alignment: .leading)
+                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 6), minHeight: twoLineHeight, alignment: .topLeading)
                             .padding(.vertical, Spacing.inline)
                     }
-                    
                 }
                 .tint(.black)
-                .padding(.horizontal, Spacing.layout * 1.5)
             }
         }
+        .padding(.horizontal, Spacing.layout * 1.5)
     }
 }
 
