@@ -97,7 +97,6 @@ struct ManualScheduleInputView: View {
                         HStack {
                             DatePickerView(text: "종료일", date: $repeatEndDate, isAllDay: $hasRepeatEndDate, isPresented: $isRepeatEndDateOpen)
                                 .padding(.top, 5)
-
                         }
                     }
                     alarmSection
