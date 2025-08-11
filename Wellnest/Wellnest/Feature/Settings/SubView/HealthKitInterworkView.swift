@@ -171,12 +171,10 @@ extension HealthKitInterworkView {
             try await manager.requestAuthorization()
             try? await Task.sleep(for: .milliseconds(200))
             
-//            if isHealthAuthorized() {
-                userDefault.isHealthKitEnabled = true
-                try await fetchHealthData()
-                startObserversIfNeeded()
-                print("건강 앱 연동")
-//            }
+            userDefault.isHealthKitEnabled = true
+            try await fetchHealthData()
+            startObserversIfNeeded()
+            print("건강 앱 연동")
         } catch {
             userDefault.isHealthKitEnabled = false
             alertMessage = "건강 데이터 접근에 실패했습니다.\n설정에서 권한을 확인해주세요."
@@ -220,18 +218,6 @@ extension HealthKitInterworkView {
             showSettingAlert = true
         }
     }
-//    
-//    private func isHealthAuthorized() -> Bool {
-//        let store = HKHealthStore()
-//        var types: [HKObjectType] = []
-//        if let step = HKObjectType.quantityType(forIdentifier: .stepCount) { types.append(step) }
-//        if let calories = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { types.append(calories) }
-//        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) { types.append(heartRate) }
-//        if let sleepTime = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) { types.append(sleepTime) }
-//
-//        // 4개의 항목중 하나라도 허용 시 ture
-//        return types.contains { store.authorizationStatus(for: $0) == .sharingAuthorized }
-//    }
 }
 
 #Preview {
