@@ -9,11 +9,10 @@ import SwiftUI
 
 struct IntroductionTabView: View {
     @Binding var currentPage: Int
-    
+    @Binding var title: String
+
     var body: some View {
         VStack {
-            OnboardingTitle(title: "앱 소개", description: "", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
-
             Spacer()
 
             FilledButton(title: "다음") {
@@ -22,6 +21,9 @@ struct IntroductionTabView: View {
                 }
             }
             .padding()
+        }
+        .onAppear {
+            title = "앱 소개"
         }
     }
 }
@@ -32,8 +34,9 @@ struct IntroductionTabView: View {
 
 private struct Preview: View {
     @State private var currentPage = 0
+    @State private var title = "앱 소개"
 
     var body: some View {
-        IntroductionTabView(currentPage: $currentPage)
+        IntroductionTabView(currentPage: $currentPage, title: $title)
     }
 }
