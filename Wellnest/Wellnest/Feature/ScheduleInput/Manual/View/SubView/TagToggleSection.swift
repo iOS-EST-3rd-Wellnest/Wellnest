@@ -19,7 +19,13 @@ struct TagToggleSection<Model: TagModel>: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Toggle(title, isOn: $isOn)
+
+            Toggle(isOn: $isOn) {
+                Text(title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+
 
             if isOn {
                 HStack {
