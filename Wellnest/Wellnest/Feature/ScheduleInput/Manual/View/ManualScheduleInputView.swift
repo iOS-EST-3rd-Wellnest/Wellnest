@@ -105,6 +105,9 @@ struct ManualScheduleInputView: View {
                         }
                     )
                     .padding(.bottom, 8)
+                    .onChange(of: isRepeated) { newValue in
+                        UIApplication.hideKeyboard()
+                    }
                     TagToggleSection(
                         title: "알람",
                         tags: AlarmRule.tags,
@@ -113,6 +116,9 @@ struct ManualScheduleInputView: View {
                         showDetail: false,
                         detailContent: nil
                     )
+                    .onChange(of: isAlarm) { newValue in
+                        UIApplication.hideKeyboard()
+                    }
                     Spacer()
                 }
                 .padding()

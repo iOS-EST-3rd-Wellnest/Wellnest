@@ -21,6 +21,7 @@ struct FocusableTextField: UIViewRepresentable {
 
     var onReturn: (() -> Void)? = nil
     var onEditing: (() -> Void)? = nil
+    var onCommittedChange: ((String) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -35,6 +36,8 @@ struct FocusableTextField: UIViewRepresentable {
         textField.autocorrectionType = .no // 자동완성 비활성화
         textField.spellCheckingType = .no // 철자검사 비활성화
         textField.clearButtonMode = clearButtonMode
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+
         return textField
     }
 
@@ -74,6 +77,14 @@ struct FocusableTextField: UIViewRepresentable {
 
         func textFieldDidChangeSelection(_ textField: UITextField) {
             parent.text = textField.text ?? ""
+        }
+
+        @objc func editingChanged(_ sender: UITextField) {
+            // ✅ 조합 중이면 무시
+            guard sender.markedTextRange == nil else { return }
+            let normalized = (sender.text ?? "").precomposedStringWithCanonicalMapping
+            parent.text = normalized
+            parent.onCommittedChange?(normalized) // 필요시 콜백으로 알림
         }
     }
 }
