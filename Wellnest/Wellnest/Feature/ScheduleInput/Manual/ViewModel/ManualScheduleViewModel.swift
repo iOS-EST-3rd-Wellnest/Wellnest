@@ -53,7 +53,15 @@ final class ManualScheduleViewModel: ObservableObject {
             id: entity.id ?? UUID(),
             title: entity.title ?? "",
             startDate: entity.startDate ?? Date(),
-            endDate: entity.endDate ?? Date()
+            endDate: entity.endDate ?? Date(),
+            createdAt: entity.createdAt ?? Date(),
+            updatedAt: entity.updatedAt ?? Date(),
+            backgroundColor: entity.backgroundColor ?? "",
+            isAllDay: entity.isAllDay?.boolValue ?? false,
+            repeatRule: entity.repeatRule ?? "",
+            hasRepeatEndDate: entity.hasRepeatEndDate,
+            repeatEndDate: entity.repeatEndDate,
+            isCompleted: entity.isCompleted?.boolValue ?? false
         )
     }
 }
