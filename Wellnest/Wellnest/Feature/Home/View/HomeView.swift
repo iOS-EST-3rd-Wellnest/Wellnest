@@ -33,7 +33,7 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack {
+            VStack(spacing: Spacing.layout) {
                 HStack(spacing: Spacing.layout) {
                     Image("img_profile")
                         .resizable()
@@ -52,21 +52,19 @@ struct HomeView: View {
 
                     Spacer()
                 }
-                .padding()
 
                 HStack {
                     Text(today)
                         .font(.title2)
                         .bold()
-                        .padding(.horizontal, Spacing.content)
                     
                     Spacer()
                 }
 
-                HStack(spacing: 0) {
+                HStack(spacing: Spacing.layout) {
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(colorScheme == .dark ? Color(.gray) : .white)
-                        .frame(minWidth: UIScreen.main.bounds.width / 2 - (Spacing.layout * 2), minHeight: 170)
+                        .frame(minHeight: 180)
                         .defaultShadow()
                         .overlay(alignment: .topLeading) {
                             VStack(alignment: .leading, spacing: Spacing.content) {
@@ -83,42 +81,17 @@ struct HomeView: View {
                             }
                             .padding()
                         }
-                        .padding(.horizontal, Spacing.content)
 
-                    ZStack {
-                        Circle()
-                            .padding(.horizontal, Spacing.content)
-                            .frame(minWidth: UIScreen.main.bounds.width / 2 - (Spacing.layout * 2))
-                            .foregroundStyle(.blue)
-
-                        Circle()
-                            .frame(maxWidth: 140)
-                            .foregroundStyle(.gray)
-
-                        VStack(spacing: 0) {
-                            Group {
-                                Text("Today")
-                                    .font(.footnote)
-                                    .bold()
-
-                                Text("schedule")
-                                    .font(.footnote)
-
-                                Text("attainment")
-                                    .font(.footnote)
-
-                                Text("88%")
-                                    .font(.title)
-                                    .bold()
-                                    .padding(Spacing.content)
-                            }
-                            .multilineTextAlignment(.center)
+                    RoundedRectangle(cornerRadius: CornerRadius.large)
+                        .fill(colorScheme == .dark ? Color(.gray) : .white)
+                        .frame(minHeight: 180)
+                        .defaultShadow()
+                        .overlay {
+                            
                         }
-                    }
                 }
                 
                 HStack {
-                    Spacer()
                     
                     VStack {
                         if isCompleteSchedules.isEmpty {
@@ -148,15 +121,14 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .padding(.vertical, Spacing.layout)
                     .onAppear {
                         manualScheduleVM.loadTodaySchedules()
                     }
                     
-                    Spacer()
                 }
+                .padding(.bottom, Spacing.layout)
             }
-            .padding()
+            .padding(.horizontal)
     
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)

@@ -113,68 +113,45 @@ struct ScheduleCardView: View {
                 }
                 .disabled(isDeleting || isCompleted)
                 
-                //            ScheduleItemView(schedule: schedule)
-                VStack(alignment: .leading, spacing: Spacing.content) {
-                    HStack {
-                        Image(systemName: "clock.fill")
-                            .opacity(0.75)
-                        
-                        Text("\(schedule.startDate.formattedTime) ~ \(schedule.endDate.formattedTime)")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                    }
-                    
-                    Text(schedule.title)
-                        .font(.headline)
-                        .bold()
-                        .padding(.horizontal, Spacing.content)
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(Color(.systemGray6))
-                        .defaultShadow()
-                )
-                .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
-                .offset(x: animationOffset)
-                .gesture(
-                    DragGesture(minimumDistance: 35)
-                        .onChanged { value in
-                            let horizontal = value.translation.width
-                            let vertical = value.translation.height
-                            
-                            guard abs(horizontal) > abs(vertical) else { return }
-                            
-                            let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                            if swipedScheduleId != schedule.id || swipedDirection != direction {
-                                onSwiped(schedule.id, direction)
-                            }
-                        }
-                        .onEnded { value in
-                            let horizontal = value.translation.width
-                            let vertical = value.translation.height
-                            
-                            guard abs(horizontal) > abs(vertical) else {
-                                onSwiped(nil, nil)
-                                return
-                            }
-                            
-                            if abs(horizontal) > maxSwipeDistance / 2 {
+                ScheduleItemView(schedule: schedule)
+                    .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
+                    .offset(x: animationOffset)
+                    .gesture(
+                        DragGesture(minimumDistance: 35)
+                            .onChanged { value in
+                                let horizontal = value.translation.width
+                                let vertical = value.translation.height
+                                
+                                guard abs(horizontal) > abs(vertical) else { return }
+                                
                                 let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                                onSwiped(schedule.id, direction)
-                            } else {
-                                onSwiped(nil, nil)
+                                if swipedScheduleId != schedule.id || swipedDirection != direction {
+                                    onSwiped(schedule.id, direction)
+                                }
                             }
-                        },
-                    including: .gesture
-                )
-                .simultaneousGesture(
-                    TapGesture().onEnded {
-                        onSwiped(nil, nil)
-                    }
-                )
+                            .onEnded { value in
+                                let horizontal = value.translation.width
+                                let vertical = value.translation.height
+                                
+                                guard abs(horizontal) > abs(vertical) else {
+                                    onSwiped(nil, nil)
+                                    return
+                                }
+                                
+                                if abs(horizontal) > maxSwipeDistance / 2 {
+                                    let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
+                                    onSwiped(schedule.id, direction)
+                                } else {
+                                    onSwiped(nil, nil)
+                                }
+                            },
+                        including: .gesture
+                    )
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            onSwiped(nil, nil)
+                        }
+                    )
             }
         }
         .animation(.easeInOut, value: animationOffset)

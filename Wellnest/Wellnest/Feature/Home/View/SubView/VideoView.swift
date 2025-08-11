@@ -64,7 +64,7 @@ struct VideoView: View {
                 .tint(.black)
             }
         }
-        .padding(.horizontal, Spacing.layout * 1.5)
+        .padding(.horizontal)
     }
 }
 
