@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct WellnessGoalTabView: View {
+    var userEntity: UserEntity
+    var viewModel: UserInfoViewModel
+
     @Binding var currentPage: Int
     @Binding var title: String
 
@@ -61,6 +64,7 @@ struct WellnessGoalTabView: View {
             Spacer()
 
             FilledButton(title: "다음") {
+                saveWellnessGoal()
                 withAnimation {
                     currentPage += 1
                 }
@@ -75,15 +79,41 @@ struct WellnessGoalTabView: View {
     }
 }
 
+extension WellnessGoalTabView {
+    private func saveWellnessGoal() {
+        let selectedGoals = goals.filter { $0.isSelected }
+
+        if selectedGoals.contains(where: { $0.title.withoutPrefix3 == "특별히 없음" }) {
+            userEntity.goal = nil
+        } else {
+            let goals = selectedGoals.map { $0.title.withoutPrefix3 }.joined(separator: ", ")
+            userEntity.goal = goals
+        }
+
+        print(userEntity)
+        try? CoreDataService.shared.saveContext()
+    }
+}
+
 #Preview {
     Preview()
 }
 
 private struct Preview: View {
+    @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = ""
 
     var body: some View {
-        WellnessGoalTabView(currentPage: $currentPage, title: $title)
+        if let userEntity = userInfoVM.userEntity {
+            WellnessGoalTabView(
+                userEntity: userEntity,
+                viewModel: userInfoVM,
+                currentPage: $currentPage,
+                title: $title
+            )
+        } else {
+            ProgressView("Loading...")
+        }
     }
 }

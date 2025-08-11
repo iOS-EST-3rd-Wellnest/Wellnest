@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct UserInfoTabView: View {
+    var userEntity: UserEntity
+    var viewModel: UserInfoViewModel
+
     @Binding var currentPage: Int
     @Binding var title: String
 
@@ -134,7 +137,7 @@ struct UserInfoTabView: View {
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.5))
                     )
-                    .keyboardType(.decimalPad)
+                    .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 46)
@@ -152,7 +155,7 @@ struct UserInfoTabView: View {
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.5))
                     )
-                    .keyboardType(.decimalPad)
+                    .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 18)
@@ -163,6 +166,7 @@ struct UserInfoTabView: View {
             Spacer()
 
             FilledButton(title: "다음") {
+                saveUserInfo()
                 withAnimation {
                     currentPage += 1
                 }
@@ -217,15 +221,54 @@ struct UserInfoForm<Content: View>: View {
     }
 }
 
+extension UserInfoTabView {
+    private func saveUserInfo() {
+        let selectedGenterText = selectedGender
+                .components(separatedBy: " ")
+                .first ?? selectedGender
+
+        // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
+        if userEntity.id == nil {
+            userEntity.id = UUID()
+        }
+        if userEntity.createdAt == nil {
+            userEntity.createdAt = Date()
+        }
+        userEntity.nickname = nickname
+        userEntity.ageRange = selectedAge
+        userEntity.gender = selectedGenterText
+        if let height = height, let weight = weight {
+            userEntity.height = NSNumber(value: height)
+            userEntity.weight = NSNumber(value: weight)
+        } else {
+            userEntity.height = nil
+            userEntity.weight = nil
+        }
+
+        print(userEntity)
+        try? CoreDataService.shared.saveContext()
+    }
+}
+
 #Preview {
     Preview()
 }
 
 private struct Preview: View {
+    @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = "사용자 정보"
 
     var body: some View {
-        UserInfoTabView(currentPage: $currentPage, title: $title)
+        if let userEntity = userInfoVM.userEntity {
+            UserInfoTabView(
+                userEntity: userEntity,
+                viewModel: userInfoVM,
+                currentPage: $currentPage,
+                title: $title
+            )
+        } else {
+            ProgressView("Loading...")
+        }
     }
 }
