@@ -27,95 +27,106 @@ struct HealthKitInterworkView: View {
         return "\(hour)시간 \(minute)분"
     }
     
+    @State private var isAuthorizing: Bool = false
     @State private var showSettingAlert: Bool = false
     @State private var alertMessage: String = ""
     
     let manager = HealthManager()
     
     var body: some View {
-        VStack {
+        VStack(spacing: 20) {
+            
             Spacer()
             
-            Text("건강앱과 연동하여 건강정보를 가져옵니다.")
-                .padding()
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(lineWidth: 1)
-                }
-            
-            Toggle(isOn: $userDefault.isHealthKitEnabled) {
-                Text("건강앱 연동하기")
-            }
-            .onChange(of: userDefault.isHealthKitEnabled) { newValue in
-                if newValue {
-                    Task {
-                        do {
-                            try await manager.requestAuthorization()
-                            try await fetchHealthData()
-                            
-                        } catch {
-                            userDefault.isHealthKitEnabled = false
-                            alertMessage = "건강 데이터 접근에 실패했습니다.\n설정에서 권한을 확인해주세요."
-                            showSettingAlert = true
-                        }
-                    }
-                } else {
-                    stepCount = 0
-                    caloriesCount = 0
-                    sleepTime = 0
-                    heartRate = 0
-                    bmi = 0.0
-                    bodyFatPercentage = 0.0
-                }
-            }
-            .alert("건강 앱 연동 실패", isPresented: $showSettingAlert) {
-                Button("설정으로 이동") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
+            VStack(alignment: .leading, spacing: 40) {
+                HStack {
+                    Image(systemName: "shoeprints.fill")
+                        .foregroundStyle(.blue)
+                        .font(.system(size: 40))
+                    
+                    VStack(alignment: .leading) {
+                        Text("당신의 건강여정을 시작하세요")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Text("Apple 건강앱과 연동하여 걸음수, 수면, 심박수 등 건강데이터를 자동으로 기록합니다.")
+                            .font(.footnote)
                     }
                 }
-                Button("취소", role: .cancel) {
-                    userDefault.isHealthKitEnabled = false
+                
+                HStack {
+                    Image(systemName: "iphone")
+                        .foregroundStyle(.blue)
+                        .font(.system(size: 40))
+                    
+                    VStack(alignment: .leading) {
+                        Text("하루의 건강 리포트를 한눈에")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 확인할 수 있습니다.")
+                            .font(.footnote)
+                    }
                 }
-            } message: {
-                Text(alertMessage)
+                
+                HStack {
+                    Image(systemName: "chart.xyaxis.line")
+                        .foregroundStyle(.blue)
+                        .font(.system(size: 40))
+                    
+                    VStack(alignment: .leading) {
+                        Text("목표 달성의 시작")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Text("건강 데이터를 기반으로 매일의 성취를 확인하세요.")
+                            .font(.footnote)
+                    }
+                }
             }
             
             if userDefault.isHealthKitEnabled {
-                VStack(spacing: 8) {
-                    Text("걸음수: \(stepCount)걸음")
-                    Text("소모 칼로리: \(caloriesCount) kcal")
+                VStack {
+                    Text("연동 완료")
+                    
+                    Text("걸음수: \(stepCount)")
+                    Text("칼로리: \(caloriesCount)")
                     Text("수면 시간: \(formattedSleepTime)")
-                    Text("심박수: \(heartRate) bpm")
+                    Text("심박수: \(heartRate)")
                     Text("BMI: \(String(format: "%.1f", bmi))")
                     Text("체지방률: \(String(format: "%.1f", bodyFatPercentage))%")
                 }
-                .padding(.top)
             }
             
             Spacer()
+            
+            Button {
+                Task {
+                    await connectHealthKit()
+                }
+            } label: {
+                Text(userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기")
+                    .padding(Spacing.content)
+                    .frame(maxWidth: .infinity)
+                    .fontWeight(.bold)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(userDefault.isHealthKitEnabled)
+            
+            Text("* 설정 > 건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
+                .font(.caption)
+            
         }
         .padding()
-        .navigationTitle("헬스킷 연동")
+        .navigationTitle("건강 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
+        .padding(.bottom, 100)
         .onAppear {
             if userDefault.isHealthKitEnabled {
                 Task {
                     try await fetchHealthData()
                 }
-                
-                if let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) {
-                    manager.startObservingUpdates(for: stepType)
-                }
-                if let calorieType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
-                    manager.startObservingUpdates(for: calorieType)
-                }
-                if let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) {
-                    manager.startObservingUpdates(for: heartRateType)
-                }
-                if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
-                    manager.startObservingUpdates(for: sleepType)
-                }
+                startObserversIfNeeded()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .healthDataDidUpdate)) { _ in
@@ -124,14 +135,72 @@ struct HealthKitInterworkView: View {
             }
         }
         .onChange(of: scenePhase) { phase in
-            if phase == .active && userDefault.isHealthKitEnabled {
+            if phase == .active, userDefault.isHealthKitEnabled {
                 Task {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    
                     await refreshHealthData()
                 }
             }
         }
+        .alert("건강 앱 연동 오류", isPresented: $showSettingAlert) {
+            Button("설정으로 이동") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("닫기", role: .cancel) { }
+        } message: { Text(alertMessage) }
+    }
+}
+
+extension HealthKitInterworkView {
+    @MainActor
+    private func connectHealthKit() async {
+        if userDefault.isHealthKitEnabled {
+            await refreshHealthData()
+            return
+        } else {
+            userDefault.isHealthKitEnabled = false
+        }
+        
+        isAuthorizing = true
+        defer { isAuthorizing = false }
+        
+        do {
+            try await manager.requestAuthorization()
+            try? await Task.sleep(for: .milliseconds(200))
+            
+//            if isHealthAuthorized() {
+                userDefault.isHealthKitEnabled = true
+                try await fetchHealthData()
+                startObserversIfNeeded()
+                print("건강 앱 연동")
+//            }
+        } catch {
+            userDefault.isHealthKitEnabled = false
+            alertMessage = "건강 데이터 접근에 실패했습니다.\n설정에서 권한을 확인해주세요."
+            showSettingAlert = true
+        }
     }
     
+    /// 건강앱의 데이터가 변경 시  업데이트
+    private func startObserversIfNeeded() {
+        if let step = HKObjectType.quantityType(forIdentifier: .stepCount) {
+            manager.startObservingUpdates(for: step)
+        }
+        if let calories = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            manager.startObservingUpdates(for: calories)
+        }
+        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) {
+            manager.startObservingUpdates(for: heartRate)
+        }
+        if let sleepTime = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            manager.startObservingUpdates(for: sleepTime)
+        }
+    }
+    
+    /// 데이터 패치
     func fetchHealthData() async throws {
         stepCount = try await manager.fetchStepCount()
         caloriesCount = try await manager.fetchCalorieCount()
@@ -141,30 +210,28 @@ struct HealthKitInterworkView: View {
         bodyFatPercentage = try await manager.fetchBodyFatPercentage()
     }
     
-    /// 앱으로 복귀 후 권한이 허용된 경우 최신 데이터 다시 가져오기
+    @MainActor
+    /// 기존 앱 연동 비활성화 -> 활성화 시 데이터 패치
     func refreshHealthData() async {
-        if let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount) {
-            let status = HKHealthStore().authorizationStatus(for: stepType)
-            if status == .sharingAuthorized {
-                do {
-                    stepCount = try await manager.fetchStepCount()
-                    caloriesCount = try await manager.fetchCalorieCount()
-                    sleepTime = Int(try await manager.fetchSleepDuration())
-                    heartRate = try await manager.fetchAverageHeartRate()
-                    bmi = try await manager.fetchBMI()
-                    bodyFatPercentage = try await manager.fetchBodyFatPercentage()
-                    
-                } catch {
-                    alertMessage = "데이터 갱신 중 오류가 발생했습니다."
-                    showSettingAlert = true
-                }
-            }// else {
-            //                userDefault.isHealthKitEnabled = false
-            //                alertMessage = "건강 앱 권한이 해제되었습니다.\n설정에서 다시 허용해주세요."
-            //                showSettingAlert = true
-            //            }
+        do {
+            try await fetchHealthData()
+        } catch {
+            alertMessage = "데이터 갱신 중 오류가 발생했습니다."
+            showSettingAlert = true
         }
     }
+//    
+//    private func isHealthAuthorized() -> Bool {
+//        let store = HKHealthStore()
+//        var types: [HKObjectType] = []
+//        if let step = HKObjectType.quantityType(forIdentifier: .stepCount) { types.append(step) }
+//        if let calories = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { types.append(calories) }
+//        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) { types.append(heartRate) }
+//        if let sleepTime = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) { types.append(sleepTime) }
+//
+//        // 4개의 항목중 하나라도 허용 시 ture
+//        return types.contains { store.authorizationStatus(for: $0) == .sharingAuthorized }
+//    }
 }
 
 #Preview {
