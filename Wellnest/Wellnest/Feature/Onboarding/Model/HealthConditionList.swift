@@ -9,7 +9,7 @@ import Foundation
 
 struct HealthCondition: SelectableItem {
     let id = UUID()
-    let icon: String?
+    let icon: String
     let category: String
     var isSelected: Bool = false
 
@@ -25,6 +25,6 @@ struct HealthCondition: SelectableItem {
         HealthCondition(icon: "😵‍💫", category: "번아웃"),
         HealthCondition(icon: "🍜", category: "과식/불규칙한 식사"),
         HealthCondition(icon: "💤", category: "수면 문제"),
-        HealthCondition(icon: "🔍", category: "기타")
+        HealthCondition(icon: "❔", category: "기타")
     ]
 }

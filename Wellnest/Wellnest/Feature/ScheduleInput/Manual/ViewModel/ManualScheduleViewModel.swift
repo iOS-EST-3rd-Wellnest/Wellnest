@@ -19,7 +19,7 @@ final class ManualScheduleViewModel: ObservableObject {
             now as NSDate,
             startOfTomorrow as NSDate
         )
-        
+
 
         let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
 

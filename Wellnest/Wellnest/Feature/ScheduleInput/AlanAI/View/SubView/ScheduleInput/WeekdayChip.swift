@@ -20,6 +20,10 @@ struct WeekdayChip: View {
                 .foregroundColor(isSelected ? .white : .primary)
                 .frame(width: 32, height: 32)
                 .background(isSelected ? Color.blue : Color(.systemGray6))
+                .overlay(
+                    Circle()
+                        .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                )
                 .clipShape(Circle())
         }
     }

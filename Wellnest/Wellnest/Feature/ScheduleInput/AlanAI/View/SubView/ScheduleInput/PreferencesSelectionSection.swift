@@ -65,6 +65,7 @@ struct FlowResult {
 
 struct PreferencesSelectionSection: View {
     @Binding var selectedPreferences: Set<String>
+    let onPreferenceToggle: (String) -> Void
 
     private let preferenceOptions = ["유산소", "요가", "명상", "야구", "축구", "달리기", "등산", "패러글라이딩", "독서"]
 
@@ -80,11 +81,7 @@ struct PreferencesSelectionSection: View {
                         title: preference,
                         isSelected: selectedPreferences.contains(preference)
                     ) {
-                        if selectedPreferences.contains(preference) {
-                            selectedPreferences.remove(preference)
-                        } else {
-                            selectedPreferences.insert(preference)
-                        }
+                        onPreferenceToggle(preference)
                     }
                 }
             }
@@ -93,6 +90,9 @@ struct PreferencesSelectionSection: View {
 }
 
 #Preview {
-    PreferencesSelectionSection(selectedPreferences: .constant(Set(["유산소", "요가"])))
-        .padding()
+    PreferencesSelectionSection(
+        selectedPreferences: .constant(Set(["유산소", "요가"])),
+        onPreferenceToggle: { _ in }
+    )
+    .padding()
 }

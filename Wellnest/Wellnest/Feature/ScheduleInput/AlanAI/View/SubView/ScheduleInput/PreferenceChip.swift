@@ -17,10 +17,14 @@ struct PreferenceChip: View {
             Text(title)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(isSelected ? .white : .primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.layout)
+                .padding(.vertical, Spacing.content)
                 .background(isSelected ? Color.blue : Color(.systemGray6))
-                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.large)
+                        .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                )
+                .cornerRadius(CornerRadius.large)
         }
     }
 }

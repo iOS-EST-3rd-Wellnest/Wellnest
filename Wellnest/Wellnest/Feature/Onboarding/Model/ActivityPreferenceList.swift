@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ActivityPreference: SelectableItem {
     let id = UUID()
-    let icon: String?
+    let icon: String
     let category: String
     var isSelected: Bool = false
 //    let randomCardColor: Color
@@ -29,6 +29,7 @@ struct ActivityPreference: SelectableItem {
 //        self.randomCardColor = ActivityPreference.availableCardColors.randomElement()!
 //    }
 
+    // TODO: 사용자 정보에서 성별 선택에 따라 아이콘을 성별에 맞게 바꿔보기
     static let activities: [ActivityPreference] = [
         ActivityPreference(icon: "🚶🏽‍♂", category: "걷기/산책"),
         ActivityPreference(icon: "🏃🏾‍♂️", category: "달리기"),
@@ -43,13 +44,13 @@ struct ActivityPreference: SelectableItem {
         ActivityPreference(icon: "🩰", category: "요가/필라테스/발레"),
         ActivityPreference(icon: "💃🏽", category: "댄스 스포츠"),
         ActivityPreference(icon: "🧘🏾", category: "명상"),
-        ActivityPreference(icon: "🔍", category: "기타"),
-        ActivityPreference(icon: "", category: "특별히 없음")
+        ActivityPreference(icon: "❔", category: "기타"),
+        ActivityPreference(icon: "💬", category: "특별히 없음")
     ]
 }
 
 protocol SelectableItem: Identifiable, Equatable {
-    var icon: String? { get }
+    var icon: String { get }
     var category: String { get }
     var isSelected: Bool { get set }
 }
