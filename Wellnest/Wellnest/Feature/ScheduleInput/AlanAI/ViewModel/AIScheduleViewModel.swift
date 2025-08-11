@@ -212,47 +212,6 @@ final class AIScheduleViewModel: ObservableObject {
         }
     }
 
-    private func saveSchedulesToCoreData(plan: HealthPlanResponse) async throws {
-        print("💿 Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
-
-        for (index, scheduleItem) in plan.schedules.enumerated() {
-            let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
-            newSchedule.id = UUID()
-            newSchedule.title = scheduleItem.activity
-            newSchedule.detail = scheduleItem.notes ?? ""
-
-            // AI 스케줄의 날짜와 시간 설정
-            if let dateString = scheduleItem.date {
-                // 특정 날짜가 있는 경우
-                newSchedule.startDate = parseDate(from: dateString, time: scheduleItem.time)
-                newSchedule.endDate = parseEndDate(from: dateString, time: scheduleItem.time)
-            } else if let dayString = scheduleItem.day {
-                // 요일 기반인 경우 (루틴)
-                newSchedule.startDate = getNextDate(for: dayString, time: scheduleItem.time)
-                newSchedule.endDate = parseEndDate(from: nil, time: scheduleItem.time, baseDate: newSchedule.startDate)
-            } else {
-                // 기본값
-                newSchedule.startDate = Date()
-                newSchedule.endDate = Date().addingTimeInterval(3600)
-            }
-
-            newSchedule.isAllDay = false
-            newSchedule.isCompleted = false
-            newSchedule.repeatRule = plan.planType == "routine" ? "weekly" : nil
-            newSchedule.hasRepeatEndDate = false
-            newSchedule.repeatEndDate = nil
-            newSchedule.alarm = nil
-            newSchedule.scheduleType = "ai_generated"
-            newSchedule.createdAt = Date()
-            newSchedule.updatedAt = Date()
-
-            print("📝 AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - \(newSchedule.startDate ?? Date())")
-        }
-
-        try CoreDataService.shared.saveContext()
-        print("💾 Core Data 저장 완료")
-    }
-
     // MARK: - Private Helpers
     private func createPlanRequest() -> PlanRequest {
         return PlanRequestFactory.createPlanRequest(
@@ -273,57 +232,41 @@ final class AIScheduleViewModel: ObservableObject {
         )
     }
 
-    // 날짜/시간 파싱 헬퍼 메서드들
-    private func parseDate(from dateString: String?, time: String) -> Date {
-        let calendar = Calendar.current
-        let now = Date()
+    private func saveSchedulesToCoreData(plan: HealthPlanResponse) async throws {
+        print("💿 Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
-        // 시간 파싱
-        let timeComponents = parseTime(from: time)
+        for (index, scheduleItem) in plan.schedules.enumerated() {
+            let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
+            newSchedule.id = UUID()
+            newSchedule.title = scheduleItem.activity
+            newSchedule.detail = scheduleItem.notes ?? ""
 
-        if let dateString = dateString {
-            // 특정 날짜가 있는 경우
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "ko_KR")
-            dateFormatter.dateFormat = "yyyy-MM-dd"
+            // AIScheduleDateTimeHelper를 사용하여 날짜/시간 설정
+            let dates = AIScheduleDateTimeHelper.parseDatesForCoreData(
+                scheduleItem: scheduleItem,
+                planType: plan.planType
+            )
+            newSchedule.startDate = dates.startDate
+            newSchedule.endDate = dates.endDate
 
-            if let date = dateFormatter.date(from: dateString) {
-                return calendar.date(bySettingHour: timeComponents.hour,
-                                   minute: timeComponents.minute,
-                                   second: 0,
-                                   of: date) ?? now
-            }
+            newSchedule.isAllDay = false
+            newSchedule.isCompleted = false
+            newSchedule.repeatRule = plan.planType == "routine" ? "weekly" : nil
+            newSchedule.hasRepeatEndDate = false
+            newSchedule.repeatEndDate = nil
+            newSchedule.alarm = nil
+            newSchedule.scheduleType = "ai_generated"
+            newSchedule.createdAt = Date()
+            newSchedule.updatedAt = Date()
+
+            print("📝 AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(newSchedule.startDate ?? Date()) - 종료: \(newSchedule.endDate ?? Date())")
         }
 
-        // 기본값: 오늘 날짜에 시간 설정
-        return calendar.date(bySettingHour: timeComponents.hour,
-                           minute: timeComponents.minute,
-                           second: 0,
-                           of: now) ?? now
+        try CoreDataService.shared.saveContext()
+        print("💾 Core Data 저장 완료")
     }
 
-    private func parseEndDate(from dateString: String?, time: String, baseDate: Date? = nil) -> Date {
-        let startDate = baseDate ?? parseDate(from: dateString, time: time)
-
-        // 시간 범위 파싱 (예: "09:00 - 10:00")
-        if time.contains("-") {
-            let timeComponents = time.components(separatedBy: "-")
-            if timeComponents.count == 2 {
-                let endTimeString = timeComponents[1].trimmingCharacters(in: .whitespaces)
-                let endTimeComponents = parseTime(from: endTimeString)
-
-                let calendar = Calendar.current
-                return calendar.date(bySettingHour: endTimeComponents.hour,
-                                   minute: endTimeComponents.minute,
-                                   second: 0,
-                                   of: startDate) ?? startDate.addingTimeInterval(3600)
-            }
-        }
-
-        // 기본값: 1시간 후
-        return startDate.addingTimeInterval(3600)
-    }
-
+    // 헬퍼 메서드들 추가
     private func parseTime(from timeString: String) -> (hour: Int, minute: Int) {
         let cleanTime = timeString.components(separatedBy: "-")[0].trimmingCharacters(in: .whitespaces)
         let components = cleanTime.components(separatedBy: ":")
@@ -337,7 +280,21 @@ final class AIScheduleViewModel: ObservableObject {
         return (hour: 9, minute: 0) // 기본값
     }
 
-    private func getNextDate(for dayString: String, time: String) -> Date {
+    private func parseEndTime(from timeString: String) -> (hour: Int, minute: Int) {
+        if timeString.contains("-") {
+            let timeComponents = timeString.components(separatedBy: "-")
+            if timeComponents.count >= 2 {
+                let endTimeString = timeComponents[1].trimmingCharacters(in: .whitespaces)
+                return parseTime(from: endTimeString)
+            }
+        }
+
+        // 기본값: 시작 시간 + 1시간
+        let startTime = parseTime(from: timeString)
+        return (hour: min(startTime.hour + 1, 23), minute: startTime.minute)
+    }
+
+    private func getNextDate(for dayString: String) -> Date? {
         let calendar = Calendar.current
         let today = Date()
 
@@ -347,7 +304,7 @@ final class AIScheduleViewModel: ObservableObject {
         ]
 
         guard let targetWeekday = weekdayMapping[dayString] else {
-            return parseDate(from: nil, time: time)
+            return today
         }
 
         let currentWeekday = calendar.component(.weekday, from: today)
@@ -357,8 +314,7 @@ final class AIScheduleViewModel: ObservableObject {
             daysToAdd += 7 // 다음 주
         }
 
-        let targetDate = calendar.date(byAdding: .day, value: daysToAdd, to: today) ?? today
-        return parseDate(from: nil, time: time)
+        return calendar.date(byAdding: .day, value: daysToAdd, to: today)
     }
 
     // MARK: - View State Enum
