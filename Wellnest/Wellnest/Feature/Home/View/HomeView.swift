@@ -25,6 +25,11 @@ struct HomeView: View {
 
         return df.string(from: Date.now)
     }
+    
+    /// 오늘 일정 목록에서 미완료 일정만 필터링
+    private var isCompleteSchedules: [ScheduleItem] {
+        manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
+    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -116,7 +121,7 @@ struct HomeView: View {
                     Spacer()
                     
                     VStack {
-                        if manualScheduleVM.todaySchedules.isEmpty {
+                        if isCompleteSchedules.isEmpty {
                             Text("일정을 추가 해주세요.")
                                 .padding(.vertical, 40)
                                 .background(
@@ -126,18 +131,20 @@ struct HomeView: View {
                                         .defaultShadow()
                                 )
                         } else {
-                            ForEach(manualScheduleVM.todaySchedules) { schedule in
-                                ScheduleCardView(
-                                    manualScheduleVM: manualScheduleVM,
-                                    schedule: schedule,
-                                    swipedScheduleId: swipedScheduleId,
-                                    swipedDirection: swipedDirection) { id, direction in
-                                        withAnimation {
-                                            swipedScheduleId = id
-                                            swipedDirection = direction
+                            ForEach(isCompleteSchedules) { schedule in
+                                if !schedule.isCompleted {
+                                    ScheduleCardView(
+                                        manualScheduleVM: manualScheduleVM,
+                                        schedule: schedule,
+                                        swipedScheduleId: swipedScheduleId,
+                                        swipedDirection: swipedDirection) { id, direction in
+                                            withAnimation {
+                                                swipedScheduleId = id
+                                                swipedDirection = direction
+                                            }
                                         }
-                                    }
-                                    .padding(.vertical, Spacing.content)
+                                        .padding(.vertical, Spacing.content)
+                                }
                             }
                         }
                     }

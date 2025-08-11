@@ -12,4 +12,5 @@ struct ScheduleItem: Identifiable {
     let title: String
     let startDate: Date
     let endDate: Date
+    var isCompleted: Bool
 }

@@ -6,11 +6,19 @@
 //
 import SwiftUI
 
+// 좌우 스와이프 구분 열거형
+enum SwipeDirection {
+    case left, right
+}
+
 struct ScheduleCardView: View {
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
+
+    @State private var isCompleted = false
+    @State private var completedOffset: CGFloat = 0
     
     let schedule: ScheduleItem
 
@@ -32,13 +40,35 @@ struct ScheduleCardView: View {
         }
     }
     
+    private var animationOffset: CGFloat {
+        if isDeleting { return deleteOffset }
+        if isCompleted { return completedOffset }
+        return currentOffset
+    }
+    
     var body: some View {
         GeometryReader { geo in
             ZStack {
                 HStack(spacing: 0) {
                     if currentOffset > 0 {
                         Button {
-                            print("완료: \(schedule.id)")
+                            withAnimation(.easeIn(duration: 0.3)) {
+                                isDeleting = false
+                                isCompleted = true
+                                completedOffset = geo.size.width + 30
+                                onSwiped(nil, nil)
+                            }
+                            
+                            Task {
+                                // 애니메이션 효과 이후 업데이트를 위한 sleep
+                                try? await Task.sleep(for: .milliseconds(300))
+                                await MainActor.run {
+                                    withAnimation(.easeInOut) {
+                                        manualScheduleVM.updateCompleted(item: schedule)
+                                    }
+                                }
+                            }
+                            
                         } label: {
                             Image(systemName: "checkmark")
                                 .frame(width: 45, height: 70)
@@ -54,18 +84,22 @@ struct ScheduleCardView: View {
                         Spacer()
                         
                         Button {
-                            print("삭제: \(schedule.id)")
+                            withAnimation(.easeIn(duration: 0.3)) {
+                                isDeleting = true
+                                isCompleted = false
+                                deleteOffset = -geo.size.width - 30
+                                onSwiped(nil, nil)
+                            }
                             
-                            //withAnimation(.easeIn(duration: 0.3)) {
-                            //    isDeleting = true
-                            //    deleteOffset = -geo.size.width
-                            //}
-                            
-                            //Task {
-                            //    try? await Task.sleep(nanoseconds: 300_000_000)
-                            //    await viewModel.deleteSchedule(schedule)
-                            //}
-                            
+                            Task {
+                                // 애니메이션 효과 이후 삭제를 위한 sleep
+                                try? await Task.sleep(for: .milliseconds(300))
+                                await MainActor.run {
+                                    withAnimation(.easeInOut) {
+                                        manualScheduleVM.deleteSchedule(item: schedule)
+                                    }
+                                }
+                            }
                         } label: {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.white)
@@ -77,6 +111,7 @@ struct ScheduleCardView: View {
                         )
                     }
                 }
+                .disabled(isDeleting || isCompleted)
                 
                 //            ScheduleItemView(schedule: schedule)
                 VStack(alignment: .leading, spacing: Spacing.content) {
@@ -103,7 +138,7 @@ struct ScheduleCardView: View {
                         .defaultShadow()
                 )
                 .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
-                .offset(x: isDeleting ? deleteOffset : currentOffset)
+                .offset(x: animationOffset)
                 .gesture(
                     DragGesture(minimumDistance: 35)
                         .onChanged { value in
@@ -142,11 +177,7 @@ struct ScheduleCardView: View {
                 )
             }
         }
-        .animation(.easeInOut, value: isDeleting ? deleteOffset : currentOffset)
+        .animation(.easeInOut, value: animationOffset)
         .frame(height: 70)
     }
-}
-
-enum SwipeDirection {
-    case left, right
 }
