@@ -32,14 +32,20 @@ struct ProfileView: View {
                         .font(.title)
                         .fontWeight(.semibold)
                 }
-                
-                
-                
+
                 Spacer()
                 
-                Circle()
-                    .frame(width: 80, height: 80)
-                    .foregroundStyle(.gray)
+                if let image = profileImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                } else {
+                    Circle()
+                        .frame(width: 80, height: 80)
+                        .foregroundStyle(.gray)
+                }
             }
         }
         .padding()

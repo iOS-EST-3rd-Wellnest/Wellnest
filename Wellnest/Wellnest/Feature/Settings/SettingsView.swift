@@ -18,83 +18,45 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack {
-                    /// 프로필 navigation 방식
+                VStack(alignment: .leading) {
+                    Text("설정")
+                        .padding(.top)
+                        .padding(.leading)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
                     NavigationLink {
                         ProfileDetailView(name: $name, height: $height, weight: $weight, profileImage: $profileImage)
                     } label: {
-                         ProfileView(name: $name, profileImage: $profileImage)
+                        ProfileView(name: $name, profileImage: $profileImage)
                     }
                     
-                    HStack {
-                        RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 100)
-                            .foregroundStyle(.gray)
-                            
-                        
-                        RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 100)
-                            .foregroundStyle(.gray)
-                    }
-                    .padding(.leading)
-                    .padding(.trailing)
-                    
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 150)
-                        .foregroundStyle(.gray)
-                        .padding()
-                }
-                
-//                Section(header: Text("앱 설정")) {
-//                    // TODO: 알림
-//                    NavigationLink {
-//                        NotificationView()
-//                    } label: {
-//                        Label("알림 설정", systemImage: "bell")
-//                            .foregroundStyle(.primary)
+//                    HStack {
+//                        RoundedRectangle(cornerRadius: CornerRadius.large)
+//                            .frame(maxWidth: .infinity)
+//                            .frame(height: 100)
+//                            .foregroundStyle(.gray)
 //                        
+//                        RoundedRectangle(cornerRadius: CornerRadius.large)
+//                            .frame(maxWidth: .infinity)
+//                            .frame(height: 100)
+//                            .foregroundStyle(.gray)
 //                    }
+//                    .padding(.leading)
+//                    .padding(.trailing)
 //                    
-//                    // TODO: 캘린더 연동
-//                    NavigationLink {
-//                        CalendarInterworkView()
-//                    } label: {
-//                        Label("캘린더 연동", systemImage: "calendar")
-//                            .foregroundStyle(.primary)
-//                    }
-//                    
-//                    // TODO: 헬스킷 연동
-//                    NavigationLink {
-//                        HealthKitInterworkView()
-//                    } label: {
-//                        Label("헬스킷 연동", systemImage: "heart")
-//                            .foregroundStyle(.primary)
-//                    }
-//                    
-//                    // TODO: 데이터 초기화 설정
-//                    NavigationLink {
-//                        ResetDataView()
-//                    } label: {
-//                        Label("데이터 초기화", systemImage: "trash")
-//                            .foregroundStyle(.red)
-//                    }
-//                }
-//                
-//                Section(header: Text("피드백")) {
-//                    // TODO: 설문 수정
-//                    NavigationLink {
-//                        ModifyingSurveyView()
-//                    } label: {
-//                        Label("설문 수정", systemImage: "ecg.text.page")
-//                            .foregroundStyle(.primary)
-//                    }
-//                }
+//                    RoundedRectangle(cornerRadius: CornerRadius.large)
+//                        .frame(maxWidth: .infinity)
+//                        .frame(height: 150)
+//                        .foregroundStyle(.gray)
+//                        .padding(.horizontal)
+                        
+                    
+                    SettingList()
+                }
+                .padding(.bottom, 100)
             }
-            .navigationTitle("설정")
-            .listStyle(.insetGrouped)
+//            .navigationTitle("설정")
         }
     }
 }
