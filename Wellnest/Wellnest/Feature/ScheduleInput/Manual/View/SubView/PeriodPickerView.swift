@@ -22,10 +22,14 @@ struct PeriodPickerView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Toggle("하루 종일", isOn: $isAllDay)
-                .onChange(of: isAllDay) { newValue in
-                    UIApplication.hideKeyboard()
-                }
+            Toggle(isOn: $isAllDay) {
+                Text("하루 종일")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .onChange(of: isAllDay) { newValue in
+                        UIApplication.hideKeyboard()
+                    }
+            }
             DatePickerView(
                 text: "시작",
                 date: $startDate,
