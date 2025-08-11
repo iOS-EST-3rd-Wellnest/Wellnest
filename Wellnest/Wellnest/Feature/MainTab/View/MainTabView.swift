@@ -21,7 +21,7 @@ struct MainTabView: View {
                 case .plan:
                     PlanView()
                 case .analysis:
-                    TestAnalyticsView()
+                    AnalyticsView()
                 case .settings:
                     SettingsView()
                 }
