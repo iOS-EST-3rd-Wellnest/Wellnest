@@ -92,6 +92,8 @@ struct ManualScheduleInputView: View {
                                 keyboardType: .default,
                                 onReturn: {
                                     currentFocus = .detail
+                                    showLocationSearchSheet = true
+                                    currentFocus = nil
                                 },
                                 onEditing: {
                                     if currentFocus != .title {
@@ -114,6 +116,8 @@ struct ManualScheduleInputView: View {
                                 onEditing: {
                                     if currentFocus != .detail {
                                         currentFocus = .detail
+                                        showLocationSearchSheet = true
+                                        currentFocus = nil
                                     }
                                 }
                             )
@@ -154,7 +158,7 @@ struct ManualScheduleInputView: View {
                             currentFocus = nil
                         }
                     )
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 5)
                     .onChange(of: isRepeated) { newValue in
                         UIApplication.hideKeyboard()
                     }
@@ -166,6 +170,7 @@ struct ManualScheduleInputView: View {
                         showDetail: false,
                         detailContent: nil
                     )
+                    .padding(.bottom, 5)
                     .onChange(of: isAlarm) { newValue in
                         UIApplication.hideKeyboard()
                     }

@@ -26,7 +26,7 @@ struct LocationSearchView: View {
                     text: $query,
                     placeholder: "장소를 입력해주세요.",
                     isFirstResponder: true,
-                    clearButtonMode: .whileEditing
+                    clearButtonMode: .whileEditing,
                 )
                 .frame(height: 20)
                 .onChange(of: query) { newValue in
@@ -34,31 +34,47 @@ struct LocationSearchView: View {
                         completerWrapper.clearResults()
                     } else {
                         completerWrapper.updateQuery(newValue)
+
                     }
                 }
-
                 Divider()
 
-                List(completerWrapper.completions, id: \.self) { completion in
-                    VStack(alignment: .leading) {
-                        Text(completion.title).bold()
-                        Text(completion.subtitle)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                List {
+                    if !query.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text(query).bold()
+                            Text("사용자 지정 위치")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .listRowSeparator(.hidden)
+                        .onTapGesture {
+                            selectedLocation = query
+                            isPresented = false
+                            dismiss()
+                        }
                     }
-                    .listRowBackground(Color.clear)
-                    .onTapGesture {
-                        // 사용자 현재 위치로 대체 권장
-                        let center = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
-                        handleSelect(completion: completion, center: center)
+                    ForEach(completerWrapper.completions, id: \.self) { completion in
+                        VStack(alignment: .leading) {
+                            Text(completion.title).bold()
+                            Text(completion.subtitle)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .contentShape(Rectangle())        
+                        .onTapGesture {
+                            let center = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
+                            handleSelect(completion: completion, center: center)
+                        }
                     }
                 }
                 .listStyle(.plain)
-
+                .frame(maxWidth: .infinity)
                 if completerWrapper.isFiltering {
                     ProgressView().padding(.top, 8)
                 }
-
                 Spacer()
             }
             .padding()
