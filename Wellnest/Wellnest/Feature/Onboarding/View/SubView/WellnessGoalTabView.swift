@@ -26,6 +26,7 @@ struct WellnessGoalTabView: View {
         VStack {
             OnboardingTitleDescription(description: "삶의 질을 높이고 지속 가능한 건강 루틴을 만드는 것에 집중해보세요.")
 
+            // TODO: OnboardingCardContent 구조체 사용할 수 있게, OnboardingCardLayout의 columnCount 바꿔보기
             VStack {
                 HStack {
                     Text("* 중복 선택 가능")
@@ -38,15 +39,16 @@ struct WellnessGoalTabView: View {
 
                 ForEach($goals) { $goal in
                     Button {
-                        withAnimation(.easeInOut) {
-                            goal.isSelected.toggle()
-                        }
+                        ToggleCardHelper.toggleCard(item: $goal, items: $goals)
                     } label: {
                         HStack {
+                            Text(goal.icon)
+                                .padding(.leading)
+                                .saturation(goal.isSelected ? 1 : 0)
+
                             Text(goal.title)
                                 .fontWeight(.semibold)
                                 .foregroundColor(goal.isSelected ? .black : .secondary)
-                                .padding(.leading)
 
                             Spacer()
                         }
@@ -80,10 +82,10 @@ extension WellnessGoalTabView {
     private func saveWellnessGoal() {
         let selectedGoals = goals.filter { $0.isSelected }
 
-        if selectedGoals.contains(where: { $0.title.withoutPrefix3 == "특별히 없음" }) {
+        if selectedGoals.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.goal = nil
         } else {
-            let goals = selectedGoals.map { $0.title.withoutPrefix3 }.joined(separator: ", ")
+            let goals = selectedGoals.map { $0.title }.joined(separator: ", ")
             userEntity.goal = goals
         }
 

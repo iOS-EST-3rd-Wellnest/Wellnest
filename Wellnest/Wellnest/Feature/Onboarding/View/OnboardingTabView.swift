@@ -47,6 +47,31 @@ struct OnboardingCardLayout {
     }
 }
 
+struct ToggleCardHelper {
+    static func toggleCard<Item: SelectableItem>(item: Binding<Item>, items: Binding<[Item]>) {
+        withAnimation(.easeInOut) {
+            if item.wrappedValue.title.hasPrefix("특별히") {
+                // "특별히 없음" 선택 시, 다른 선택 전부 해제
+                if !item.wrappedValue.isSelected { // 현재 선택 안돼있으면
+                    for index in items.indices {
+                        items.wrappedValue[index].isSelected = false
+                    }
+                    item.wrappedValue.isSelected = true
+                } else {
+                    // 다시 누르면 해제
+                    item.wrappedValue.isSelected = false
+                }
+            } else {
+                // 다른 목표 선택 시, "특별히 없음" 해제
+                if let noneIndex = items.wrappedValue.firstIndex(where: { $0.title.hasPrefix("특별히") }) {
+                    items.wrappedValue[noneIndex].isSelected = false
+                }
+                item.wrappedValue.isSelected.toggle()
+            }
+        }
+    }
+}
+
 struct OnboardingCardContent<Item: SelectableItem>: View {
     @Binding var items: [Item]
 
@@ -68,9 +93,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
             LazyVGrid(columns: columns, spacing: spacing) {
                 ForEach($items, id: \.id) { $item in
                     Button {
-                        withAnimation(.easeInOut) {
-                            item.isSelected.toggle()
-                        }
+                        ToggleCardHelper.toggleCard(item: $item, items: $items)
                     } label: {
                         VStack(spacing: Spacing.inline) {
                             Text(item.icon)
@@ -169,6 +192,7 @@ struct OnboardingTabView: View {
                         IntroductionTabView(currentPage: $currentPage, title: $title)
                     }
                 }
+
                 // TabView(selection: $currentPage) {
                 //                MotivationTabView(currentPage: $currentPage)
                 //                    .tag(0)
