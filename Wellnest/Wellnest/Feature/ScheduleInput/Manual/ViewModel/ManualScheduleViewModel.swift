@@ -46,7 +46,10 @@ final class ManualScheduleViewModel: ObservableObject {
         }
         
         do {
-            try CoreDataService.shared.update(entity, by: \ScheduleEntity.isCompleted, to: !entity.isCompleted)
+            let current = entity.isCompleted?.boolValue ?? false
+            let newValue = !current
+            
+            try CoreDataService.shared.update(entity, by: \ScheduleEntity.isCompleted, to: NSNumber(value: newValue))
             if let index = todaySchedules.firstIndex(where: { $0.id == item.id }) {
                 todaySchedules[index].isCompleted.toggle()
             }
@@ -91,7 +94,14 @@ final class ManualScheduleViewModel: ObservableObject {
             title: entity.title ?? "",
             startDate: entity.startDate ?? Date(),
             endDate: entity.endDate ?? Date(),
-            isCompleted: entity.isCompleted
+            createdAt: entity.createdAt ?? Date(),
+            updatedAt: entity.updatedAt ?? Date(),
+            backgroundColor: entity.backgroundColor ?? "",
+            isAllDay: entity.isAllDay?.boolValue ?? false,
+            repeatRule: entity.repeatRule ?? "",
+            hasRepeatEndDate: entity.hasRepeatEndDate,
+            repeatEndDate: entity.repeatEndDate,
+            isCompleted: entity.isCompleted?.boolValue ?? false
         )
     }
     

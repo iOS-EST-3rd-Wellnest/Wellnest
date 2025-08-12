@@ -105,19 +105,17 @@ struct HomeView: View {
                                 )
                         } else {
                             ForEach(isCompleteSchedules) { schedule in
-                                if !schedule.isCompleted {
-                                    ScheduleCardView(
-                                        manualScheduleVM: manualScheduleVM,
-                                        schedule: schedule,
-                                        swipedScheduleId: swipedScheduleId,
-                                        swipedDirection: swipedDirection) { id, direction in
-                                            withAnimation {
-                                                swipedScheduleId = id
-                                                swipedDirection = direction
-                                            }
+                                ScheduleCardView(
+                                    manualScheduleVM: manualScheduleVM,
+                                    schedule: schedule,
+                                    swipedScheduleId: swipedScheduleId,
+                                    swipedDirection: swipedDirection) { id, direction in
+                                        withAnimation {
+                                            swipedScheduleId = id
+                                            swipedDirection = direction
                                         }
-                                        .padding(.vertical, Spacing.content)
-                                }
+                                    }
+                                    .padding(.vertical, Spacing.content)
                             }
                         }
                     }
