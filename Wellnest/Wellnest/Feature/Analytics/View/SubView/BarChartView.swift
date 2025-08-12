@@ -12,15 +12,15 @@ struct BarChartView: View {
     let color: Color
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
+        HStack(alignment: .bottom, spacing: Spacing.content) {
             ForEach(Array(data.enumerated()), id: \.offset) { index, value in
                 let maxValue = data.max() ?? 1
-                let normalizedHeight = CGFloat(value / maxValue) * 60
+                let normalizedHeight = CGFloat(value / maxValue) * 40
 
                 Rectangle()
                     .fill(color)
-                    .frame(width: 20, height: normalizedHeight)
-                    .cornerRadius(4)
+                    .frame(width: 15, height: normalizedHeight)
+                    .cornerRadius(Spacing.inline)
             }
         }
         .frame(maxWidth: .infinity)

@@ -11,34 +11,28 @@ struct AIInsightCardView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(spacing: 12) {
-            Text("💡")
-                .font(.title)
+        RoundedRectangle(cornerRadius: CornerRadius.large)
+            .fill(colorScheme == .dark ? Color(.gray) : .white)
+            .frame(minHeight: 120)
+            .defaultShadow()
+            .overlay(alignment: .topLeading) {
+                HStack(spacing: Spacing.content) {
+                    Text("💡")
+                        .font(.title2)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("AI 인사이트")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .textCase(.uppercase)
+                    VStack(alignment: .leading, spacing: Spacing.content) {
+                        Text("AI 인사이트")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
 
-                Text("운동한 날엔 수면 시간이 평균 50분 증가했어요.")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                        Text("운동한 날엔 수면 시간이 평균 50분 증가했어요.")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+
+                    Spacer()
+                }
+                .padding()
             }
-
-            Spacer()
-        }
-        .padding(.vertical)
-        .padding(.leading)
-        .background(cardBackgroundColor)
-        .cornerRadius(12)
-    }
-
-    private var primaryTextColor: Color {
-        colorScheme == .dark ? .white : .primary
-    }
-
-    private var cardBackgroundColor: Color {
-        colorScheme == .dark ? Color.gray.opacity(0.15) : Color(.systemGray6)
     }
 }

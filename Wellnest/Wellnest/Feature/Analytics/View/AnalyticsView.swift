@@ -15,52 +15,54 @@ struct AnalyticsView: View {
         NavigationView {
             ScrollView {
                 if horizontalSizeClass == .regular {
-                    // iPad Layout
                     iPadLayout
                 } else {
-                    // iPhone Layout
                     iPhoneLayout
                 }
             }
-            .navigationTitle("분석")
-            .navigationBarTitleDisplayMode(.large)
-            .background(backgroundColor)
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
 
     private var iPhoneLayout: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.layout) {
+            TitleHeaderView(name: .constant("홍길동"))
             PlanCompletionCardView()
             AIInsightCardView()
-            HealthStatsSectionView()
-            ChartSectionView()
+
+            ExerciseStatChartCardView()
+
+            SleepStatChartCardView()
+
+            MeditationStatCardView()
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
+        .padding(.horizontal)
+        .padding(.top, Spacing.layout)
+        .padding(.bottom, 100)
     }
 
     private var iPadLayout: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 20),
-            GridItem(.flexible(), spacing: 20)
-        ], spacing: 20) {
-            VStack(alignment: .leading, spacing: 16) {
-                PlanCompletionCardView()
-                HealthStatsSectionView()
-            }
+        VStack(spacing: Spacing.layout) {
+            TitleHeaderView(name: .constant("홍길동"))
 
-            VStack(alignment: .leading, spacing: 16) {
-                AIInsightCardView()
-                ChartSectionView()
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: Spacing.layout),
+                GridItem(.flexible(), spacing: Spacing.layout)
+            ], spacing: Spacing.layout) {
+                VStack(alignment: .leading, spacing: Spacing.layout) {
+                    PlanCompletionCardView()
+                    ExerciseStatChartCardView()
+                }
+
+                VStack(alignment: .leading, spacing: Spacing.layout) {
+                    AIInsightCardView()
+                    SleepStatChartCardView()
+                    MeditationStatCardView()
+                }
             }
         }
         .padding(.horizontal, 32)
         .padding(.top, 20)
-    }
-
-    private var backgroundColor: Color {
-        colorScheme == .dark ? .black : Color(.systemBackground)
     }
 }
 

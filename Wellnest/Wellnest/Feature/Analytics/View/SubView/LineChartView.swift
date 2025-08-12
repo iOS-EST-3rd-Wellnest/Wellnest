@@ -29,7 +29,7 @@ struct LineChartView: View {
                     }
                 }
             }
-            .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+            .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
         }
     }
 }
