@@ -19,5 +19,5 @@ struct ScheduleItem: Identifiable, Codable {
     let repeatRule: String?
     let hasRepeatEndDate: Bool
     let repeatEndDate: Date?
-    let isCompleted: Bool
+    var isCompleted: Bool
 }

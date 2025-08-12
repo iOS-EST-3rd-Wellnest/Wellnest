@@ -19,7 +19,6 @@ struct RecommendView: View {
                     Text("오늘의 한마디")
                         .font(.title2)
                         .bold()
-                        .padding(Spacing.content)
                     
                     Spacer()
                 }
@@ -27,11 +26,10 @@ struct RecommendView: View {
                 Text("휴식도 하나의 전략입니다. 잠시 멈추어 숨을 고르고 다시 시작하세요.")
                     .font(.callout)
                     .padding()
-                    .padding(.horizontal, Spacing.content)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(Color(.systemGray6))
-                            .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 3))
+                            .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 2))
                             .defaultShadow()
                     )
                 
@@ -39,7 +37,6 @@ struct RecommendView: View {
                     Text("날씨")
                         .font(.title2)
                         .bold()
-                        .padding(.horizontal, Spacing.content)
                         .padding(.top, Spacing.layout)
                     
                     Spacer()
@@ -59,11 +56,10 @@ struct RecommendView: View {
                     Spacer()
                 }
                 .padding()
-                .padding(.horizontal, Spacing.content)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(Color(.systemGray6))
-                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 3))
+                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 2))
                         .defaultShadow()
                 )
                 
@@ -71,7 +67,6 @@ struct RecommendView: View {
                     Text("추천 영상")
                         .font(.title2)
                         .bold()
-                        .padding(.horizontal, Spacing.content)
                         .padding(.top, Spacing.layout)
                     
                     Spacer()
