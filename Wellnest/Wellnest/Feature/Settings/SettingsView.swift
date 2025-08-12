@@ -19,44 +19,15 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text("설정")
-                        .padding(.top)
-                        .padding(.leading)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
                     NavigationLink {
                         ProfileDetailView(name: $name, height: $height, weight: $weight, profileImage: $profileImage)
                     } label: {
                         ProfileView(name: $name, profileImage: $profileImage)
                     }
                     
-//                    HStack {
-//                        RoundedRectangle(cornerRadius: CornerRadius.large)
-//                            .frame(maxWidth: .infinity)
-//                            .frame(height: 100)
-//                            .foregroundStyle(.gray)
-//                        
-//                        RoundedRectangle(cornerRadius: CornerRadius.large)
-//                            .frame(maxWidth: .infinity)
-//                            .frame(height: 100)
-//                            .foregroundStyle(.gray)
-//                    }
-//                    .padding(.leading)
-//                    .padding(.trailing)
-//                    
-//                    RoundedRectangle(cornerRadius: CornerRadius.large)
-//                        .frame(maxWidth: .infinity)
-//                        .frame(height: 150)
-//                        .foregroundStyle(.gray)
-//                        .padding(.horizontal)
-                        
-                    
                     SettingList()
                 }
-                .padding(.bottom, 100)
             }
-//            .navigationTitle("설정")
         }
     }
 }
