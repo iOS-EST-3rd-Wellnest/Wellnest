@@ -14,6 +14,7 @@
     </entity>
     <entity name="ScheduleEntity" representedClassName="ScheduleEntity" syncable="YES" codeGenerationType="class">
         <attribute name="alarm" optional="YES" attributeType="String"/>
+        <attribute name="backgroundColor" optional="YES" attributeType="String"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="detail" optional="YES" attributeType="String"/>
         <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
