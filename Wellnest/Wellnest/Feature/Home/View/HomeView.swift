@@ -8,13 +8,16 @@
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var viewModel = ManualScheduleViewModel()
+    @Environment(\.colorScheme) var colorScheme
+    
+    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
+    @StateObject private var homeVM = HomeViewModel()
     
     @State var name: String = "홍길동"
     
     @State private var swipedScheduleId: UUID? = nil
     @State private var swipedDirection: SwipeDirection? = nil
-
+    
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
@@ -22,10 +25,15 @@ struct HomeView: View {
 
         return df.string(from: Date.now)
     }
+    
+    /// 오늘 일정 목록에서 미완료 일정만 필터링
+    private var isCompleteSchedules: [ScheduleItem] {
+        manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
+    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading) {
+            VStack(spacing: Spacing.layout) {
                 HStack(spacing: Spacing.layout) {
                     Image("img_profile")
                         .resizable()
@@ -44,17 +52,19 @@ struct HomeView: View {
 
                     Spacer()
                 }
-                .padding()
 
-                Text(today)
-                    .font(.title2)
-                    .bold()
-                    .padding(.horizontal, Spacing.content)
+                HStack {
+                    Text(today)
+                        .font(.title2)
+                        .bold()
+                    
+                    Spacer()
+                }
 
-                HStack(spacing: 0) {
+                HStack(spacing: Spacing.layout) {
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(.white)
-                        .frame(minWidth: 170, minHeight: 200)
+                        .fill(colorScheme == .dark ? Color(.gray) : .white)
+                        .frame(minHeight: 180)
                         .defaultShadow()
                         .overlay(alignment: .topLeading) {
                             VStack(alignment: .leading, spacing: Spacing.content) {
@@ -71,56 +81,32 @@ struct HomeView: View {
                             }
                             .padding()
                         }
-                        .padding(.horizontal, Spacing.content)
 
-                    ZStack {
-                        Circle()
-                            .padding(.horizontal, Spacing.content)
-                            .frame(minWidth: 170)
-                            .foregroundStyle(.accentButton)
-
-                        Circle()
-                            .frame(maxWidth: 140)
-                            .foregroundStyle(.gray)
-
-                        VStack(spacing: 0) {
-                            Group {
-                                Text("Today")
-                                    .font(.footnote)
-                                    .bold()
-
-                                Text("schedule")
-                                    .font(.footnote)
-
-                                Text("attainment")
-                                    .font(.footnote)
-
-                                Text("88%")
-                                    .font(.title)
-                                    .bold()
-                                    .padding(Spacing.content)
-                            }
-                            .multilineTextAlignment(.center)
+                    RoundedRectangle(cornerRadius: CornerRadius.large)
+                        .fill(colorScheme == .dark ? Color(.gray) : .white)
+                        .frame(minHeight: 180)
+                        .defaultShadow()
+                        .overlay {
+                            
                         }
-                    }
                 }
                 
                 HStack {
-                    Spacer()
                     
                     VStack {
-                        if viewModel.todaySchedules.isEmpty {
+                        if isCompleteSchedules.isEmpty {
                             Text("일정을 추가 해주세요.")
-                                .padding(.vertical, 25)
+                                .padding(.vertical, 40)
                                 .background(
                                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                                        .fill(.white)
-                                        .frame(width: UIScreen.main.bounds.width - 46, height: 90)
+                                        .fill(colorScheme == .dark ? Color(.gray) : .white)
+                                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 3), height: 100)
                                         .defaultShadow()
                                 )
                         } else {
-                            ForEach(viewModel.todaySchedules) { schedule in
+                            ForEach(isCompleteSchedules) { schedule in
                                 ScheduleCardView(
+                                    manualScheduleVM: manualScheduleVM,
                                     schedule: schedule,
                                     swipedScheduleId: swipedScheduleId,
                                     swipedDirection: swipedDirection) { id, direction in
@@ -129,45 +115,24 @@ struct HomeView: View {
                                             swipedDirection = direction
                                         }
                                     }
+                                    .padding(.vertical, Spacing.content)
                             }
                         }
                     }
-                    .padding(.vertical, Spacing.layout)
-                    .padding(.horizontal, Spacing.inline)
                     .onAppear {
-                        viewModel.loadTodaySchedules()
+                        manualScheduleVM.loadTodaySchedules()
                     }
                     
-                    Spacer()
                 }
-                
-                Text("오늘의 한마디")
-                    .font(.title2)
-                    .bold()
-                    .padding(Spacing.content)
-
-                Text("날씨")
-                    .font(.title2)
-                    .bold()
-                    .padding(Spacing.content)
-
-                Text("추천 식단")
-                    .font(.title2)
-                    .bold()
-                    .padding(Spacing.content)
-
-                Text("추천 영상")
-                    .font(.title2)
-                    .bold()
-                    .padding(Spacing.content)
-
-                Text("추천 글")
-                    .font(.title2)
-                    .bold()
-                    .padding(Spacing.content)
+                .padding(.bottom, Spacing.layout)
             }
-            .padding()
-            .padding(.bottom, 80)
+            .padding(.horizontal)
+    
+            RecommendView(homeVM: homeVM)
+                .padding(.bottom, 100)
+        }
+        .onAppear {
+//            homeVM.videoRequest()
         }
     }
 }

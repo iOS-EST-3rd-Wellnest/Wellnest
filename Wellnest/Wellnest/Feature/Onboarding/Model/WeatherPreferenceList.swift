@@ -9,16 +9,16 @@ import Foundation
 
 struct WeatherPreference: SelectableItem {
     let id = UUID()
-    let icon: String?
-    let category: String
+    let icon: String
+    let title: String
     var isSelected: Bool = false
 
     static let weathers: [WeatherPreference] = [
-        WeatherPreference(icon: "☀️", category: "맑음"),
-        WeatherPreference(icon: "🌥️", category: "흐림"),
-        WeatherPreference(icon: "🌧️", category: "비"),
-        WeatherPreference(icon: "🌨️", category: "눈"),
-        WeatherPreference(icon: "🔍", category: "기타"),
-        WeatherPreference(icon: "", category: "특별히 없음")
+        WeatherPreference(icon: "☀️", title: "맑음"),
+        WeatherPreference(icon: "🌥️", title: "흐림"),
+        WeatherPreference(icon: "🌧️", title: "비"),
+        WeatherPreference(icon: "🌨️", title: "눈"),
+        WeatherPreference(icon: "❔", title: "기타"),
+        WeatherPreference(icon: "💬", title: "특별히 없음")
     ]
 }

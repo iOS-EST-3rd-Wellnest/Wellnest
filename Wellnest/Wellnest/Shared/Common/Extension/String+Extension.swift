@@ -25,4 +25,14 @@ extension String {
             .prefix(maxLength)
             .description
     }
+
+    /// 문자열의 앞 3글자(이모지 1글자 + 공백 2글자)를 제거한 새로운 문자열을 반환
+    var withoutPrefix3: String {
+        if self.count > 3 {
+            let startIndex = self.index(self.startIndex, offsetBy: 3)
+            return String(self[startIndex...])
+        } else {
+            return self
+        }
+    }
 }

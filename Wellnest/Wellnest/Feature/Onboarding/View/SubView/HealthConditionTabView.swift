@@ -8,9 +8,13 @@
 import SwiftUI
 
 struct HealthConditionTabView: View {
+    var userEntity: UserEntity
+    var viewModel: UserInfoViewModel
+
     @ObservedObject var userDefaultsManager: UserDefaultsManager
     
     @Binding var currentPage: Int
+    @Binding var title: String
 
     @State private var conditions = HealthCondition.conditions
 
@@ -20,20 +24,41 @@ struct HealthConditionTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitle(title: "현재 건강 상태", description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?", currentPage: currentPage, onBack: { withAnimation { currentPage -= 1 } })
-
+            OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
             OnboardingCardContent(items: $conditions)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             FilledButton(title: "완료") {
-                userDefaultsManager.isOnboarding = true
+                saveHealthCondition()
+                withAnimation {
+                    userDefaultsManager.isOnboarding = true
+                }
             }
             .disabled(isButtonDisabled)
             .opacity(isButtonDisabled ? 0.5 : 1.0)
             .padding()
             .background(.white)
         }
+        .onAppear {
+            title = "현재 건강 상태"
+        }
+    }
+}
+
+extension HealthConditionTabView {
+    private func saveHealthCondition() {
+        let selectedConditions = conditions.filter { $0.isSelected }
+
+        if selectedConditions.contains(where: { $0.title == "특별히 없음" }) {
+            userEntity.healthConditions = nil
+        } else {
+            let conditions = selectedConditions.map { $0.title }.joined(separator: ", ")
+            userEntity.healthConditions = conditions
+        }
+
+        print(userEntity)
+        try? CoreDataService.shared.saveContext()
     }
 }
 
@@ -42,9 +67,21 @@ struct HealthConditionTabView: View {
 }
 
 private struct Preview: View {
+    @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
+    @State private var title = ""
 
     var body: some View {
-        HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage)
+        if let userEntity = userInfoVM.userEntity {
+            HealthConditionTabView(
+                userEntity: userEntity,
+                viewModel: userInfoVM,
+                userDefaultsManager: UserDefaultsManager.shared,
+                currentPage: $currentPage,
+                title: $title
+            )
+        } else {
+            ProgressView("Loading...")
+        }
     }
 }
