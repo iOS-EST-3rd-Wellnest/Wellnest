@@ -9,25 +9,36 @@ import SwiftUI
 import UserNotifications
 
 struct NotificationView: View {
-    @State var isOn = false
     @StateObject private var userDefault = UserDefaultsManager.shared
     
     var body: some View {
-        Text("알림 설정을 해주세요.")
-            .padding()
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(lineWidth: 1)
-            }
-        
         Toggle(isOn: $userDefault.isNotificationEnabled) {
-            Text("앱 내의 알림 받기")
+            ReminderRow(icon: "bell", title: "알림 설정")
         }
         .onChange(of: userDefault.isNotificationEnabled) { newValue in
             if newValue {
                 LocalNotiManager.shared.requestNotificationAuthorization()
             }
         }
+    }
+}
+
+struct ReminderRow: View {
+    let icon: String
+    let title: String
+    
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 28, height: 28)
+            
+            Text(title)
+                .foregroundStyle(.primary)
+            
+            Spacer()
+        }
+        .padding(Spacing.content)
     }
 }
 
