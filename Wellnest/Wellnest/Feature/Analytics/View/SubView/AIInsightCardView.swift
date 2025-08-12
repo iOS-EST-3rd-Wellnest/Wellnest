@@ -13,7 +13,7 @@ struct AIInsightCardView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.gray) : .white)
-            .frame(minHeight: 120)
+            .frame(minHeight: 80)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 HStack(spacing: Spacing.content) {
