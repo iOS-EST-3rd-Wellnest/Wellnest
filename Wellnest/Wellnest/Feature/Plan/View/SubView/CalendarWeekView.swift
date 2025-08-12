@@ -10,7 +10,9 @@ import SwiftUI
 struct CalendarWeekView: View {
     @ObservedObject var planVM: PlanViewModel
 
+
     let calendar = Calendar.current
+
     var body: some View {
         GeometryReader { geo in
 
@@ -24,10 +26,14 @@ struct CalendarWeekView: View {
 
                 VStack(spacing: 0) {
                     CalendarLayout(fixedCellHeight: planVM.calenderHeight(width: geo.size.width, rows: 1)) {
+
+
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
+                            let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
+
                             Text(Date.weekdays[date.weekdayIndex])
                                 .font(.subheadline)
-                                .foregroundStyle(date.weekdayColor)
+                                .foregroundStyle(isSelected ? Color.white : date.weekdayColor)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .allowsHitTesting(false)
                         }
@@ -35,8 +41,12 @@ struct CalendarWeekView: View {
 
                     CalendarLayout(fixedCellHeight: planVM.calenderHeight(width: geo.size.width, rows: 1)) {
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
+
+                            let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
+
                             Text("\(date.dayNumber)")
                                 .font(.system(size: 16))
+                                .foregroundStyle(isSelected ? Color.white : date.weekdayColor)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .allowsHitTesting(false)
                         }
@@ -60,7 +70,7 @@ struct CalendarWeekView: View {
                  Group {
                      if isSelected {
                          RoundedRectangle(cornerRadius: CornerRadius.medium)
-                             .foregroundColor(Color.blue)
+                             .foregroundStyle(Color.accentColor)
                      } else if isToday {
                          RoundedRectangle(cornerRadius: CornerRadius.medium)
                              .stroke(Color.gray.opacity(0.5), lineWidth: 1)
