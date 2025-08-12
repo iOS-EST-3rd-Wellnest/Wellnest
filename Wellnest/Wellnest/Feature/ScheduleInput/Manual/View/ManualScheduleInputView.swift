@@ -93,7 +93,6 @@ struct ManualScheduleInputView: View {
                                 onReturn: {
                                     currentFocus = .detail
                                     showLocationSearchSheet = true
-                                    currentFocus = nil
                                 },
                                 onEditing: {
                                     if currentFocus != .title {
@@ -114,9 +113,10 @@ struct ManualScheduleInputView: View {
                                     currentFocus = nil
                                 },
                                 onEditing: {
-                                    if currentFocus != .detail {
+                                    if currentFocus == .title {
                                         currentFocus = .detail
                                         showLocationSearchSheet = true
+                                    } else if currentFocus == .detail {
                                         currentFocus = nil
                                     }
                                 }

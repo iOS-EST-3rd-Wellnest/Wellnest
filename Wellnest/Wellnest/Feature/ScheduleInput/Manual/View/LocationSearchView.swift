@@ -82,7 +82,10 @@ struct LocationSearchView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .destructiveAction) {
-                    Button { dismiss() } label: {
+                    Button {
+                        isPresented = false
+                        dismiss()
+                    } label: {
                         Image(systemName: "xmark").foregroundColor(.black)
                     }
                 }
