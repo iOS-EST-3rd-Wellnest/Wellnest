@@ -15,13 +15,12 @@ struct CalendarHeaderView: View {
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(.spring) {
                     showDatePicker.toggle()
-                }
             } label: {
                 HStack(spacing: 4) {
                     Text(planVM.displayedMonth.dateFormat("YYYY년 M월"))
                         .font(.title2)
+                        .fontWeight(.semibold)
                     Image(systemName:"arrowtriangle.down.fill")
                         .font(.body)
                         .rotationEffect(.degrees(showDatePicker ? 180 : 0))

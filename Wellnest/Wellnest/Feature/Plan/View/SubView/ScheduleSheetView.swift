@@ -10,7 +10,7 @@ import SwiftUI
 struct ScheduleSheetView: View {
     @ObservedObject var planVM: PlanViewModel
     @Binding var isSheetExpanded: Bool
- 
+
     @State private var currentDragOffset: CGFloat = 0
     @State private var isDragging: Bool = false
 
@@ -21,7 +21,7 @@ struct ScheduleSheetView: View {
                 .frame(width: 60, height: 5)
                 .frame(maxWidth: .infinity)
                 .scaleEffect(isDragging ? 1.2 : 1.0)
-                .animation(.easeInOut, value: isDragging)
+//                .animation(.easeInOut, value: isDragging)
 
             Text(planVM.selectedDate.dateFormat("M월 d일 E요일"))
                 .font(.headline)
@@ -40,7 +40,7 @@ struct ScheduleSheetView: View {
                 .padding(.horizontal)
             }
             .scrollDisabled(isDragging || !isSheetExpanded)
-            
+
             Spacer()
         }
         .padding(.top, Spacing.layout)
@@ -48,8 +48,8 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
-//        .animation(.spring, value: isSheetExpanded)
-        .animation(.spring, value: currentDragOffset)
+        //        .animation(.spring, value: isSheetExpanded)
+//        .animation(.spring, value: currentDragOffset)
     }
 
     private var dragGesture: some Gesture {
@@ -65,15 +65,14 @@ struct ScheduleSheetView: View {
 
                 let threshold: CGFloat = 100
 
-                withAnimation(.spring) {
-                    if value.translation.height < -threshold {
-                        isSheetExpanded = true
-                    } else if value.translation.height > threshold {
-                        isSheetExpanded = false
-                    }
-
-                    currentDragOffset = 0
+                if value.translation.height < -threshold {
+                    isSheetExpanded = true
+                } else if value.translation.height > threshold {
+                    isSheetExpanded = false
                 }
+
+                currentDragOffset = 0
+
             }
     }
 

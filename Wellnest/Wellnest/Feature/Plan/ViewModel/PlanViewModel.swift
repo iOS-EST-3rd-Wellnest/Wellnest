@@ -26,10 +26,10 @@ final class PlanViewModel: ObservableObject {
         let normalized = selectedDate.startOfDay
 
         self.selectedDate = normalized
-        self.displayedMonth = normalized.startOfMonth ?? normalized
+        self.displayedMonth = normalized.startOfMonth
         self.calendarDates = normalized.filledDatesOfMonth()
         self.months = (-12...12).compactMap {
-            calendar.date(byAdding: .month, value: $0, to: normalized.startOfMonth ?? normalized)
+            calendar.date(byAdding: .month, value: $0, to: normalized.startOfMonth)
         }
     }
 }
@@ -93,7 +93,7 @@ extension PlanViewModel {
         selectedDate = normalized
 
         if !Calendar.current.isDate(normalized, equalTo: displayedMonth, toGranularity: .month) {
-            displayedMonth = normalized.startOfMonth ?? normalized
+            displayedMonth = normalized.startOfMonth
             calendarDates = displayedMonth.filledDatesOfMonth()
         }
     }

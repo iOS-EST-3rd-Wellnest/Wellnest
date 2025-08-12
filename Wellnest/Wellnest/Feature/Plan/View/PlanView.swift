@@ -12,49 +12,77 @@ struct PlanView: View {
 
     @State private var isSheetExpanded: Bool = false
     @State private var showDatePicker: Bool = false
+    @State private var headerHeight: CGFloat = 0
 
     var body: some View {
-        GeometryReader { geo in
+        ZStack {
             VStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    CalendarHeaderView(planVM: planVM,  showDatePicker: $showDatePicker)
-                        .padding()
-
-                    if isSheetExpanded {
-                        CalendarWeekView(planVM: planVM)
-                    } else {
-                        CalendarPagingView(planVM: planVM)
-                    }
+                if isSheetExpanded {
+                    CalendarWeekView(planVM: planVM)
+                } else {
+                    CalendarPagingView(planVM: planVM)
                 }
 
                 ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded)
                     .frame(maxHeight: .infinity)
                     .padding(.top)
             }
-            .overlay {
-                if showDatePicker {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea(.all)
-                        .onTapGesture {
-                            withAnimation(.spring) {
-                                showDatePicker = false
+            .padding(.top, headerHeight)
+            .zIndex(0)
+            
+            if showDatePicker {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea(.all)
+                    .onTapGesture {
+                            showDatePicker = false
+                    }
+                    .zIndex(1)
+            }
+
+            if showDatePicker {
+                DatePickerSheetView(
+                    planVM: planVM,
+                    showDatePicker: $showDatePicker,
+                    headerHeight: headerHeight
+                )
+                .transition(.asymmetric(
+                    insertion: .move(edge: .top),
+                    removal: .move(edge: .top)
+                ))
+                .zIndex(2)
+            }
+
+            VStack(spacing: 0) {
+                HStack {
+                    CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
+                        .padding(.vertical, Spacing.content)
+                        .background {
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        headerHeight = geo.size.height
+                                    }
+                                    .onChange(of: geo.size.height) { newValue in
+                                        headerHeight = newValue
+                                    }
                             }
                         }
 
+                    Spacer()
+
+                    Button {
+                        planVM.selectedDate = Date().startOfDay
+                        planVM.displayedMonth = Date().startOfMonth
+                    } label: {
+                        Text("오늘")
+                    }
                 }
+
+
+                Spacer()
             }
-            .overlay {
-                if showDatePicker {
-                    DatePickerSheetView(
-                        planVM: planVM,
-                        showDatePicker: $showDatePicker
-                    )
-                    .transition(.asymmetric(
-                         insertion: .move(edge: .top),
-                         removal: .move(edge: .top)
-                     ))
-                }
-            }
+            .padding(.horizontal)
+            .zIndex(3)
         }
         .ignoresSafeArea(edges: .bottom)
     }

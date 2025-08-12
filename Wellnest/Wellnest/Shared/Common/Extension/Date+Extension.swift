@@ -13,8 +13,10 @@ extension Date {
         Calendar.current.startOfDay(for: self)
     }
 
-    var startOfMonth: Date? {
-        Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: self))
+    var startOfMonth: Date{
+        Calendar.current.date(
+            from: Calendar.current.dateComponents([.year, .month], from: self)
+        ) ?? self
     }
 
     var dayNumber: Int {
