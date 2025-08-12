@@ -59,6 +59,7 @@ struct CalendarInterworkView: View {
         .padding()
         .navigationTitle("캘린더 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
+        .padding(.bottom, 100)
     }
     
     func handleCalendarAccess() {
