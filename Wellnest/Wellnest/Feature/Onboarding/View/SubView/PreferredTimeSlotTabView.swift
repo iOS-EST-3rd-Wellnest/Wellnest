@@ -27,16 +27,10 @@ struct PreferredTimeSlotTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 savePreferredTimeSlot()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-            .background(.white)
         }
         .onAppear {
             title = "활동 시간대"

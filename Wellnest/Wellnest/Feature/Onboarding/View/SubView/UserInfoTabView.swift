@@ -51,7 +51,7 @@ struct UserInfoTabView: View {
                     .padding(.leading, 10)
                     .focused($isNicknameFieldFocused)
                     .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                    .disableAutocorrection(true)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
                     }
@@ -165,15 +165,10 @@ struct UserInfoTabView: View {
 
             Spacer()
 
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveUserInfo()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
         }
         .onAppear {
             title = "사용자 정보"

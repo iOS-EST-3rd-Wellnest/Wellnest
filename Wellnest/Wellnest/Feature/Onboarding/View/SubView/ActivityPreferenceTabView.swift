@@ -27,18 +27,10 @@ struct ActivityPreferenceTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveActivityPreference()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-//            .background(.white) // TODO: 방법 1) 하얀색 배경
-            .background(.ultraThinMaterial) // TODO: 방법 2) 블러 배경
-                                            // TODO: 방법 3) 배경 없음(투명)
         }
         .onAppear {
             title = "선호 활동"

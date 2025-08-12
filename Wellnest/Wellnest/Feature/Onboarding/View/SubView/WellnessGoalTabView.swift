@@ -63,15 +63,12 @@ struct WellnessGoalTabView: View {
 
             Spacer()
 
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveWellnessGoal()
                 withAnimation {
                     currentPage += 1
                 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
         }
         .onAppear {
             title = "웰니스 목표"

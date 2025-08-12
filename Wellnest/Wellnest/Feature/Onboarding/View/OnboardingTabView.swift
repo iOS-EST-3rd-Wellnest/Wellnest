@@ -94,6 +94,38 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
     }
 }
 
+struct OnboardingButton: View {
+    let title: String
+    let isDisabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.white.opacity(0.0),
+                    Color.white.opacity(1.0)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 16)
+            
+            FilledButton(
+                title: title,
+                action: action,
+                backgroundColor: isDisabled ? .secondary : .blue
+            )
+            .disabled(isDisabled)
+            .opacity(isDisabled ? 0.5 : 1.0)
+            .padding(.horizontal)
+            .padding(.bottom)
+            .padding(.top, Spacing.inline)
+            .background(.white)
+        }
+    }
+}
+
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
