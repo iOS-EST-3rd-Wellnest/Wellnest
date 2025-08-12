@@ -33,7 +33,7 @@ struct UserInfoTabView: View {
     }
 
     var body: some View {
-        VStack {
+        ScrollView {
             OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
 
             VStack {
@@ -162,9 +162,9 @@ struct UserInfoTabView: View {
                 }
             }
             .padding(.horizontal, spacing)
-
-            Spacer()
-
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
             OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveUserInfo()
                 withAnimation { currentPage += 1 }
