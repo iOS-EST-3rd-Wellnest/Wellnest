@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct HealthConditionTabView: View {
+    var userEntity: UserEntity
+    var viewModel: UserInfoViewModel
+
     @ObservedObject var userDefaultsManager: UserDefaultsManager
     
     @Binding var currentPage: Int
@@ -22,12 +25,12 @@ struct HealthConditionTabView: View {
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
-
             OnboardingCardContent(items: $conditions)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             FilledButton(title: "완료") {
+                saveHealthCondition()
                 withAnimation {
                     userDefaultsManager.isOnboarding = true
                 }
@@ -43,15 +46,42 @@ struct HealthConditionTabView: View {
     }
 }
 
+extension HealthConditionTabView {
+    private func saveHealthCondition() {
+        let selectedConditions = conditions.filter { $0.isSelected }
+
+        if selectedConditions.contains(where: { $0.title == "특별히 없음" }) {
+            userEntity.healthConditions = nil
+        } else {
+            let conditions = selectedConditions.map { $0.title }.joined(separator: ", ")
+            userEntity.healthConditions = conditions
+        }
+
+        print(userEntity)
+        try? CoreDataService.shared.saveContext()
+    }
+}
+
 #Preview {
     Preview()
 }
 
 private struct Preview: View {
+    @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = ""
 
     var body: some View {
-        HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
+        if let userEntity = userInfoVM.userEntity {
+            HealthConditionTabView(
+                userEntity: userEntity,
+                viewModel: userInfoVM,
+                userDefaultsManager: UserDefaultsManager.shared,
+                currentPage: $currentPage,
+                title: $title
+            )
+        } else {
+            ProgressView("Loading...")
+        }
     }
 }

@@ -77,7 +77,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                                     .font(.system(size: 60))
                                     .saturation(item.isSelected ? 1 : 0) // 채도 조절
 
-                            Text(item.category)
+                            Text(item.title)
                                 .fontWeight(.semibold)
                                 .foregroundColor(item.isSelected ? .white : .secondary)
                         }
@@ -97,6 +97,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
+    @StateObject private var userDataVM = UserInfoViewModel()
 
     @State private var currentPage: Int = 0
     @State private var title: String = ""
@@ -108,28 +109,33 @@ struct OnboardingTabView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // 사용자 입력을 받지 않아도 페이징이 되는 걸 막기 위함
-                switch currentPage {
-                case 0:
-                    MotivationTabView(currentPage: $currentPage, title: $title)
-                case 1:
-                    IntroductionTabView(currentPage: $currentPage, title: $title)
-                case 2:
-                    IntroductionTabView(currentPage: $currentPage, title: $title)
-                case 3:
-                    UserInfoTabView(currentPage: $currentPage, title: $title)
-                case 4:
-                    WellnessGoalTabView(currentPage: $currentPage, title: $title)
-                case 5:
-                    ActivityPreferenceTabView(currentPage: $currentPage, title: $title)
-                case 6:
-                    PreferredTimeSlotTabView(currentPage: $currentPage, title: $title)
-                case 7:
-                    WeatherPreferenceTabView(currentPage: $currentPage, title: $title)
-                case 8:
-                    HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
-                default:
-                    EmptyView()
+                if let user = userDataVM.userEntity {
+                    switch currentPage {
+                    case 0:
+                        MotivationTabView(currentPage: $currentPage, title: $title)
+                    case 1, 2:
+                        IntroductionTabView(currentPage: $currentPage, title: $title)
+                    case 3:
+                        UserInfoTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                    case 4:
+                        WellnessGoalTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                    case 5:
+                        ActivityPreferenceTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                    case 6:
+                        PreferredTimeSlotTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                    case 7:
+                        WeatherPreferenceTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                    case 8:
+                        HealthConditionTabView(userEntity: user, viewModel: userDataVM, userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
+                    default:
+                        EmptyView()
+                    }
+                } else {
+                    if currentPage == 0 {
+                        MotivationTabView(currentPage: $currentPage, title: $title)
+                    } else if currentPage == 1 || currentPage == 2 {
+                        IntroductionTabView(currentPage: $currentPage, title: $title)
+                    }
                 }
                 // TabView(selection: $currentPage) {
                 //                MotivationTabView(currentPage: $currentPage)
