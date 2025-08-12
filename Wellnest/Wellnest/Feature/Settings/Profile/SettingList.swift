@@ -36,7 +36,7 @@ struct SettingList: View {
                         NavigationLink {
                             CalendarInterworkView()
                         } label: {
-                            SettingsRow(icon: "calendar", title: "캘린더 연동")
+                            SettingsRow(icon: "calendar", title: "캘린더 앱 연동")
                                 .foregroundStyle(darkMode == .dark ? .white : .black)
                         }
                         

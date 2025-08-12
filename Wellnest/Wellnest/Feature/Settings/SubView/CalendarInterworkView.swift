@@ -52,57 +52,12 @@ struct CalendarInterworkView: View {
             
             Spacer()
             
-            Button {
+            FilledButton(title: "캘린더 앱 연동하기") {
                 
-            } label: {
-                Text("캘린더 앱 연동하기")
-                    .padding(Spacing.content)
-                    .frame(maxWidth: .infinity)
-                    .fontWeight(.bold)
             }
-            .buttonStyle(.borderedProminent)
-            .padding(.bottom, 100)
         }
-//        VStack {
-//            Spacer()
-//            
-//            Text("캘린더앱과 연동하여 일정을 가져옵니다.")
-//                .padding()
-//                .overlay {
-//                    RoundedRectangle(cornerRadius: CornerRadius.medium)
-//                        .stroke(lineWidth: 1)
-//                }
-//            
-//            Toggle(isOn: $isOn) {
-//                Text("캘린더 연동하기")
-//            }
-//            .onChange(of: isOn) { newValue in
-//                if newValue {
-//                    handleCalendarAccess()
-//                    
-//                    let store = EKEventStore()
-//                    store.requestAccess(to: .event) { granted, error in
-//                        if let error {
-//                            print("에러발생: \(error)")
-//                        }
-//                        
-//                        if granted {
-//                            print("캘린더 접근 허용")
-//                        } else {
-//                            print("캘린더 접근 거부")
-//                        }
-//                    }
-//                }
-//            }
-//            
-//            Spacer()
-//            
-//            if isOn {
-//                // TODO: 연동코드 작성
-//            }
-//        }
         .padding()
-        .navigationTitle("캘린더 연동")
+        .navigationTitle("캘린더 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
     }
     
