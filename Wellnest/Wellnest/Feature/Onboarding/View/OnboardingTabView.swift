@@ -79,10 +79,10 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
                             Text(item.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? .white : .secondary)
+                                .foregroundColor(item.isSelected ? .black : .secondary)
                         }
                         .frame(width: cardWidth, height: cardWidth)
-                        .background(item.isSelected ? .blue : .customSecondary)
+                        .background(item.isSelected ? .customGray : .customSecondary)
                         .cornerRadius(CornerRadius.large)
                     }
                     .defaultShadow()

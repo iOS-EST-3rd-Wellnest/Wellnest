@@ -45,14 +45,14 @@ struct WellnessGoalTabView: View {
                         HStack {
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .white : .secondary)
+                                .foregroundColor(goal.isSelected ? .black : .secondary)
                                 .padding(.leading)
 
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)
-                        .background(goal.isSelected ? .blue : .customSecondary)
+                        .background(goal.isSelected ? .customGray : .customSecondary)
                         .cornerRadius(CornerRadius.large)
                     }
                     .padding(.bottom, Spacing.content)
