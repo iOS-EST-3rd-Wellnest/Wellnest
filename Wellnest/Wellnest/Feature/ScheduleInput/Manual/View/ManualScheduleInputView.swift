@@ -19,7 +19,6 @@ struct ManualScheduleInputView: View {
 
     enum InputField: Hashable {
         case title
-        case location
     }
 
     // MARK: - locationSection
@@ -88,9 +87,9 @@ struct ManualScheduleInputView: View {
                                 returnKeyType: .next,
                                 keyboardType: .default,
                                 onReturn: {
-                                    currentFocus = .location
-                                    showLocationSearchSheet = true
                                     currentFocus = nil
+                                    showLocationSearchSheet = true
+
                                 },
                                 onEditing: {
                                     if currentFocus != .title {
@@ -102,8 +101,8 @@ struct ManualScheduleInputView: View {
                         Divider()
                         HStack {
                             Button {
-                                showLocationSearchSheet = true
                                 currentFocus = nil
+                                showLocationSearchSheet = true
                             } label: {
                                 HStack {
                                     Text(location.isEmpty ? "장소" : location)
