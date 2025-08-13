@@ -11,7 +11,6 @@ struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
-    @State private var currentFocus: InputField? = .title
     // 일정 제목
     @State private var title: String = ""
 
@@ -62,7 +61,6 @@ struct ManualScheduleInputView: View {
 
     @State private var isRepeatEndDateOpen: Bool = false
 
-
     // MARK: - alarmSection
 
     // 알람 여부
@@ -74,151 +72,164 @@ struct ManualScheduleInputView: View {
     // 일정 상세 정보 - 아직 미정
     @State private var detail: String = ""
 
+    @State var isKeyboardVisible: Bool = true
 
     var body: some View {
         NavigationView {
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: Spacing.layout) {
-                    VStack {
-                        HStack {
-                            FocusableTextField(
-                                text: $title,
-                                placeholder: "일정을 입력하세요.",
-                                isFirstResponder: currentFocus == .title,
-                                returnKeyType: .next,
-                                keyboardType: .default,
-                                onReturn: {
-                                    currentFocus = nil
-                                    showLocationSearchSheet = true
-
-                                },
-                                onEditing: {
-                                    if currentFocus != .title {
-                                        currentFocus = .title
+            ZStack(alignment: .bottom) {
+                ScrollView(.vertical) {
+                    VStack(alignment: .leading, spacing: Spacing.layout) {
+                        VStack {
+                            HStack {
+                                FocusableTextField(
+                                    text: $title,
+                                    placeholder: "일정을 입력하세요.",
+                                    isFirstResponder: isKeyboardVisible,
+                                    returnKeyType: .next,
+                                    keyboardType: .default,
+                                    onReturn: {
+                                        showLocationSearchSheet = true
+                                        isKeyboardVisible = false
+                                    },
+                                    onEditing: {
+                                        if !isKeyboardVisible {
+                                            isKeyboardVisible = true
+                                        }
                                     }
-                                }
-                            )
-                        }
-                        Divider()
-                        HStack {
-                            Button {
-                                currentFocus = nil
-                                showLocationSearchSheet = true
-                            } label: {
-                                HStack {
-                                    Text(location.isEmpty ? "장소" : location)
-                                        .foregroundStyle(location.isEmpty ? .tertiary : .primary)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Image(systemName: "magnifyingglass")
-                                        .frame(width: 20, height: 20)
-                                }
-                                .contentShape(Rectangle())
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                )
                             }
-                            .buttonStyle(.plain)
-                            .frame(maxWidth: .infinity)
+                            Divider()
+                            HStack {
+                                Button {
+                                    showLocationSearchSheet = true
+                                    isKeyboardVisible = false
+                                } label: {
+                                    HStack {
+                                        Text(location.isEmpty ? "장소" : location)
+                                            .foregroundStyle(location.isEmpty ? .tertiary : .primary)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Image(systemName: "magnifyingglass")
+                                            .frame(width: 20, height: 20)
+                                    }
+                                    .contentShape(Rectangle())
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+                                .frame(maxWidth: .infinity)
 
+                            }
+                            .padding(.top, 2)
+                            .sheet(isPresented: $showLocationSearchSheet) {
+                                LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
+                            }
+                            Divider()
                         }
-                        .padding(.top, 2)
-                        .sheet(isPresented: $showLocationSearchSheet) {
-                            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
+                        PeriodPickerView(
+                            startDate: $startDate,
+                            endDate: $endDate,
+                            isAllDay: $isAllDay
+                        )
+                        .padding(.bottom, 5)
+                        TagToggleSection(
+                            title: "반복",
+                            tags: RepeatRule.tags,
+                            isOn: $isRepeated,
+                            selectedTag: $selectedRepeatRule,
+                            showDetail: selectedRepeatRule != nil,
+                            detailContent: {
+                                AnyView(
+                                    EndDateSelectorView(endDate: $repeatEndDate)
+                                )
+                            },
+                            onTagTap: { _ in
+                                UIApplication.hideKeyboard()
+                            }
+                        )
+                        .padding(.bottom, 5)
+                        .onChange(of: isRepeated) { newValue in
+                            UIApplication.hideKeyboard()
                         }
-                        Divider()
-                    }
-                    PeriodPickerView(
-                        startDate: $startDate,
-                        endDate: $endDate,
-                        isAllDay: $isAllDay
-                    )
-                    .padding(.bottom, 5)
-                    TagToggleSection(
-                        title: "반복",
-                        tags: RepeatRule.tags,
-                        isOn: $isRepeated,
-                        selectedTag: $selectedRepeatRule,
-                        showDetail: selectedRepeatRule != nil,
-                        detailContent: {
-                            AnyView(
-                                EndDateSelectorView(endDate: $repeatEndDate)
-                            )
-                        },
-                        onTagTap: { _ in
-                            currentFocus = nil
+                        TagToggleSection(
+                            title: "알람",
+                            tags: AlarmRule.tags,
+                            isOn: $isAlarm,
+                            selectedTag: $alarmRule,
+                            showDetail: false,
+                            detailContent: nil
+                        )
+                        .padding(.bottom, 5)
+                        .onChange(of: isAlarm) { newValue in
+                            UIApplication.hideKeyboard()
                         }
-                    )
-                    .padding(.bottom, 5)
-                    .onChange(of: isRepeated) { newValue in
-                        UIApplication.hideKeyboard()
-                    }
-                    TagToggleSection(
-                        title: "알람",
-                        tags: AlarmRule.tags,
-                        isOn: $isAlarm,
-                        selectedTag: $alarmRule,
-                        showDetail: false,
-                        detailContent: nil
-                    )
-                    .padding(.bottom, 5)
-                    .onChange(of: isAlarm) { newValue in
-                        UIApplication.hideKeyboard()
-                    }
-                    HStack {
-                        Text("배경색")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                        HStack {
+                            Text("배경색")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Button {
+                                showColorPickerSheet = true
+                            } label: {
+                                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                    .labelsHidden()
+                                    .disabled(true)
+                            }
+                        }
+                        .sheet(isPresented: $showColorPickerSheet) {
+                            ComposeView()
+                                .presentationDetents([.medium])
+                        }
                         Spacer()
+                    }
+                    .padding()
+
+                }
+                .onDisappear {
+                    UIApplication.hideKeyboard()
+                }
+                .navigationTitle("새 일정")
+                .scrollDismissesKeyboard(.interactively)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            showColorPickerSheet = true
+                            selectedCreationType = nil
+                            dismiss()
                         } label: {
-                            ColorPicker("배경 색상 선택", selection: $selectedColor)
-                                .labelsHidden()
-                                .disabled(true)
+                            Image(systemName: "xmark")
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .sheet(isPresented: $showColorPickerSheet) {
-                        ComposeView()
-                            .presentationDetents([.medium])
-                    }
-                    Spacer()
-                    
                 }
-                .padding()
             }
-            .onDisappear {
-                UIApplication.hideKeyboard()
-            }
-            .safeAreaInset(edge: .bottom) {
-                saveButton
-                    .padding()
-                    .background(.white)
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
-            }
-            .navigationTitle("새 일정")
-            .scrollDismissesKeyboard(.interactively)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+
+            .overlay(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    // 버튼 위로 덮일 페이드
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color.white.opacity(0.0), location: 0.0),
+                            .init(color: Color.white.opacity(1.0), location: 1.0),
+                        ]),
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    .frame(height: 28)
+
+                    // 버튼
+                    FilledButton(title: "저장하기", disabled: title.isEmpty) {
+                        saveSchedule()
+                        selectedTab = .plan
                         selectedCreationType = nil
                         dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.secondary)
                     }
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white.ignoresSafeArea(edges: .bottom))
                 }
             }
+            .padding(.bottom, 8)
+
         }
     }
-
-    private var saveButton: some View {
-        FilledButton(title: "저장하기", disabled: title.isEmpty) {
-            saveSchedule()
-            selectedTab = .plan
-            selectedCreationType = nil
-            dismiss()
-        }
-    }
-
 }
 
 extension ManualScheduleInputView {
