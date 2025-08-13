@@ -16,6 +16,7 @@ struct ManualScheduleInputView: View {
     @State private var title: String = ""
 
     @State private var selectedColor: Color = .blue
+    @State var showColorPickerSheet: Bool = false
 
     enum InputField: Hashable {
         case title
@@ -166,10 +167,20 @@ struct ManualScheduleInputView: View {
                             .font(.headline)
                             .fontWeight(.semibold)
                         Spacer()
-                        ColorPicker("배경 색상 선택", selection: $selectedColor)
-                            .labelsHidden()
+                        Button {
+                            showColorPickerSheet = true
+                        } label: {
+                            ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                .labelsHidden()
+                                .disabled(true)
+                        }
+                    }
+                    .sheet(isPresented: $showColorPickerSheet) {
+                        ComposeView()
+                            .presentationDetents([.medium])
                     }
                     Spacer()
+                    
                 }
                 .padding()
             }
