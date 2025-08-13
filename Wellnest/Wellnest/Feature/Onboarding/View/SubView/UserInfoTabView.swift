@@ -93,15 +93,6 @@ struct UserInfoTabView: View {
 
                 /// 성별
                 UserInfoForm(title: "성별", isRequired: true) {
-//                    Picker("", selection: $selectedGender) {
-//                        ForEach(genderOptions, id: \.self) {
-//                            Text($0)
-//                        }
-//                    }
-//                    .pickerStyle(.segmented)
-//                    .padding()
-//                    .padding(.leading, 16)
-
                     HStack(spacing: 10) {
                         ForEach(genderOptions, id: \.self) { option in
                             Button {
@@ -232,11 +223,14 @@ extension UserInfoTabView {
         userEntity.nickname = nickname
         userEntity.ageRange = selectedAge
         userEntity.gender = selectedGenterText
-        if let height = height, let weight = weight {
+        if let height = height {
             userEntity.height = NSNumber(value: height)
-            userEntity.weight = NSNumber(value: weight)
         } else {
             userEntity.height = nil
+        }
+        if let weight = weight {
+            userEntity.weight = NSNumber(value: weight)
+        } else {
             userEntity.weight = nil
         }
 
@@ -258,16 +252,15 @@ extension UserInfoTabView {
                 selectedGender = "남성 👨🏻"
             }
         }
-        if let height = height {
-            userEntity.height = NSNumber(value: height)
+        if let heightValue = userEntity.height?.intValue {
+            height = heightValue
         } else {
-            userEntity.height = nil
+            height = nil
         }
-
-        if let weight = weight {
-            userEntity.weight = NSNumber(value: weight)
+        if let weightValue = userEntity.weight?.intValue {
+            weight = weightValue
         } else {
-            userEntity.weight = nil
+            weight = nil
         }
     }
 }
