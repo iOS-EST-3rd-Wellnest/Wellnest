@@ -15,11 +15,11 @@ struct BarChartView: View {
         HStack(alignment: .bottom, spacing: Spacing.content) {
             ForEach(Array(data.enumerated()), id: \.offset) { index, value in
                 let maxValue = data.max() ?? 1
-                let normalizedHeight = CGFloat(value / maxValue) * 40
+                let normalizedHeight = CGFloat(value / maxValue) * 150
 
                 Rectangle()
                     .fill(color)
-                    .frame(width: 15, height: normalizedHeight)
+                    .frame(width: 30, height: normalizedHeight)
                     .cornerRadius(Spacing.inline)
             }
         }

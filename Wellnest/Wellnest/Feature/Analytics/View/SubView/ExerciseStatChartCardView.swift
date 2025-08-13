@@ -19,7 +19,7 @@ struct ExerciseStatChartCardView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.gray) : .white)
-            .frame(minHeight: 220)
+            .frame(minHeight: 320)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
@@ -112,16 +112,11 @@ struct ExerciseStatChartCardView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        LineChartView(
+                        BarChartView(
                             data: selectedPeriod == .week ? weeklyStepsData : monthlyStepsData,
                             color: .orange
                         )
-                        .frame(height: 70)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.gray.opacity(0.05))
-                        )
-                        .padding(.horizontal, 4)
+                        .frame(height: 140)
                     }
                 }
                 .padding()

@@ -19,7 +19,7 @@ struct SleepStatChartCardView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.gray) : .white)
-            .frame(minHeight: 220)
+            .frame(minHeight: 320)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
@@ -116,12 +116,7 @@ struct SleepStatChartCardView: View {
                             data: selectedPeriod == .week ? weeklySleepData : monthlySleepData,
                             color: .blue
                         )
-                        .frame(height: 70)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.gray.opacity(0.05))
-                        )
-                        .padding(.horizontal, 4)
+                        .frame(height: 140)
                     }
                 }
                 .padding()

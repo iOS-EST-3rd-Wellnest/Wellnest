@@ -10,53 +10,73 @@ import SwiftUI
 struct PlanCompletionCardView: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    private let completionRate: Double = 0.88
+    private let completedItems: Int = 4
+    private let totalItems: Int = 6
+
+    private var completionRate: Double {
+        guard totalItems > 0 else { return 0.0 }
+        return Double(completedItems) / Double(totalItems)
+    }
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.gray) : .white)
-            .frame(minHeight: 180)
+            .frame(minHeight: 150)
             .defaultShadow()
             .overlay {
-                HStack(spacing: 20) {
-                    // 왼쪽 정보
-                    VStack(alignment: .leading, spacing: Spacing.content) {
-                        Text("목표달성")
-                            .font(.title3)
-                            .bold()
+                VStack(alignment: .leading, spacing: Spacing.content) {
+                    HStack(spacing: Spacing.layout) {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 16)
+                                .frame(width: 100, height: 100)
 
-                        Text("\(Int(completionRate * 100))%")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundColor(.primary)
+                            Circle()
+                                .trim(from: 0, to: completionRate)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.green, .blue],
+                                        startPoint: .topTrailing,
+                                        endPoint: .bottomLeading
+                                    ),
+                                    style: StrokeStyle(lineWidth: 16, lineCap: .round)
+                                )
+                                .frame(width: 100, height: 100)
+                                .rotationEffect(.degrees(-90))
 
-                        Text("이번 주 달성률")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                    }
+                            Image(systemName: "flag.pattern.checkered")
+                                .font(.system(size: 35, weight: .bold))
+                                .foregroundStyle(.secondary)
+                            }
+                            .padding(8)
 
-                    Spacer()
+                        VStack(alignment: .leading, spacing: Spacing.content) {
+                            Text("\(Int(completionRate * 100))%")
+                                .font(.largeTitle)
+                                .bold()
 
-                    // 오른쪽 원형 차트
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 6)
-                            .frame(width: 80, height: 80)
+                            Text("오늘 일정이\n\(totalItems - completedItems)개 남았어요")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
 
-                        Circle()
-                            .trim(from: 0, to: completionRate)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.green, .blue],
-                                    startPoint: .topTrailing,
-                                    endPoint: .bottomLeading
-                                ),
-                                style: StrokeStyle(lineWidth: 6, lineCap: .round)
-                            )
-                            .frame(width: 80, height: 80)
-                            .rotationEffect(.degrees(-90))
+                            Spacer()
+                        }
+
+                        Spacer()
+
+                        VStack(alignment: .trailing) {
+                            Spacer()
+                            Text("오늘 달성률")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 .padding()
             }
     }
+}
+
+#Preview {
+    PlanCompletionCardView()
 }
