@@ -94,6 +94,9 @@ struct LocationSearchView: View {
                 // 한국 전체 힌트 + 사용 위치 설정(가능하면 실제 위치로 설정)
                 completerWrapper.center = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
             }
+            .onDisappear {
+                UIApplication.hideKeyboard()
+            }
         }
     }
 

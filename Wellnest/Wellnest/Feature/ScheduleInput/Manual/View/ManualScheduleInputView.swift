@@ -90,6 +90,7 @@ struct ManualScheduleInputView: View {
                                 onReturn: {
                                     currentFocus = .location
                                     showLocationSearchSheet = true
+                                    currentFocus = nil
                                 },
                                 onEditing: {
                                     if currentFocus != .title {
@@ -102,6 +103,7 @@ struct ManualScheduleInputView: View {
                         HStack {
                             Button {
                                 showLocationSearchSheet = true
+                                currentFocus = nil
                             } label: {
                                 HStack {
                                     Text(location.isEmpty ? "장소" : location)
