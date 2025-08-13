@@ -11,13 +11,10 @@ struct HealthConditionTabView: View {
     var userEntity: UserEntity
 
     @ObservedObject var viewModel: UserInfoViewModel
-
     @ObservedObject var userDefaultsManager: UserDefaultsManager
     
     @Binding var currentPage: Int
     @Binding var title: String
-
-//    @State private var conditions = HealthCondition.conditions
 
     var isButtonDisabled: Bool {
         !viewModel.healthConditions.contains(where: { $0.isSelected })
@@ -37,7 +34,6 @@ struct HealthConditionTabView: View {
         }
         .onAppear {
             title = "현재 건강 상태"
-//            ToggleCardHelper.restoreSelectedCards(items: &conditions, savedGoalString: userEntity.healthConditions, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }

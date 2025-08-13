@@ -15,8 +15,6 @@ struct WellnessGoalTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-//    @State private var goals = WellnessGoal.goals
-
     let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
@@ -75,7 +73,6 @@ struct WellnessGoalTabView: View {
         }
         .onAppear {
             title = "웰니스 목표"
-//            ToggleCardHelper.restoreSelectedCards(items: &goals, savedGoalString: userEntity.goal, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }

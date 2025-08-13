@@ -15,8 +15,6 @@ struct ActivityPreferenceTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-//    @State private var activities = ActivityPreference.activities
-
     var isButtonDisabled: Bool {
         !viewModel.activityPreferences.contains(where: { $0.isSelected })
     }
@@ -35,6 +33,7 @@ struct ActivityPreferenceTabView: View {
         }
         .onAppear {
             title = "선호 활동"
+            viewModel.loadActivities()
         }
     }
 }

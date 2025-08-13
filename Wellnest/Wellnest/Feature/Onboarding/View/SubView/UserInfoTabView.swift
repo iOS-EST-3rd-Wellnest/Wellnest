@@ -9,6 +9,7 @@ import SwiftUI
 
 struct UserInfoTabView: View {
     var userEntity: UserEntity
+    
     var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
@@ -252,12 +253,13 @@ extension UserInfoTabView {
                 selectedGender = "남성 👨🏻"
             }
         }
-        if let heightValue = userEntity.height?.intValue {
+        if let heightValue = userEntity.height?.intValue, heightValue != 0 {
             height = heightValue
         } else {
             height = nil
         }
-        if let weightValue = userEntity.weight?.intValue {
+
+        if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
         } else {
             weight = nil

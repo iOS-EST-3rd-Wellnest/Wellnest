@@ -15,8 +15,6 @@ struct WeatherPreferenceTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-//    @State private var weathers = WeatherPreference.weathers
-
     var isButtonDisabled: Bool {
         !viewModel.weatherPreferences.contains(where: { $0.isSelected })
     }
@@ -35,7 +33,6 @@ struct WeatherPreferenceTabView: View {
         }
         .onAppear {
             title = "선호 날씨"
-//            ToggleCardHelper.restoreSelectedCards(items: &weathers, savedGoalString: userEntity.weatherPreferences, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }

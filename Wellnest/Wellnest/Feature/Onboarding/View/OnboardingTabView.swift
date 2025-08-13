@@ -10,7 +10,8 @@ import SwiftUI
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
-    @StateObject private var userDataVM = UserInfoViewModel()
+
+    @StateObject private var viewModel = UserInfoViewModel()
 
     @State private var currentPage: Int = 0
     @State private var title: String = ""
@@ -22,24 +23,24 @@ struct OnboardingTabView: View {
     var body: some View {
         NavigationView {
             VStack {
-                if let user = userDataVM.userEntity {
+                if let user = viewModel.userEntity {
                     switch currentPage {
                     case 0:
                         MotivationTabView(currentPage: $currentPage, title: $title)
                     case 1, 2:
                         IntroductionTabView(currentPage: $currentPage, title: $title)
                     case 3:
-                        UserInfoTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                        UserInfoTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 4:
-                        WellnessGoalTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                        WellnessGoalTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 5:
-                        ActivityPreferenceTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                        ActivityPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 6:
-                        PreferredTimeSlotTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                        PreferredTimeSlotTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 7:
-                        WeatherPreferenceTabView(userEntity: user, viewModel: userDataVM, currentPage: $currentPage, title: $title)
+                        WeatherPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 8:
-                        HealthConditionTabView(userEntity: user, viewModel: userDataVM, userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
+                        HealthConditionTabView(userEntity: user, viewModel: viewModel, userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
                     default:
                         EmptyView()
                     }
@@ -235,7 +236,7 @@ struct OnboardingButton: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 16)
+            .frame(height: 24) // TODO: blur 높이 조정
 
             FilledButton(
                 title: title,
@@ -246,7 +247,7 @@ struct OnboardingButton: View {
             .opacity(isDisabled ? 0.5 : 1.0)
             .padding(.horizontal)
             .padding(.bottom)
-            .padding(.top, Spacing.inline) // TODO: 조금 더 높게 content로도 해보기
+            .padding(.top, Spacing.inline)
             .background(.white)
         }
     }

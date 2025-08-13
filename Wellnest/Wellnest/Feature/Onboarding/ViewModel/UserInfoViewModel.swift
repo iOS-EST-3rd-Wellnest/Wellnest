@@ -12,7 +12,7 @@ class UserInfoViewModel: ObservableObject {
     @Published var userEntity: UserEntity?
 
     @Published var wellnessGoals: [WellnessGoal] = WellnessGoal.goals
-    @Published var activityPreferences: [ActivityPreference] = ActivityPreference.activities
+    @Published var activityPreferences: [ActivityPreference] = []
     @Published var preferredTimeSlots: [PreferredTimeSlot] = PreferredTimeSlot.timeSlots
     @Published var weatherPreferences: [WeatherPreference] = WeatherPreference.weathers
     @Published var healthConditions: [HealthCondition] = HealthCondition.conditions
@@ -22,6 +22,19 @@ class UserInfoViewModel: ObservableObject {
 
     init() {
         fetchOrCreateUserInfo()
+        loadActivities()
+    }
+
+    func loadActivities() {
+        // 1. 성별에 따라 기본 아이콘 배열 세팅
+        let gender = userEntity?.gender ?? "여성"
+        let activitiesForGender = ActivityPreference.activities(for: gender)
+
+        // 2. Core Data에 저장된 선택값 반영
+        activityPreferences = restoreSelection(
+            items: activitiesForGender,
+            savedString: userEntity?.activityPreferences
+        )
     }
 
     private func fetchOrCreateUserInfo() {
@@ -55,21 +68,4 @@ class UserInfoViewModel: ObservableObject {
             return item
         }
     }
-
-//    func toggleActivity(_ activity: ActivityPreference) {
-//        if let index = activityPreferences.firstIndex(where: { $0.id == activity.id }) {
-//            activityPreferences[index].isSelected.toggle()
-//            saveActivityPreferences()
-//        }
-//    }
-//
-//    func saveActivityPreferences() {
-//        let selected = activityPreferences.filter { $0.isSelected }
-//        if selected.contains(where: { $0.title == "특별히 없음" }) {
-//            userEntity?.activityPreferences = nil
-//        } else {
-//            userEntity?.activityPreferences = selected.map { $0.title }.joined(separator: ", ")
-//        }
-//        try? CoreDataService.shared.saveContext()
-//    }
 }
