@@ -17,12 +17,9 @@ struct ManualScheduleInputView: View {
 
     @State private var selectedColor: Color = .blue
 
-    // 초기에 첫번째 텍스트 필드에 focus.
-    @State private var isTextFieldFocused: Bool = true
-
     enum InputField: Hashable {
         case title
-        case detail
+        case location
     }
 
     // MARK: - locationSection
@@ -91,7 +88,7 @@ struct ManualScheduleInputView: View {
                                 returnKeyType: .next,
                                 keyboardType: .default,
                                 onReturn: {
-                                    currentFocus = .detail
+                                    currentFocus = .location
                                     showLocationSearchSheet = true
                                 },
                                 onEditing: {
@@ -103,35 +100,24 @@ struct ManualScheduleInputView: View {
                         }
                         Divider()
                         HStack {
-                            FocusableTextField(
-                                text: $location,
-                                placeholder: "장소",
-                                isFirstResponder: currentFocus == .detail,
-                                returnKeyType: .done,
-                                keyboardType: .default,
-                                onReturn: {
-                                    currentFocus = nil
-                                },
-                                onEditing: {
-                                    if currentFocus == .title {
-                                        currentFocus = .detail
-                                        showLocationSearchSheet = true
-                                    } else if currentFocus == .detail {
-                                        currentFocus = nil
-                                    }
-                                }
-                            )
-
                             Button {
                                 showLocationSearchSheet = true
                             } label: {
-                                Image(systemName: "magnifyingglass")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundColor(.black)
+                                HStack {
+                                    Text(location.isEmpty ? "장소" : location)
+                                        .foregroundStyle(location.isEmpty ? .tertiary : .primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Image(systemName: "magnifyingglass")
+                                        .frame(width: 20, height: 20)
+                                }
+                                .contentShape(Rectangle())
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity)
+
                         }
+                        .padding(.top, 2)
                         .sheet(isPresented: $showLocationSearchSheet) {
                             LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
                         }
@@ -196,6 +182,7 @@ struct ManualScheduleInputView: View {
                     .ignoresSafeArea(.keyboard, edges: .bottom)
             }
             .navigationTitle("새 일정")
+            .scrollDismissesKeyboard(.interactively)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -208,7 +195,6 @@ struct ManualScheduleInputView: View {
                     }
                 }
             }
-
         }
     }
 
