@@ -10,26 +10,26 @@ import SwiftUI
 struct CustomTabBar: View {
     @Binding var selectedTab: TabBarItem
     @Binding var showScheduleMenu: Bool
-
+    
     var body: some View {
         ZStack {
             HStack {
                 tabButton(tab: .home)
                 tabButton(tab: .plan)
-                 Spacer()
+                Spacer()
                     .frame(width: 40 + Spacing.layout*2)
                 tabButton(tab: .analysis)
                 tabButton(tab: .settings)
             }
             .padding(.vertical, Spacing.content)
             .padding(.horizontal)
-//            .background(.ultraThinMaterial)
+            //            .background(.ultraThinMaterial)
             .background {
                 GeometryReader { geo in
                     ZStack {
                         Capsule()
                             .fill(.ultraThinMaterial)
-
+                        
                         Circle()
                             .frame(width: 80, height: 80)
                             .position(x: geo.size.width / 2, y: 0)
@@ -42,17 +42,17 @@ struct CustomTabBar: View {
             .clipShape(Capsule())
             .defaultShadow()
             .padding(.horizontal)
-
+            
             Button {
-                withAnimation {
-                    showScheduleMenu.toggle()
-                }
+                
+                showScheduleMenu.toggle()
+                
             } label: {
                 Image(systemName: "plus")
                     .resizable()
                     .fontWeight(.semibold)
                     .frame(width: 40, height: 40)
-//                    .font(.system(size: 40, weight: .bold))
+                //                    .font(.system(size: 40, weight: .bold))
                     .padding(12)
                     .background {
                         Circle()
@@ -64,7 +64,7 @@ struct CustomTabBar: View {
             .offset(y: -(20 + Spacing.content))
         }
     }
-
+    
     @ViewBuilder
     private func tabButton(tab: TabBarItem) -> some View {
         Button {
@@ -76,7 +76,7 @@ struct CustomTabBar: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 24, height: 24)
-
+                
                 Text(tab.title)
                     .font(.caption2)
             }

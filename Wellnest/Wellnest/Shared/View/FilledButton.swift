@@ -9,15 +9,21 @@ import SwiftUI
 
 struct FilledButton: View {
     private let title: String
+    private let disabled: Bool
     private let action: () -> Void
     private let foregroundColor: Color
     private let backgroundColor: Color
 
-    init(title: String, action: @escaping () -> Void, foregroundColor: Color = .white, backgroundColor: Color = .blue) {
+    init(title: String,
+         disabled: Bool = false,
+         foregroundColor: Color = .white,
+         backgroundColor: Color = .blue,
+         action: @escaping () -> Void) {
         self.title = title
-        self.action = action
+        self.disabled = disabled // @Binding 초기화는 언더바로
         self.foregroundColor = foregroundColor
         self.backgroundColor = backgroundColor
+        self.action = action
     }
 
     var body: some View {
@@ -27,18 +33,24 @@ struct FilledButton: View {
                 .foregroundColor(.white)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(
-                    Capsule()
-                        .fill(backgroundColor)
-                )
-                .defaultShadow()
+
         }
+        .defaultShadow()
+        .disabled(disabled)
+        .background(
+            Capsule()
+                .fill(disabled ? .secondary : backgroundColor)
+        )
     }
     
 }
 
 #Preview {
-    FilledButton(title: "저장 하기") {
+    FilledButton(title: "저장 하기", disabled: true) {
+        print("저장")
+    }
+
+    FilledButton(title: "저장 하기", disabled: false) {
         print("저장")
     }
 }
