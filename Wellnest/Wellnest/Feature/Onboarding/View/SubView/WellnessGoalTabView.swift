@@ -9,17 +9,18 @@ import SwiftUI
 
 struct WellnessGoalTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
+
+    @ObservedObject var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var goals = WellnessGoal.goals
+//    @State private var goals = WellnessGoal.goals
 
     let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
-        !goals.contains(where: { $0.isSelected })
+        !viewModel.wellnessGoals.contains(where: { $0.isSelected })
     }
 
     var body: some View {
@@ -37,9 +38,9 @@ struct WellnessGoalTabView: View {
                 .padding(.horizontal, Spacing.content)
                 .padding(.bottom, Spacing.content)
 
-                ForEach($goals) { $goal in
+                ForEach($viewModel.wellnessGoals, id: \.id) { $goal in
                     Button {
-                        ToggleCardHelper.toggleCard(item: $goal, items: $goals)
+                        ToggleCardHelper.toggleCard(item: $goal, items: $viewModel.wellnessGoals)
                     } label: {
                         HStack {
                             Text(goal.icon)
@@ -74,13 +75,14 @@ struct WellnessGoalTabView: View {
         }
         .onAppear {
             title = "웰니스 목표"
+//            ToggleCardHelper.restoreSelectedCards(items: &goals, savedGoalString: userEntity.goal, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }
 
 extension WellnessGoalTabView {
     private func saveWellnessGoal() {
-        let selectedGoals = goals.filter { $0.isSelected }
+        let selectedGoals = viewModel.wellnessGoals.filter { $0.isSelected }
 
         if selectedGoals.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.goal = nil

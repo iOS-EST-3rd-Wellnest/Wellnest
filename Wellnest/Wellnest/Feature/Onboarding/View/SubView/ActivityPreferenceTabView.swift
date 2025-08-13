@@ -9,21 +9,22 @@ import SwiftUI
 
 struct ActivityPreferenceTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
-    
+
+    @ObservedObject var viewModel: UserInfoViewModel
+
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var activities = ActivityPreference.activities
+//    @State private var activities = ActivityPreference.activities
 
     var isButtonDisabled: Bool {
-        !activities.contains(where: { $0.isSelected })
+        !viewModel.activityPreferences.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "평소에 선호하는 운동이나 활동을 골라주세요.")
-            OnboardingCardContent(items: $activities)
+            OnboardingCardContent(items: $viewModel.activityPreferences)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
@@ -40,7 +41,7 @@ struct ActivityPreferenceTabView: View {
 
 extension ActivityPreferenceTabView {
     private func saveActivityPreference() {
-        let selectedActivities = activities.filter { $0.isSelected }
+        let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }
 
         if selectedActivities.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.activityPreferences = nil

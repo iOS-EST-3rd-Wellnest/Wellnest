@@ -7,148 +7,6 @@
 
 import SwiftUI
 
-struct OnboardingTitleDescription: View {
-    let description: String
-
-    var body: some View {
-        Text(description)
-            .foregroundColor(.primary.opacity(0.7))
-            .multilineTextAlignment(.center)
-            .padding(.top, Spacing.content)
-            .padding(.horizontal)
-            .padding(.bottom, 60)
-    }
-}
-
-struct OnboardingCardLayout {
-    static var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
-    }
-
-    static var columnCount: Int {
-        isIPad ? 3 : 2
-    }
-
-    static var spacing: CGFloat {
-        isIPad ? 25 : Spacing.layout
-    }
-
-    static var spacingCount: CGFloat {
-        isIPad ? 4 : 3
-    }
-
-    static var columns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount)
-    }
-
-    static var cardWidth: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
-        return (screenWidth - (spacing * spacingCount)) / CGFloat(columnCount)
-    }
-}
-
-struct ToggleCardHelper {
-    static func toggleCard<Item: SelectableItem>(item: Binding<Item>, items: Binding<[Item]>) {
-        withAnimation(.easeInOut) {
-            if item.wrappedValue.title.hasPrefix("특별히") {
-                // "특별히 없음" 선택 시, 다른 선택 전부 해제
-                if !item.wrappedValue.isSelected { // 현재 선택 안돼있으면
-                    for index in items.indices {
-                        items.wrappedValue[index].isSelected = false
-                    }
-                    item.wrappedValue.isSelected = true
-                } else {
-                    // 다시 누르면 해제
-                    item.wrappedValue.isSelected = false
-                }
-            } else {
-                // 다른 목표 선택 시, "특별히 없음" 해제
-                if let noneIndex = items.wrappedValue.firstIndex(where: { $0.title.hasPrefix("특별히") }) {
-                    items.wrappedValue[noneIndex].isSelected = false
-                }
-                item.wrappedValue.isSelected.toggle()
-            }
-        }
-    }
-}
-
-struct OnboardingCardContent<Item: SelectableItem>: View {
-    @Binding var items: [Item]
-
-    let columns = OnboardingCardLayout.columns
-    let cardWidth = OnboardingCardLayout.cardWidth
-    let spacing = OnboardingCardLayout.spacing
-
-    var body: some View {
-        VStack {
-            HStack {
-                Text("* 중복 선택 가능")
-                    .font(.caption2)
-                    .foregroundColor(.primary.opacity(0.5))
-                Spacer()
-            }
-            .padding(.horizontal, Spacing.content)
-            .padding(.bottom, Spacing.content)
-
-            LazyVGrid(columns: columns, spacing: spacing) {
-                ForEach($items, id: \.id) { $item in
-                    Button {
-                        ToggleCardHelper.toggleCard(item: $item, items: $items)
-                    } label: {
-                        VStack(spacing: Spacing.inline) {
-                            Text(item.icon)
-                                    .font(.system(size: 60))
-                                    .saturation(item.isSelected ? 1 : 0) // 채도 조절
-
-                            Text(item.title)
-                                .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? .black : .secondary)
-                        }
-                        .frame(width: cardWidth, height: cardWidth)
-                        .background(item.isSelected ? .customGray : .customSecondary)
-                        .cornerRadius(CornerRadius.large)
-                    }
-                    .defaultShadow()
-                }
-            }
-        }
-        .padding(.horizontal, spacing)
-        .padding(.bottom)
-    }
-}
-
-struct OnboardingButton: View {
-    let title: String
-    let isDisabled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.white.opacity(0.0),
-                    Color.white.opacity(1.0)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 16)
-            
-            FilledButton(
-                title: title,
-                action: action,
-                backgroundColor: isDisabled ? .secondary : .blue
-            )
-            .disabled(isDisabled)
-            .opacity(isDisabled ? 0.5 : 1.0)
-            .padding(.horizontal)
-            .padding(.bottom)
-            .padding(.top, Spacing.inline)
-            .background(.white)
-        }
-    }
-}
-
 struct OnboardingTabView: View {
 //    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
@@ -248,6 +106,148 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+struct OnboardingTitleDescription: View {
+    let description: String
+
+    var body: some View {
+        Text(description)
+            .foregroundColor(.primary.opacity(0.7))
+            .multilineTextAlignment(.center)
+            .padding(.top, Spacing.content)
+            .padding(.horizontal)
+            .padding(.bottom, 60)
+    }
+}
+
+struct OnboardingCardLayout {
+    static var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    static var columnCount: Int {
+        isIPad ? 3 : 2
+    }
+
+    static var spacing: CGFloat {
+        isIPad ? 25 : Spacing.layout
+    }
+
+    static var spacingCount: CGFloat {
+        isIPad ? 4 : 3
+    }
+
+    static var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount)
+    }
+
+    static var cardWidth: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        return (screenWidth - (spacing * spacingCount)) / CGFloat(columnCount)
+    }
+}
+
+struct ToggleCardHelper {
+    static func toggleCard<Item: SelectableItem>(item: Binding<Item>, items: Binding<[Item]>) {
+        withAnimation(.easeInOut) {
+            if item.wrappedValue.title == "특별히 없음" {
+                // "특별히 없음" 선택 시, 다른 선택 전부 해제
+                if !item.wrappedValue.isSelected { // 현재 선택 안돼있으면
+                    for index in items.indices {
+                        items.wrappedValue[index].isSelected = false
+                    }
+                    item.wrappedValue.isSelected = true
+                } else {
+                    // 다시 누르면 해제
+                    item.wrappedValue.isSelected = false
+                }
+            } else {
+                // 다른 목표 선택 시, "특별히 없음" 해제
+                if let noneIndex = items.wrappedValue.firstIndex(where: { $0.title == "특별히 없음" }) {
+                    items.wrappedValue[noneIndex].isSelected = false
+                }
+                item.wrappedValue.isSelected.toggle()
+            }
+        }
+    }
+}
+
+struct OnboardingCardContent<Item: SelectableItem>: View {
+    @Binding var items: [Item]
+
+    let columns = OnboardingCardLayout.columns
+    let cardWidth = OnboardingCardLayout.cardWidth
+    let spacing = OnboardingCardLayout.spacing
+
+    var body: some View {
+        VStack {
+            HStack {
+                Text("* 중복 선택 가능")
+                    .font(.caption2)
+                    .foregroundColor(.primary.opacity(0.5))
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.content)
+            .padding(.bottom, Spacing.content)
+
+            LazyVGrid(columns: columns, spacing: spacing) {
+                ForEach($items, id: \.id) { $item in
+                    Button {
+                        ToggleCardHelper.toggleCard(item: $item, items: $items)
+                    } label: {
+                        VStack(spacing: Spacing.inline) {
+                            Text(item.icon)
+                                    .font(.system(size: 60))
+                                    .saturation(item.isSelected ? 1 : 0) // 채도 조절
+
+                            Text(item.title)
+                                .fontWeight(.semibold)
+                                .foregroundColor(item.isSelected ? .black : .secondary)
+                        }
+                        .frame(width: cardWidth, height: cardWidth)
+                        .background(item.isSelected ? .customGray : .customSecondary)
+                        .cornerRadius(CornerRadius.large)
+                    }
+                    .defaultShadow()
+                }
+            }
+        }
+        .padding(.horizontal, spacing)
+        .padding(.bottom)
+    }
+}
+
+struct OnboardingButton: View {
+    let title: String
+    let isDisabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.white.opacity(0.0),
+                    Color.white.opacity(1.0)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 16)
+
+            FilledButton(
+                title: title,
+                action: action,
+                backgroundColor: isDisabled ? .secondary : .blue
+            )
+            .disabled(isDisabled)
+            .opacity(isDisabled ? 0.5 : 1.0)
+            .padding(.horizontal)
+            .padding(.bottom)
+            .padding(.top, Spacing.inline) // TODO: 조금 더 높게 content로도 해보기
+            .background(.white)
         }
     }
 }

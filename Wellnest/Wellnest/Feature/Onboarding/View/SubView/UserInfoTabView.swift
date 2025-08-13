@@ -93,7 +93,6 @@ struct UserInfoTabView: View {
 
                 /// 성별
                 UserInfoForm(title: "성별", isRequired: true) {
-                    // TODO: picker 다크모드 대응
 //                    Picker("", selection: $selectedGender) {
 //                        ForEach(genderOptions, id: \.self) {
 //                            Text($0)
@@ -116,7 +115,7 @@ struct UserInfoTabView: View {
                                         Capsule()
                                             .fill(selectedGender == option ? .blue : Color.gray.opacity(0.2))
                                     )
-                                    .foregroundColor(selectedGender == option ? .white : .primary)
+                                    .foregroundColor(selectedGender == option ? .white : .black)
                             }
                         }
                     }
@@ -172,6 +171,7 @@ struct UserInfoTabView: View {
         }
         .onAppear {
             title = "사용자 정보"
+            loadUserEntity()
         }
         .onTapGesture {
             UIApplication.hideKeyboard()
@@ -242,6 +242,33 @@ extension UserInfoTabView {
 
         print(userEntity)
         try? CoreDataService.shared.saveContext()
+    }
+
+    private func loadUserEntity() {
+        if let nicknameValue = userEntity.nickname {
+            nickname = nicknameValue
+        }
+        if let age = userEntity.ageRange {
+            selectedAge = age
+        }
+        if let gender = userEntity.gender {
+            if gender == "여성" {
+                selectedGender = "여성 👩🏻"
+            } else if gender == "남성" {
+                selectedGender = "남성 👨🏻"
+            }
+        }
+        if let height = height {
+            userEntity.height = NSNumber(value: height)
+        } else {
+            userEntity.height = nil
+        }
+
+        if let weight = weight {
+            userEntity.weight = NSNumber(value: weight)
+        } else {
+            userEntity.weight = nil
+        }
     }
 }
 

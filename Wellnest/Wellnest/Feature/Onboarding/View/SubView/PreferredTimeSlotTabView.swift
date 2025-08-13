@@ -9,21 +9,22 @@ import SwiftUI
 
 struct PreferredTimeSlotTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
+
+    @ObservedObject var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var timeSlots = PreferredTimeSlot.timeSlots
+//    @State private var timeSlots = PreferredTimeSlot.timeSlots
 
     var isButtonDisabled: Bool {
-        !timeSlots.contains(where: { $0.isSelected })
+        !viewModel.preferredTimeSlots.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
-            OnboardingCardContent(items: $timeSlots)
+            OnboardingCardContent(items: $viewModel.preferredTimeSlots)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
@@ -34,13 +35,14 @@ struct PreferredTimeSlotTabView: View {
         }
         .onAppear {
             title = "활동 시간대"
+//            ToggleCardHelper.restoreSelectedCards(items: &timeSlots, savedGoalString: userEntity.preferredTimeSlot, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }
 
 extension PreferredTimeSlotTabView {
     private func savePreferredTimeSlot() {
-        let selectedTimeSlots = timeSlots.filter { $0.isSelected }
+        let selectedTimeSlots = viewModel.preferredTimeSlots.filter { $0.isSelected }
 
         if selectedTimeSlots.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.preferredTimeSlot = nil
