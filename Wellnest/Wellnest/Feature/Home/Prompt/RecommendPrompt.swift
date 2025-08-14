@@ -1,5 +1,5 @@
 //
-//  HomePrompt.swift
+//  RecommendPrompt.swift
 //  Wellnest
 //
 //  Created by JuYong Lee on 8/7/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct HomePrompt {
+struct RecommendPrompt {
     func quoteOfTheDayPrompt() -> String {
         return """
         건강 플래너 AI 프롬프트
