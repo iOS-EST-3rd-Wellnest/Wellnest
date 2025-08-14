@@ -25,7 +25,6 @@ struct WellnessGoalTabView: View {
         VStack {
             OnboardingTitleDescription(description: "삶의 질을 높이고 지속 가능한 건강 루틴을 만드는 것에 집중해보세요.")
 
-            // TODO: OnboardingCardContent 구조체 사용할 수 있게, OnboardingCardLayout의 columnCount 바꿔보기
             VStack {
                 HStack {
                     Text("* 중복 선택 가능")

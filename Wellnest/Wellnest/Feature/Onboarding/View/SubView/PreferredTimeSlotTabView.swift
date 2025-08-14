@@ -15,8 +15,6 @@ struct PreferredTimeSlotTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-//    @State private var timeSlots = PreferredTimeSlot.timeSlots
-
     var isButtonDisabled: Bool {
         !viewModel.preferredTimeSlots.contains(where: { $0.isSelected })
     }
@@ -35,7 +33,6 @@ struct PreferredTimeSlotTabView: View {
         }
         .onAppear {
             title = "활동 시간대"
-//            ToggleCardHelper.restoreSelectedCards(items: &timeSlots, savedGoalString: userEntity.preferredTimeSlot, hasCompletedOnboarding: UserDefaultsManager.shared.hasCompletedOnboarding)
         }
     }
 }

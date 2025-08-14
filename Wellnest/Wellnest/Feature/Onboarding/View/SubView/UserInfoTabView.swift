@@ -19,11 +19,7 @@ struct UserInfoTabView: View {
     @FocusState private var isNicknameFieldFocused: Bool
 
     @State private var selectedAge = ""
-    let ageOptions = ["10대", "20대", "30대", "40대", "50대", "60대 이상"]
-
     @State private var selectedGender = ""
-    let genderOptions = ["여성 👩🏻", "남성 👨🏻"]
-
     @State private var height: Int?
     @State private var weight: Int?
 
@@ -45,7 +41,7 @@ struct UserInfoTabView: View {
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.secondary.opacity(0.4)) // TODO: 임시 컬러
+                            .foregroundColor(.secondary.opacity(0.4)) // TODO: 임시
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -66,27 +62,15 @@ struct UserInfoTabView: View {
                 /// 연령대
                 UserInfoForm(title: "연령대", isRequired: true) {
                     Menu {
-                        ForEach(ageOptions, id: \.self) { age in
-                            Button(action: {
-                                selectedAge = age
-                            }) {
-                                Text(age)
+                        ForEach(UserInfoOptions.ageRanges) { age in
+                            Button {
+                                selectedAge = age.value
+                            } label: {
+                                Text(age.title)
                             }
                         }
                     } label: {
-                        HStack {
-                            Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
-                                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.5) : .black)
-                                .font(selectedAge.isEmpty ? .footnote : .body)
-
-                            Spacer()
-
-                            // TODO: 메뉴 클릭 시 chevron.up으로 바뀌는 것도 좋을 것 같음
-                            Image(systemName: "chevron.down")
-                                .foregroundColor(.primary)
-                                .imageScale(.small)
-                        }
-                        .frame(maxWidth: .infinity)
+                        AgeMenuLabel(selectedAge: selectedAge)
                     }
                     .padding(.horizontal)
                     .padding(.leading, 10)
@@ -95,19 +79,11 @@ struct UserInfoTabView: View {
                 /// 성별
                 UserInfoForm(title: "성별", isRequired: true) {
                     HStack(spacing: 10) {
-                        ForEach(genderOptions, id: \.self) { option in
+                        ForEach(UserInfoOptions.genders) { gender in
                             Button {
-                                selectedGender = option
+                                selectedGender = gender.value
                             } label: {
-                                Text(option)
-                                    .font(.body)
-                                    .frame(width: 80, height: 30)
-                                    .multilineTextAlignment(.center)
-                                    .background(
-                                        Capsule()
-                                            .fill(selectedGender == option ? .blue : Color.gray.opacity(0.2))
-                                    )
-                                    .foregroundColor(selectedGender == option ? .white : .black)
+                                GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
                         }
                     }
@@ -208,12 +184,45 @@ struct UserInfoForm<Content: View>: View {
     }
 }
 
+struct AgeMenuLabel: View {
+    let selectedAge: String
+
+    var body: some View {
+        HStack {
+            Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
+                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.5) : .black)
+                .font(selectedAge.isEmpty ? .footnote : .body)
+
+            Spacer()
+
+            // TODO: 메뉴 클릭 시 chevron.up으로 바뀌는 것도 좋을 것 같음
+            Image(systemName: "chevron.down")
+                .foregroundColor(.primary)
+                .imageScale(.small)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct GenderMenuLabel: View {
+    let selectedGender: String
+    let gender: UserInfo
+
+    var body: some View {
+        Text(gender.title)
+            .font(.body)
+            .frame(width: 80, height: 30)
+            .multilineTextAlignment(.center)
+            .background(
+                Capsule()
+                    .fill(selectedGender == gender.value ? .blue : Color.gray.opacity(0.2))
+            )
+            .foregroundColor(selectedGender == gender.value ? .white : .black)
+    }
+}
+
 extension UserInfoTabView {
     private func saveUserInfo() {
-        let selectedGenterText = selectedGender
-                .components(separatedBy: " ")
-                .first ?? selectedGender
-
         // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
             userEntity.id = UUID()
@@ -221,9 +230,11 @@ extension UserInfoTabView {
         if userEntity.createdAt == nil {
             userEntity.createdAt = Date()
         }
+
         userEntity.nickname = nickname
         userEntity.ageRange = selectedAge
-        userEntity.gender = selectedGenterText
+        userEntity.gender = selectedGender
+
         if let height = height {
             userEntity.height = NSNumber(value: height)
         } else {
@@ -247,11 +258,7 @@ extension UserInfoTabView {
             selectedAge = age
         }
         if let gender = userEntity.gender {
-            if gender == "여성" {
-                selectedGender = "여성 👩🏻"
-            } else if gender == "남성" {
-                selectedGender = "남성 👨🏻"
-            }
+            selectedGender = gender
         }
         if let heightValue = userEntity.height?.intValue, heightValue != 0 {
             height = heightValue

@@ -17,7 +17,6 @@ class UserInfoViewModel: ObservableObject {
     @Published var weatherPreferences: [WeatherPreference] = WeatherPreference.weathers
     @Published var healthConditions: [HealthCondition] = HealthCondition.conditions
 
-
     private let context = CoreDataService.shared.context
 
     init() {
@@ -26,11 +25,11 @@ class UserInfoViewModel: ObservableObject {
     }
 
     func loadActivities() {
-        // 1. 성별에 따라 기본 아이콘 배열 세팅
+        // 성별에 따라 기본 아이콘 배열 세팅
         let gender = userEntity?.gender ?? "여성"
         let activitiesForGender = ActivityPreference.activities(for: gender)
 
-        // 2. Core Data에 저장된 선택값 반영
+        // Core Data에 저장된 선택값 반영
         activityPreferences = restoreSelection(
             items: activitiesForGender,
             savedString: userEntity?.activityPreferences

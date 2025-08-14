@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct OnboardingTabView: View {
-//    @AppStorage("isOnboarding") var isOnboarding: Bool = false
     @ObservedObject var userDefaultsManager: UserDefaultsManager
 
     @StateObject private var viewModel = UserInfoViewModel()
@@ -231,12 +230,12 @@ struct OnboardingButton: View {
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.white.opacity(0.0),
-                    Color.white.opacity(1.0)
+                    Color.white.opacity(0.9)
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 24) // TODO: blur 높이 조정
+            .frame(height: Spacing.layout)
 
             FilledButton(
                 title: title,
@@ -246,7 +245,7 @@ struct OnboardingButton: View {
             .disabled(isDisabled)
             .opacity(isDisabled ? 0.5 : 1.0)
             .padding(.horizontal)
-            .padding(.bottom)
+            .padding(.bottom, Spacing.content)
             .padding(.top, Spacing.inline)
             .background(.white)
         }
