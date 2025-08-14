@@ -14,7 +14,7 @@ struct ManualScheduleInputView: View {
     // 일정 제목
     @State private var title: String = ""
 
-    @State private var selectedColor: Color = Color("accentButtonColor")
+    @State private var selectedColorName = "accentButtonColor"
     @State var showColorPickerSheet: Bool = false
 
     enum InputField: Hashable {
@@ -172,13 +172,13 @@ struct ManualScheduleInputView: View {
                             Button {
                                 showColorPickerSheet = true
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                ColorPicker("배경 색상 선택", selection: .constant(Color(selectedColorName)))
                                     .labelsHidden()
                                     .disabled(true)
                             }
                         }
                         .sheet(isPresented: $showColorPickerSheet) {
-                            ComposeView(selectedBackgroundColor: $selectedColor)
+                            ComposeView(selectedColorName: $selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
                         }
                         Spacer()
@@ -253,7 +253,7 @@ extension ManualScheduleInputView {
         newSchedule.endDate = endDate
         newSchedule.isAllDay = isAllDay as NSNumber
         newSchedule.isCompleted = false
-        newSchedule.backgroundColor = selectedColor.description
+        newSchedule.backgroundColor = selectedColorName
         newSchedule.repeatRule = selectedRepeatRule?.name
         newSchedule.hasRepeatEndDate = hasRepeatEndDate
         newSchedule.repeatEndDate = repeatEndDate

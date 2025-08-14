@@ -9,20 +9,20 @@ import SwiftUI
 
 struct ComposeView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var selectedBackgroundColor: Color
 
+    @Binding var selectedColorName: String
     @State private var selectedBackgroundColorIndex: Int?
-
     @State private var showColorPicker = false
 
-    let colors: [Color] = [
-        Color("accentButtonColor"),
-        Color("accentCardBlueColor"),
-        Color("accentCardGreenColor"),
-        Color("accentCardPinkColor"),
-        Color("accentCardYellowColor"),
-        Color("backgroudColor"),
-        Color("CustomSecondaryColor")
+    private let colorNames: [String] = [
+        "accentButtonColor",
+        "accentCardBlueColor",
+        "accentCardGreenColor",
+        "accentCardPinkColor",
+        "accentCardYellowColor",
+        "backgroudColor",
+        "CustomSecondaryColor",
+        "CustomGrayColor"
     ]
 
     var body: some View {
@@ -47,15 +47,14 @@ struct ComposeView: View {
     private func colorSelectionGrid(selectedIndex: Binding<Int?>, isBackground: Bool) -> some View {
         let columns = Array(repeating: GridItem(.flexible()), count: 6)
         LazyVGrid(columns: columns, spacing: 10) {
-            ForEach(0..<colors.count, id: \.self) { index in
+            ForEach(colorNames, id: \.self) { colorName in
                 ZStack {
                     Circle()
-                        .fill(colors[index])
+                        .fill(Color(colorName))
                         .frame(width: 30, height: 30)
                 }
                 .onTapGesture {
-                    selectedIndex.wrappedValue = index
-                    selectedBackgroundColor = colors[index]
+                    selectedColorName = colorName
                     dismiss()
                 }
             }
@@ -65,5 +64,5 @@ struct ComposeView: View {
 }
 
 #Preview {
-    ComposeView(selectedBackgroundColor: .constant(.accentCardBlue))
+    ComposeView(selectedColorName: .constant("accentCardBlue"))
 }
