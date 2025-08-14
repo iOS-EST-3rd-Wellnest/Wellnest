@@ -52,7 +52,10 @@ struct CalendarLayoutView: View {
 //                    }
                 }
                 .onTapGesture {
-                    planVM.select(date: date)
+                    withAnimation(.spring(response: 0.25)) {
+                        planVM.select(date: date)
+                    }
+
                 }
 
             if scheduleCount > 0 && isCurrentMonth {

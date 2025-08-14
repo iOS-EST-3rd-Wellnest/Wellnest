@@ -34,7 +34,9 @@ struct PlanView: View {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea(.all)
                     .onTapGesture {
+                        withAnimation(.spring) {
                             showDatePicker = false
+                        }
                     }
                     .zIndex(1)
             }
@@ -45,38 +47,24 @@ struct PlanView: View {
                     showDatePicker: $showDatePicker,
                     headerHeight: headerHeight
                 )
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top),
-                    removal: .move(edge: .top)
-                ))
+                .transition(.move(edge: .top).combined(with: .opacity))
                 .zIndex(2)
             }
 
             VStack(spacing: 0) {
-                HStack {
-                    CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
-                        .padding(.vertical, Spacing.content)
-                        .background {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        headerHeight = geo.size.height
-                                    }
-                                    .onChange(of: geo.size.height) { newValue in
-                                        headerHeight = newValue
-                                    }
-                            }
+                CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
+                    .padding(.vertical, Spacing.content)
+                    .background {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    headerHeight = geo.size.height
+                                }
+                                .onChange(of: geo.size.height) { newValue in
+                                    headerHeight = newValue
+                                }
                         }
-
-                    Spacer()
-
-                    Button {
-                        planVM.selectedDate = Date().startOfDay
-                        planVM.displayedMonth = Date().startOfMonth
-                    } label: {
-                        Text("오늘")
                     }
-                }
 
                 Spacer()
             }
