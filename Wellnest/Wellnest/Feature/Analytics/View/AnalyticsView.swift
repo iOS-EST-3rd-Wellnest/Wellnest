@@ -10,6 +10,7 @@ import SwiftUI
 struct AnalyticsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
+    @StateObject private var viewModel = AnalyticsViewModel()
 
     var body: some View {
         NavigationView {
@@ -26,15 +27,12 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            TitleHeaderView(name: .constant("홍길동"))
-            PlanCompletionCardView()
-            AIInsightCardView()
-
-            ExerciseStatChartCardView()
-
-            SleepStatChartCardView()
-
-            MeditationStatCardView()
+            TitleHeaderView(name: viewModel.healthData.userName)
+            PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
+            AIInsightCardView(insight: viewModel.healthData.aiInsight)
+            ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
+            SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+            MeditationStatCardView(meditationData: viewModel.healthData.meditation)
         }
         .padding(.horizontal)
         .padding(.top, Spacing.layout)
@@ -43,21 +41,19 @@ struct AnalyticsView: View {
 
     private var iPadLayout: some View {
         VStack(spacing: Spacing.layout) {
-            TitleHeaderView(name: .constant("홍길동"))
-
+            TitleHeaderView(name: viewModel.healthData.userName)
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: Spacing.layout),
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    PlanCompletionCardView()
-                    ExerciseStatChartCardView()
+                    PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
+                    ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
-
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    AIInsightCardView()
-                    SleepStatChartCardView()
-                    MeditationStatCardView()
+                    AIInsightCardView(insight: viewModel.healthData.aiInsight)
+                    SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+                    MeditationStatCardView(meditationData: viewModel.healthData.meditation)
                 }
             }
         }

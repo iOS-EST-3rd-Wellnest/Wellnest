@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TitleHeaderView: View {
-    @Binding var name: String
+    let name: String
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -19,13 +19,11 @@ struct TitleHeaderView: View {
                             .foregroundStyle(.indigo)
                             .font(.title)
                             .fontWeight(.bold)
-
                         Text("님의 건강지표")
                             .font(.title)
                             .fontWeight(.semibold)
                     }
                 }
-
                 Spacer()
             }
         }

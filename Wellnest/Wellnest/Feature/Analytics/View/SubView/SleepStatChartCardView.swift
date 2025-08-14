@@ -9,11 +9,10 @@ import SwiftUI
 
 struct SleepStatChartCardView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @State private var selectedPeriod: ChartPeriod = .week
+    @StateObject private var viewModel: SleepChartViewModel
 
-    enum ChartPeriod: String, CaseIterable {
-        case week = "1주"
-        case month = "1개월"
+    init(sleepData: SleepData) {
+        self._viewModel = StateObject(wrappedValue: SleepChartViewModel(sleepData: sleepData))
     }
 
     var body: some View {
@@ -29,16 +28,13 @@ struct SleepStatChartCardView: View {
                             Image(systemName: "bed.double.fill")
                                 .font(.title2)
                                 .foregroundColor(.blue)
-
                             Text("수면")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
-
                         Spacer()
-
                         // 기간 선택 세그먼트
-                        Picker("기간", selection: $selectedPeriod) {
+                        Picker("기간", selection: $viewModel.selectedPeriod) {
                             ForEach(ChartPeriod.allCases, id: \.self) { period in
                                 Text(period.rawValue).tag(period)
                             }
@@ -53,22 +49,18 @@ struct SleepStatChartCardView: View {
                             Text("수면 시간")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-
                             HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text("7시간 15분")
+                                Text(viewModel.averageSleepTime)
                                     .font(.title3)
                                     .fontWeight(.semibold)
-
                                 Text("평균")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "minus")
                                     .font(.caption)
                                     .foregroundColor(.gray)
-
                                 Text("유지")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -80,29 +72,24 @@ struct SleepStatChartCardView: View {
                             Text("수면 질")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-
                             HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text("85%")
+                                Text(viewModel.sleepQuality)
                                     .font(.title3)
                                     .fontWeight(.semibold)
-
                                 Text("양호")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "arrow.up")
                                     .font(.caption)
                                     .foregroundColor(.green)
-
-                                Text("+5%")
+                                Text(viewModel.qualityChangeText)
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.green)
                             }
                         }
-
                         Spacer()
                     }
 
@@ -111,9 +98,8 @@ struct SleepStatChartCardView: View {
                         Text("일간 수면 시간 변화")
                             .font(.caption)
                             .foregroundColor(.secondary)
-
                         BarChartView(
-                            data: selectedPeriod == .week ? weeklySleepData : monthlySleepData,
+                            data: viewModel.currentChartData,
                             color: .blue
                         )
                         .frame(height: 140)
@@ -121,13 +107,5 @@ struct SleepStatChartCardView: View {
                 }
                 .padding()
             }
-    }
-
-    private var weeklySleepData: [Double] {
-        [6.5, 7.2, 6.8, 8.1, 7.5, 7.0, 7.8]
-    }
-
-    private var monthlySleepData: [Double] {
-        [7.0, 7.5, 6.8, 7.2, 7.8, 7.1, 6.9, 7.6]
     }
 }

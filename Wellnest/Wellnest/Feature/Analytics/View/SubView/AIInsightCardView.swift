@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AIInsightCardView: View {
     @Environment(\.colorScheme) private var colorScheme
+    let insight: AIInsightData
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -21,17 +22,14 @@ struct AIInsightCardView: View {
                         .font(.title2)
                         .foregroundColor(.yellow)
                         .frame(width: 30)
-
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text("AI 인사이트")
                             .font(.footnote)
                             .foregroundColor(.secondary)
-
-                        Text("운동한 날엔 수면 시간이 평균 50분 증가했어요.")
+                        Text(insight.message)
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
-
                     Spacer()
                 }
                 .padding()

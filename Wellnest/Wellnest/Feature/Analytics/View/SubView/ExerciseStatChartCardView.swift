@@ -9,11 +9,10 @@ import SwiftUI
 
 struct ExerciseStatChartCardView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @State private var selectedPeriod: ChartPeriod = .week
+    @StateObject private var viewModel: ExerciseChartViewModel
 
-    enum ChartPeriod: String, CaseIterable {
-        case week = "1주"
-        case month = "1개월"
+    init(exerciseData: ExerciseData) {
+        self._viewModel = StateObject(wrappedValue: ExerciseChartViewModel(exerciseData: exerciseData))
     }
 
     var body: some View {
@@ -29,16 +28,13 @@ struct ExerciseStatChartCardView: View {
                             Image(systemName: "figure.walk")
                                 .font(.title2)
                                 .foregroundColor(.orange)
-
                             Text("운동")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
-
                         Spacer()
-
                         // 기간 선택 세그먼트
-                        Picker("기간", selection: $selectedPeriod) {
+                        Picker("기간", selection: $viewModel.selectedPeriod) {
                             ForEach(ChartPeriod.allCases, id: \.self) { period in
                                 Text(period.rawValue).tag(period)
                             }
@@ -53,23 +49,19 @@ struct ExerciseStatChartCardView: View {
                             Text("걸음 수")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-
                             HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text("6,000보")
+                                Text(viewModel.averageSteps)
                                     .font(.title3)
                                     .fontWeight(.semibold)
-
                                 Text("평균")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "arrow.up")
                                     .font(.caption)
                                     .foregroundColor(.green)
-
-                                Text("+12%")
+                                Text(viewModel.stepsChangeText)
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.green)
@@ -80,29 +72,24 @@ struct ExerciseStatChartCardView: View {
                             Text("칼로리")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-
                             HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text("450kcal")
+                                Text(viewModel.averageCalories)
                                     .font(.title3)
                                     .fontWeight(.semibold)
-
                                 Text("소모")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "arrow.up")
                                     .font(.caption)
                                     .foregroundColor(.green)
-
-                                Text("+8%")
+                                Text(viewModel.caloriesChangeText)
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.green)
                             }
                         }
-
                         Spacer()
                     }
 
@@ -111,9 +98,8 @@ struct ExerciseStatChartCardView: View {
                         Text("일간 걸음 수 변화")
                             .font(.caption)
                             .foregroundColor(.secondary)
-
                         BarChartView(
-                            data: selectedPeriod == .week ? weeklyStepsData : monthlyStepsData,
+                            data: viewModel.currentChartData,
                             color: .orange
                         )
                         .frame(height: 140)
@@ -121,13 +107,5 @@ struct ExerciseStatChartCardView: View {
                 }
                 .padding()
             }
-    }
-
-    private var weeklyStepsData: [Double] {
-        [3000, 5500, 4200, 7800, 6100, 5900, 8200]
-    }
-
-    private var monthlyStepsData: [Double] {
-        [4000, 6000, 5200, 7000, 6500, 7200, 6800, 8000]
     }
 }
