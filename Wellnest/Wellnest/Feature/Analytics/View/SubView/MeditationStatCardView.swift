@@ -18,13 +18,11 @@ struct MeditationStatCardView: View {
             .defaultShadow()
             .overlay {
                 HStack(spacing: Spacing.content) {
-                    // 아이콘
                     Image(systemName: "heart.fill")
                         .font(.title2)
                         .foregroundColor(.red)
                         .frame(width: 30)
 
-                    // 정보
                     VStack(alignment: .leading, spacing: Spacing.inline) {
                         Text("명상")
                             .font(.footnote)
@@ -34,7 +32,7 @@ struct MeditationStatCardView: View {
                             Text("주 \(meditationData.weeklyCount)회")
                                 .font(.title3)
                                 .fontWeight(.semibold)
-
+                            
                             Text("성공")
                                 .font(.title3)
                                 .fontWeight(.semibold)
@@ -43,7 +41,6 @@ struct MeditationStatCardView: View {
 
                     Spacer()
 
-                    // 변화량
                     HStack(spacing: Spacing.inline) {
                         Image(systemName: "arrow.up")
                             .font(.caption)

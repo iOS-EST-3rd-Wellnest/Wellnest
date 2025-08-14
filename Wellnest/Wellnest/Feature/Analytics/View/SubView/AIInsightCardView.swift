@@ -22,6 +22,7 @@ struct AIInsightCardView: View {
                         .font(.title2)
                         .foregroundColor(.yellow)
                         .frame(width: 30)
+                    
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text("AI 인사이트")
                             .font(.footnote)

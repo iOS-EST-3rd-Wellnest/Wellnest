@@ -22,7 +22,6 @@ struct ExerciseStatChartCardView: View {
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    // 상단 헤더
                     HStack {
                         HStack(spacing: Spacing.content) {
                             Image(systemName: "figure.walk")
@@ -32,8 +31,9 @@ struct ExerciseStatChartCardView: View {
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
+
                         Spacer()
-                        // 기간 선택 세그먼트
+
                         Picker("기간", selection: $viewModel.selectedPeriod) {
                             ForEach(ChartPeriod.allCases, id: \.self) { period in
                                 Text(period.rawValue).tag(period)
@@ -43,7 +43,6 @@ struct ExerciseStatChartCardView: View {
                         .frame(width: 100)
                     }
 
-                    // 스탯 섹션
                     HStack(spacing: Spacing.layout * 2) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("걸음 수")
@@ -93,7 +92,6 @@ struct ExerciseStatChartCardView: View {
                         Spacer()
                     }
 
-                    // 차트 섹션
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text("일간 걸음 수 변화")
                             .font(.caption)

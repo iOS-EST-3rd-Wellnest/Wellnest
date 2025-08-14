@@ -22,7 +22,6 @@ struct SleepStatChartCardView: View {
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    // 상단 헤더
                     HStack {
                         HStack(spacing: Spacing.content) {
                             Image(systemName: "bed.double.fill")
@@ -32,8 +31,9 @@ struct SleepStatChartCardView: View {
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
+
                         Spacer()
-                        // 기간 선택 세그먼트
+
                         Picker("기간", selection: $viewModel.selectedPeriod) {
                             ForEach(ChartPeriod.allCases, id: \.self) { period in
                                 Text(period.rawValue).tag(period)
@@ -43,12 +43,12 @@ struct SleepStatChartCardView: View {
                         .frame(width: 100)
                     }
 
-                    // 스탯 섹션
                     HStack(spacing: Spacing.layout * 2) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("수면 시간")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+
                             HStack(alignment: .bottom, spacing: Spacing.inline) {
                                 Text(viewModel.averageSleepTime)
                                     .font(.title3)
@@ -57,6 +57,7 @@ struct SleepStatChartCardView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "minus")
                                     .font(.caption)
@@ -80,6 +81,7 @@ struct SleepStatChartCardView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+
                             HStack(spacing: Spacing.inline) {
                                 Image(systemName: "arrow.up")
                                     .font(.caption)
@@ -90,10 +92,10 @@ struct SleepStatChartCardView: View {
                                     .foregroundColor(.green)
                             }
                         }
+                        
                         Spacer()
                     }
 
-                    // 차트 섹션
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text("일간 수면 시간 변화")
                             .font(.caption)
