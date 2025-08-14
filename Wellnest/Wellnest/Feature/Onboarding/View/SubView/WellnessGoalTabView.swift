@@ -9,17 +9,16 @@ import SwiftUI
 
 struct WellnessGoalTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
+
+    @ObservedObject var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var goals = WellnessGoal.goals
-
     let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
-        !goals.contains(where: { $0.isSelected })
+        !viewModel.wellnessGoals.contains(where: { $0.isSelected })
     }
 
     var body: some View {
@@ -36,23 +35,24 @@ struct WellnessGoalTabView: View {
                 .padding(.horizontal, Spacing.content)
                 .padding(.bottom, Spacing.content)
 
-                ForEach($goals) { $goal in
+                ForEach($viewModel.wellnessGoals, id: \.id) { $goal in
                     Button {
-                        withAnimation(.easeInOut) {
-                            goal.isSelected.toggle()
-                        }
+                        ToggleCardHelper.toggleCard(item: $goal, items: $viewModel.wellnessGoals)
                     } label: {
                         HStack {
+                            Text(goal.icon)
+                                .padding(.leading)
+                                .saturation(goal.isSelected ? 1 : 0)
+
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .white : .secondary)
-                                .padding(.leading)
+                                .foregroundColor(goal.isSelected ? .black : .secondary)
 
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)
-                        .background(goal.isSelected ? .blue : .customSecondary)
+                        .background(goal.isSelected ? .customGray : .customSecondary)
                         .cornerRadius(CornerRadius.large)
                     }
                     .padding(.bottom, Spacing.content)
@@ -63,15 +63,12 @@ struct WellnessGoalTabView: View {
 
             Spacer()
 
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveWellnessGoal()
                 withAnimation {
                     currentPage += 1
                 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
         }
         .onAppear {
             title = "웰니스 목표"
@@ -81,12 +78,12 @@ struct WellnessGoalTabView: View {
 
 extension WellnessGoalTabView {
     private func saveWellnessGoal() {
-        let selectedGoals = goals.filter { $0.isSelected }
+        let selectedGoals = viewModel.wellnessGoals.filter { $0.isSelected }
 
-        if selectedGoals.contains(where: { $0.title.withoutPrefix3 == "특별히 없음" }) {
+        if selectedGoals.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.goal = nil
         } else {
-            let goals = selectedGoals.map { $0.title.withoutPrefix3 }.joined(separator: ", ")
+            let goals = selectedGoals.map { $0.title }.joined(separator: ", ")
             userEntity.goal = goals
         }
 

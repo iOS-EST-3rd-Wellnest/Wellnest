@@ -9,34 +9,27 @@ import SwiftUI
 
 struct PreferredTimeSlotTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
+
+    @ObservedObject var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var timeSlots = PreferredTimeSlot.timeSlots
-
     var isButtonDisabled: Bool {
-        !timeSlots.contains(where: { $0.isSelected })
+        !viewModel.preferredTimeSlots.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
-            OnboardingCardContent(items: $timeSlots)
+            OnboardingCardContent(items: $viewModel.preferredTimeSlots)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 savePreferredTimeSlot()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-            .background(.white)
         }
         .onAppear {
             title = "활동 시간대"
@@ -46,7 +39,7 @@ struct PreferredTimeSlotTabView: View {
 
 extension PreferredTimeSlotTabView {
     private func savePreferredTimeSlot() {
-        let selectedTimeSlots = timeSlots.filter { $0.isSelected }
+        let selectedTimeSlots = viewModel.preferredTimeSlots.filter { $0.isSelected }
 
         if selectedTimeSlots.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.preferredTimeSlot = nil

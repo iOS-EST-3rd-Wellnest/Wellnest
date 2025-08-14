@@ -13,9 +13,9 @@ final class UserDefaultsManager: ObservableObject {
     private let defaults = UserDefaults.standard
 
     /// 온보딩 완료 여부
-    @Published var isOnboarding: Bool {
+    @Published var hasCompletedOnboarding: Bool {
         didSet {
-            defaults.set(isOnboarding, forKey: UserDefaultsKeys.Onboarding.isOnboarding)
+            defaults.set(hasCompletedOnboarding, forKey: UserDefaultsKeys.Onboarding.hasCompletedOnboarding)
         }
     }
     
@@ -41,7 +41,7 @@ final class UserDefaultsManager: ObservableObject {
     }
 
     private init() {
-        self.isOnboarding = defaults.bool(forKey: UserDefaultsKeys.Onboarding.isOnboarding)
+        self.hasCompletedOnboarding = defaults.bool(forKey: UserDefaultsKeys.Onboarding.hasCompletedOnboarding)
         self.isHealthKitEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isHealthDataEnabled)
         self.isNotificationEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isNotificationEnabled)
         self.isCalendarEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isCalendarEnable)
