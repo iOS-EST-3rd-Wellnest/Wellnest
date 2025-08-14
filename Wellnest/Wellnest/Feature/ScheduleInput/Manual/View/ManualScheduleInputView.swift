@@ -14,8 +14,12 @@ struct ManualScheduleInputView: View {
     // 일정 제목
     @State private var title: String = ""
 
+//    @State private var selectedColorName = "accentButtonColor"
+//    @State private var selectedColor = Color("accentButtonColor")
+//    @State var showColorPickerSheet: Bool = false
     @State private var selectedColorName = "accentButtonColor"
-    @State var showColorPickerSheet: Bool = false
+    @State private var previewColor: Color = Color("accentButtonColor")
+    @State private var showColorPickerSheet = false
 
     enum InputField: Hashable {
         case title
@@ -169,10 +173,12 @@ struct ManualScheduleInputView: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
+
                             Button {
                                 showColorPickerSheet = true
+                                isKeyboardVisible = false
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: .constant(Color(selectedColorName)))
+                                ColorPicker("배경 색상 선택", selection: $previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }
@@ -180,6 +186,10 @@ struct ManualScheduleInputView: View {
                         .sheet(isPresented: $showColorPickerSheet) {
                             ColorPickerView(selectedColorName: $selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
+
+                        }
+                        .onChange(of: selectedColorName) { newName in
+                            previewColor = Color(newName)
                         }
                         Spacer()
                     }
