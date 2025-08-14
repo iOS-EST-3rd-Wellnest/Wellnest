@@ -15,12 +15,9 @@ struct IntroductionTabView: View {
         VStack {
             Spacer()
 
-            FilledButton(title: "다음") {
-                withAnimation {
-                    currentPage += 1
-                }
+            OnboardingButton(title: "다음", isDisabled: false) {
+                withAnimation { currentPage += 1 }
             }
-            .padding()
         }
         .onAppear {
             title = "앱 소개"

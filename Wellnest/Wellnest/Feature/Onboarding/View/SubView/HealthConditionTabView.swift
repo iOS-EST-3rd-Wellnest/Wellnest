@@ -9,36 +9,28 @@ import SwiftUI
 
 struct HealthConditionTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
 
+    @ObservedObject var viewModel: UserInfoViewModel
     @ObservedObject var userDefaultsManager: UserDefaultsManager
     
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var conditions = HealthCondition.conditions
-
     var isButtonDisabled: Bool {
-        !conditions.contains(where: { $0.isSelected })
+        !viewModel.healthConditions.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
-            OnboardingCardContent(items: $conditions)
+            OnboardingCardContent(items: $viewModel.healthConditions)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "완료") {
+            OnboardingButton(title: "완료", isDisabled: isButtonDisabled) {
                 saveHealthCondition()
-                withAnimation {
-                    userDefaultsManager.isOnboarding = true
-                }
+                withAnimation { userDefaultsManager.hasCompletedOnboarding = true }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-            .background(.white)
         }
         .onAppear {
             title = "현재 건강 상태"
@@ -48,7 +40,7 @@ struct HealthConditionTabView: View {
 
 extension HealthConditionTabView {
     private func saveHealthCondition() {
-        let selectedConditions = conditions.filter { $0.isSelected }
+        let selectedConditions = viewModel.healthConditions.filter { $0.isSelected }
 
         if selectedConditions.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.healthConditions = nil
