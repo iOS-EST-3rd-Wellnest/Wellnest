@@ -100,11 +100,11 @@ struct HealthKitInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기", action: {
+            FilledButton(title: userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기", backgroundColor: userDefault.isHealthKitEnabled ? .gray : .blue, action: {
                 Task {
                     await connectHealthKit()
                 }
-            }, backgroundColor: userDefault.isHealthKitEnabled ? .gray : .blue)
+            })
             .disabled(userDefault.isHealthKitEnabled)
             
             Text("* 설정 > 건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")

@@ -17,12 +17,8 @@ struct ManualScheduleInputView: View {
 
     @State private var selectedColor: Color = .blue
 
-    // 초기에 첫번째 텍스트 필드에 focus.
-    @State private var isTextFieldFocused: Bool = true
-
     enum InputField: Hashable {
         case title
-        case detail
     }
 
     // MARK: - locationSection
@@ -82,7 +78,52 @@ struct ManualScheduleInputView: View {
         NavigationView {
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    ScheduleInputTextField()
+                    VStack {
+                        HStack {
+                            FocusableTextField(
+                                text: $title,
+                                placeholder: "일정을 입력하세요.",
+                                isFirstResponder: currentFocus == .title,
+                                returnKeyType: .next,
+                                keyboardType: .default,
+                                onReturn: {
+                                    currentFocus = nil
+                                    showLocationSearchSheet = true
+
+                                },
+                                onEditing: {
+                                    if currentFocus != .title {
+                                        currentFocus = .title
+                                    }
+                                }
+                            )
+                        }
+                        Divider()
+                        HStack {
+                            Button {
+                                currentFocus = nil
+                                showLocationSearchSheet = true
+                            } label: {
+                                HStack {
+                                    Text(location.isEmpty ? "장소" : location)
+                                        .foregroundStyle(location.isEmpty ? .tertiary : .primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Image(systemName: "magnifyingglass")
+                                        .frame(width: 20, height: 20)
+                                }
+                                .contentShape(Rectangle())
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity)
+
+                        }
+                        .padding(.top, 2)
+                        .sheet(isPresented: $showLocationSearchSheet) {
+                            LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
+                        }
+                        Divider()
+                    }
                     PeriodPickerView(
                         startDate: $startDate,
                         endDate: $endDate,
@@ -104,7 +145,7 @@ struct ManualScheduleInputView: View {
                             currentFocus = nil
                         }
                     )
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 5)
                     .onChange(of: isRepeated) { newValue in
                         UIApplication.hideKeyboard()
                     }
@@ -116,8 +157,17 @@ struct ManualScheduleInputView: View {
                         showDetail: false,
                         detailContent: nil
                     )
+                    .padding(.bottom, 5)
                     .onChange(of: isAlarm) { newValue in
                         UIApplication.hideKeyboard()
+                    }
+                    HStack {
+                        Text("배경색")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        ColorPicker("배경 색상 선택", selection: $selectedColor)
+                            .labelsHidden()
                     }
                     Spacer()
                 }
@@ -133,6 +183,7 @@ struct ManualScheduleInputView: View {
                     .ignoresSafeArea(.keyboard, edges: .bottom)
             }
             .navigationTitle("새 일정")
+            .scrollDismissesKeyboard(.interactively)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -145,19 +196,16 @@ struct ManualScheduleInputView: View {
                     }
                 }
             }
-
         }
     }
 
     private var saveButton: some View {
-        FilledButton(title: "저장하기") {
+        FilledButton(title: "저장하기", disabled: title.isEmpty) {
             saveSchedule()
             selectedTab = .plan
             selectedCreationType = nil
             dismiss()
         }
-        .disabled(title.isEmpty)
-        .opacity(title.isEmpty ? 0.5 : 1.0)
     }
 
 }

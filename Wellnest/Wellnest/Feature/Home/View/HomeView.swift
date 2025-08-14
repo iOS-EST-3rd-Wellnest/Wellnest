@@ -75,13 +75,13 @@ struct HomeView: View {
 
                                 Text("1,000kcal 태우기")
                                     .font(.footnote)
-
+                                
                                 Text("10,000보 걷기")
                                     .font(.footnote)
                             }
                             .padding()
                         }
-
+                    
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(colorScheme == .dark ? Color(.gray) : .white)
                         .frame(minHeight: 180)
@@ -132,7 +132,9 @@ struct HomeView: View {
                 .padding(.bottom, 100)
         }
         .onAppear {
-//            homeVM.videoRequest()
+            //homeVM.quoteOfTheDayRequest()
+            //homeVM.weatherRequest()
+            //homeVM.videoRequest()
         }
     }
 }

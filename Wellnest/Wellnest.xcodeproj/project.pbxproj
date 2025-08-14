@@ -38,8 +38,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Secrets.plist,
-				Shared/Common/Util/.gitkeep,
-				Shared/Model/.gitkeep,
 			);
 			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;
 		};
@@ -192,7 +190,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					B05A1EEE2E3B222800AA8F36 = {
 						CreatedOnToolsVersion = 16.3;
@@ -420,7 +418,7 @@
 				CODE_SIGN_ENTITLEMENTS = Wellnest/Wellnest.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = V9TZ6H4V4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
@@ -439,7 +437,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Wellnest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lemon.Wellnest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -455,7 +453,7 @@
 				CODE_SIGN_ENTITLEMENTS = Wellnest/Wellnest.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = V9TZ6H4V4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
@@ -474,7 +472,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Wellnest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lemon.Wellnest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
