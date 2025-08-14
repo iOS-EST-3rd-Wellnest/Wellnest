@@ -100,12 +100,12 @@ struct HealthKitInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기", action: {
+            FilledButton(title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"), action: {
                 Task {
                     await connectHealthKit()
                 }
             }, backgroundColor: userDefault.isHealthKitEnabled ? .gray : .blue)
-            .disabled(userDefault.isHealthKitEnabled)
+            .disabled(isAuthorizing || userDefault.isHealthKitEnabled)
             
             Text("* 설정 > 건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
                 .font(.caption)
@@ -116,24 +116,36 @@ struct HealthKitInterworkView: View {
         .navigationBarTitleDisplayMode(.inline)
         .padding(.bottom, 100)
         .onAppear {
-            if userDefault.isHealthKitEnabled {
-                Task {
-                    try await fetchHealthData()
+            Task {
+                let snap = await manager.finalAuthSnapshot()
+                if !snap.missingCore.isEmpty {
+                    userDefault.isHealthKitEnabled = false
                 }
-                startObserversIfNeeded()
+                // 연결됨(=true)인 경우에만 패치/옵저버
+                if userDefault.isHealthKitEnabled {
+                    await fetchHealthDataSafely()
+                    startObserversIfNeeded()
+                }
             }
+            //            if userDefault.isHealthKitEnabled {
+            //                Task { try await fetchHealthData() }
+            ////                Task { await fetchHealthDataSafely() }
+            //                startObserversIfNeeded()
+            //            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .healthDataDidUpdate)) { _ in
-            Task {
-                try await fetchHealthData()
-            }
+            Task { await fetchHealthDataSafely() }
         }
         .onChange(of: scenePhase) { phase in
-            if phase == .active, userDefault.isHealthKitEnabled {
+            if phase == .active {
                 Task {
-                    try? await Task.sleep(for: .milliseconds(300))
+                    //                    try? await Task.sleep(for: .milliseconds(250))
+                    await resyncAuthorizationFlag()
                     
-                    await refreshHealthData()
+                    if userDefault.isHealthKitEnabled {
+                        startObserversIfNeeded()
+                        await refreshHealthData()
+                    }
                 }
             }
         }
@@ -151,65 +163,145 @@ struct HealthKitInterworkView: View {
 extension HealthKitInterworkView {
     @MainActor
     private func connectHealthKit() async {
-        if userDefault.isHealthKitEnabled {
-            await refreshHealthData()
+        print("isEnabled:", userDefault.isHealthKitEnabled)
+        
+        // 요청 전 스냅샷
+        let pre = await manager.finalAuthSnapshot()
+        print("1")
+        print("pre.missingCore:", pre.missingCore.map(krName).joined(separator: ", "))
+        print("pre.missingOptional:", pre.missingOptional.map(krName).joined(separator: ", "))
+        
+        if pre.missingCore.isEmpty {
+            // 권한 허용
+            print("2")
+            userDefault.isHealthKitEnabled = true
+            await fetchHealthDataSafely()
+            startObserversIfNeeded()
             return
-        } else {
-            userDefault.isHealthKitEnabled = false
         }
         
-        isAuthorizing = true
-        defer { isAuthorizing = false }
-        
+        // 권한이 필요한 경우에 요청
         do {
-            try await manager.requestAuthorization()
-            try? await Task.sleep(for: .milliseconds(200))
-            
-            userDefault.isHealthKitEnabled = true
-            try await fetchHealthData()
-            startObserversIfNeeded()
-            print("건강 앱 연동")
+            print("3")
+            let _ = try await manager.requestAuthorizationIfNeeded()
+            try await Task.sleep(for: .milliseconds(150))
+            let post = await manager.finalAuthSnapshot()
+            print("post.missingCore:", post.missingCore.map(krName).joined(separator: ", "))
+            print("post.missingOptional:", post.missingOptional.map(krName).joined(separator: ", "))
+            if post.missingCore.isEmpty {
+                print("연동성공")
+                
+                // 연동 성공
+                userDefault.isHealthKitEnabled = true
+                await fetchHealthDataSafely()
+                startObserversIfNeeded()
+                print("권한 상태: \(userDefault.isHealthKitEnabled)")
+                
+                // 선택 부족은 비차단
+                if !post.missingOptional.isEmpty {
+                    print("Optional not granted:", post.missingOptional.map(krName).joined(separator: ", "))
+                }
+                print("isEnabled:", userDefault.isHealthKitEnabled)
+            } else {
+                print("4")
+                // 설정 이동
+                userDefault.isHealthKitEnabled = false
+                alertMessage =
+                    """
+                    건강 데이터 접근이 부족합니다.
+                    부족한 항목: \(post.missingCore.map(krName).joined(separator: ", "))
+                    설정 > 건강 > 데이터 접근 및 기기에서 허용해 주세요.
+                    """
+                showSettingAlert = true
+            }
+        } catch HealthAuthError.notAvailable {
+            userDefault.isHealthKitEnabled = false
+            alertMessage = "이 기기에서는 건강 데이터가 지원되지 않습니다."
+            showSettingAlert = false
+        } catch HealthAuthError.unknown(let e) {
+            userDefault.isHealthKitEnabled = false
+            alertMessage = "연동 중 오류가 발생했습니다. (\(e.localizedDescription))"
+            showSettingAlert = false
         } catch {
             userDefault.isHealthKitEnabled = false
-            alertMessage = "건강 데이터 접근에 실패했습니다.\n설정에서 권한을 확인해주세요."
-            showSettingAlert = true
+            alertMessage = "연동 중 알 수 없는 오류가 발생했습니다."
+            showSettingAlert = false
+        }
+    }
+    
+    private func krName(for type: HKObjectType) -> String {
+        switch type {
+        case HKObjectType.quantityType(forIdentifier: .stepCount): return "걸음 수"
+        case HKObjectType.quantityType(forIdentifier: .activeEnergyBurned): return "활동 에너지(칼로리)"
+        case HKObjectType.quantityType(forIdentifier: .heartRate): return "심박수"
+        case HKObjectType.categoryType(forIdentifier: .sleepAnalysis): return "수면"
+        case HKObjectType.quantityType(forIdentifier: .bodyMassIndex): return "BMI"
+        case HKObjectType.quantityType(forIdentifier: .bodyFatPercentage): return "체지방률"
+        default: return "기타 항목"
         }
     }
     
     /// 건강앱의 데이터가 변경 시  업데이트
     private func startObserversIfNeeded() {
+        guard userDefault.isHealthKitEnabled else { return }
+        
         if let step = HKObjectType.quantityType(forIdentifier: .stepCount) {
             manager.startObservingUpdates(for: step)
         }
-        if let calories = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
-            manager.startObservingUpdates(for: calories)
+        if let energy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            manager.startObservingUpdates(for: energy)
         }
-        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) {
-            manager.startObservingUpdates(for: heartRate)
+        if let hr = HKObjectType.quantityType(forIdentifier: .heartRate) {
+            manager.startObservingUpdates(for: hr)
         }
-        if let sleepTime = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
-            manager.startObservingUpdates(for: sleepTime)
+        if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            manager.startObservingUpdates(for: sleep)
         }
     }
     
     /// 데이터 패치
-    func fetchHealthData() async throws {
-        stepCount = try await manager.fetchStepCount()
-        caloriesCount = try await manager.fetchCalorieCount()
-        sleepTime = Int(try await manager.fetchSleepDuration())
-        heartRate = try await manager.fetchAverageHeartRate()
-        bmi = try await manager.fetchBMI()
-        bodyFatPercentage = try await manager.fetchBodyFatPercentage()
+    //    func fetchHealthData() async throws {
+    //        stepCount = try await manager.fetchStepCount()
+    //        caloriesCount = try await manager.fetchCalorieCount()
+    //        sleepTime = Int(try await manager.fetchSleepDuration())
+    //        heartRate = try await manager.fetchAverageHeartRate()
+    //        bmi = try await manager.fetchBMI()
+    //        bodyFatPercentage = try await manager.fetchBodyFatPercentage()
+    //    }
+    
+    func fetchHealthDataSafely() async {
+        async let steps: Int = (try? manager.fetchStepCount()) ?? 0
+        async let calories: Int = (try? manager.fetchCalorieCount()) ?? 0
+        async let sleep: Double = (try? manager.fetchSleepDuration()) ?? 0
+        async let hr: Int = (try? manager.fetchAverageHeartRate()) ?? 0
+        async let bmiVal: Double = (try? manager.fetchBMI()) ?? 0
+        async let fatVal: Double = (try? manager.fetchBodyFatPercentage()) ?? 0
+        
+        let (s, c, sl, h, b, f) = await (steps, calories, sleep, hr, bmiVal, fatVal)
+        stepCount = s
+        caloriesCount = c
+        sleepTime = Int(sl)
+        heartRate = h
+        bmi = b
+        bodyFatPercentage = f
     }
     
     @MainActor
     /// 기존 앱 연동 비활성화 -> 활성화 시 데이터 패치
     func refreshHealthData() async {
         do {
-            try await fetchHealthData()
-        } catch {
-            alertMessage = "데이터 갱신 중 오류가 발생했습니다."
-            showSettingAlert = true
+            await fetchHealthDataSafely()
+            startObserversIfNeeded()
+        }
+    }
+}
+
+extension HealthKitInterworkView {
+    private func resyncAuthorizationFlag() async {
+        let snap = await manager.authorizationSnapshotByReadProbe()
+        
+        if !snap.missingCore.isEmpty {
+            userDefault.isHealthKitEnabled = false
         }
     }
 }
