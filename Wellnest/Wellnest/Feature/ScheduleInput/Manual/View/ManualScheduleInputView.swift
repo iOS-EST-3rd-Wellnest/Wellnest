@@ -14,8 +14,12 @@ struct ManualScheduleInputView: View {
     // 일정 제목
     @State private var title: String = ""
 
-    @State private var selectedColor: Color = Color("accentButtonColor")
-    @State var showColorPickerSheet: Bool = false
+//    @State private var selectedColorName = "accentButtonColor"
+//    @State private var selectedColor = Color("accentButtonColor")
+//    @State var showColorPickerSheet: Bool = false
+    @State private var selectedColorName = "accentButtonColor"
+    @State private var previewColor: Color = Color("accentButtonColor")
+    @State private var showColorPickerSheet = false
 
     enum InputField: Hashable {
         case title
@@ -169,17 +173,23 @@ struct ManualScheduleInputView: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
+
                             Button {
                                 showColorPickerSheet = true
+                                isKeyboardVisible = false
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                ColorPicker("배경 색상 선택", selection: $previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }
                         }
                         .sheet(isPresented: $showColorPickerSheet) {
-                            ComposeView(selectedBackgroundColor: $selectedColor)
+                            ColorPickerView(selectedColorName: $selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
+
+                        }
+                        .onChange(of: selectedColorName) { newName in
+                            previewColor = Color(newName)
                         }
                         Spacer()
                     }
@@ -253,7 +263,7 @@ extension ManualScheduleInputView {
         newSchedule.endDate = endDate
         newSchedule.isAllDay = isAllDay as NSNumber
         newSchedule.isCompleted = false
-        newSchedule.backgroundColor = selectedColor.description
+        newSchedule.backgroundColor = selectedColorName
         newSchedule.repeatRule = selectedRepeatRule?.name
         newSchedule.hasRepeatEndDate = hasRepeatEndDate
         newSchedule.repeatEndDate = repeatEndDate
