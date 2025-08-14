@@ -143,6 +143,7 @@ struct ManualScheduleInputView: View {
                             },
                             onTagTap: { _ in
                                 UIApplication.hideKeyboard()
+                                isKeyboardVisible = false
                             }
                         )
                         .padding(.bottom, 5)
