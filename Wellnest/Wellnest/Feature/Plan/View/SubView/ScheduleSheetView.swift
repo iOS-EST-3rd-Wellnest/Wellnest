@@ -20,18 +20,21 @@ struct ScheduleSheetView: View {
                 .fill(Color.secondary.opacity(0.3))
                 .frame(width: 60, height: 5)
                 .frame(maxWidth: .infinity)
-                .scaleEffect(isDragging ? 1.2 : 1.0)
+                .scaleEffect(isDragging ? 1.4 : 1.0)
+                .animation(.spring, value: isDragging)
 
             Text(planVM.selectedDate.dateFormat("M월 d일 E요일"))
                 .font(.headline)
                 .padding(.horizontal)
+                .opacity(isDragging ? 0.7 : 1.0)
 
             ScrollView {
                 LazyVStack(spacing: Spacing.layout) {
                     if planVM.selectedDateScheduleItems.isEmpty {
                         emptyStateView
                     } else {
-                        ForEach(planVM.selectedDateScheduleItems) { item in
+                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
+                            let item = planVM.selectedDateScheduleItems[index]
 							ScheduleItemView(schedule: item)
                         }
                     }
@@ -39,16 +42,16 @@ struct ScheduleSheetView: View {
                 .padding()
             }
             .scrollDisabled(isDragging || !isSheetExpanded)
+            .opacity(isDragging ? 0.7 : 1.0)
 
             Spacer()
         }
         .padding(.top, Spacing.layout)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)        .background(Color.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
-        //        .animation(.spring, value: isSheetExpanded)
-//        .animation(.spring, value: currentDragOffset)
     }
 
     @ViewBuilder
@@ -77,16 +80,19 @@ struct ScheduleSheetView: View {
             .onEnded { value in
                 isDragging = false
 
-                let threshold: CGFloat = 100
+                let threshold: CGFloat = 80
 
                 if value.translation.height < -threshold {
-                    isSheetExpanded = true
+                    withAnimation(.spring) {
+                        isSheetExpanded = true
+                    }
                 } else if value.translation.height > threshold {
-                    isSheetExpanded = false
+                    withAnimation(.spring) {
+                        isSheetExpanded = false
+                    }
                 }
 
                 currentDragOffset = 0
-
             }
     }
 }
