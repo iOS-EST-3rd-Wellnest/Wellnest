@@ -78,13 +78,15 @@ struct PlanView: View {
                     }
                 }
 
-
                 Spacer()
             }
             .padding(.horizontal)
             .zIndex(3)
         }
         .ignoresSafeArea(edges: .bottom)
+        .onAppear {
+             planVM.scheduleStore.loadScheduleData()
+         }
     }
 }
 
