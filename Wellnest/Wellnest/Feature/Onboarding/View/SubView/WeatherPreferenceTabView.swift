@@ -9,34 +9,27 @@ import SwiftUI
 
 struct WeatherPreferenceTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
-    
+
+    @ObservedObject var viewModel: UserInfoViewModel
+
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var weathers = WeatherPreference.weathers
-
     var isButtonDisabled: Bool {
-        !weathers.contains(where: { $0.isSelected })
+        !viewModel.weatherPreferences.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "평소에 어떤 날씨를 좋아하시나요?")
-            OnboardingCardContent(items: $weathers)
+            OnboardingCardContent(items: $viewModel.weatherPreferences)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveWeatherPreference()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-            .background(.white)
         }
         .onAppear {
             title = "선호 날씨"
@@ -46,7 +39,7 @@ struct WeatherPreferenceTabView: View {
 
 extension WeatherPreferenceTabView {
     private func saveWeatherPreference() {
-        let selectedWeathers = weathers.filter { $0.isSelected }
+        let selectedWeathers = viewModel.weatherPreferences.filter { $0.isSelected }
 
         if selectedWeathers.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.weatherPreferences = nil

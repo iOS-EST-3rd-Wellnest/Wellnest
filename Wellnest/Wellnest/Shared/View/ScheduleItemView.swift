@@ -21,7 +21,6 @@ struct ScheduleItemView: View {
                  } else {
                      Text("\(schedule.startDate.formattedTime) ~ \(schedule.endDate.formattedTime)")
                          .font(.footnote)
-                         .foregroundColor(.secondary)
                  }
 
                 Spacer()
@@ -52,7 +51,7 @@ struct ScheduleItemView: View {
             }
         }
         .padding()
-        .frame(height: 80)
+        .frame(height: 70)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.large)
                 .fill(Color.scheduleSolid(color: schedule.backgroundColor))
