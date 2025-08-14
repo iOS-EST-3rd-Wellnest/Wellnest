@@ -23,14 +23,12 @@ final class AlanAIService: ObservableObject {
            let plist = NSDictionary(contentsOfFile: path),
            let clientID = plist["ALAN_CLIENT_ID"] as? String {
             self.clientID = clientID
-            print("✅ Secrets.plist에서 Client ID 로드 성공 (길이: \(clientID.count))")
+            print("Secrets.plist에서 Client ID 로드 성공 (길이: \(clientID.count))")
         } else {
             self.clientID = ""
-            print("⚠️ ALAN_CLIENT_ID를 Secrets.plist에서 찾을 수 없습니다.")
+            print("ALAN_CLIENT_ID를 Secrets.plist에서 찾을 수 없습니다.")
         }
     }
-
-    // MARK: - Generic Request Methods (async/await 버전)
 
     func requestString(prompt: String) async throws -> String {
         isLoading = true
@@ -70,8 +68,6 @@ final class AlanAIService: ObservableObject {
         return try parseResponse(content, responseType: responseType, jsonExtractor: jsonExtractor)
     }
 
-    // MARK: - Callback 호환성을 위한 메소드들 (기존 코드와의 호환성)
-
     func requestString(
         prompt: String,
         completion: @escaping (Result<String, Error>) -> Void
@@ -107,8 +103,6 @@ final class AlanAIService: ObservableObject {
         rawResponse = ""
     }
 
-    // MARK: - Response Parsing
-
     private func parseResponse<T: Codable>(
         _ content: String,
         responseType: T.Type,
@@ -124,11 +118,11 @@ final class AlanAIService: ObservableObject {
 
         guard let validJSONString = jsonString else {
             let error = NSError(domain: "AlanAIService", code: -2, userInfo: [NSLocalizedDescriptionKey: "유효한 JSON 형식을 찾을 수 없습니다."])
-            print("❌ JSON 추출 실패. 원본 응답:\n\(content)")
+            print("JSON 추출 실패. 원본 응답:\n\(content)")
             throw error
         }
 
-        print("📋 추출된 JSON:\n\(validJSONString)\n==================")
+        print("추출된 JSON:\n\(validJSONString)\n==================")
 
         guard let jsonData = validJSONString.data(using: .utf8) else {
             let error = NSError(domain: "AlanAIService", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON 데이터 변환 실패"])
@@ -139,15 +133,13 @@ final class AlanAIService: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let decodedObject = try decoder.decode(T.self, from: jsonData)
-            print("✅ JSON 파싱 성공!")
+            print("JSON 파싱 성공!")
             return decodedObject
         } catch {
-            print("❌ JSON 파싱 실패: \(error)")
+            print("JSON 파싱 실패: \(error)")
             throw error
         }
     }
-
-    // MARK: - JSON Extraction Methods (Internal for extensions)
 
     func extractJSONFromResponse(_ response: String) -> String? {
         if let json = extractJSONByBraces(response) {

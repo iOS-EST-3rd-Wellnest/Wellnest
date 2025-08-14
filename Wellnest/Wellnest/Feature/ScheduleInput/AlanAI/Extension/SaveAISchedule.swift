@@ -11,7 +11,7 @@ extension AIScheduleResultView {
     func saveAISchedules() {
         guard let plan = viewModel.healthPlan else { return }
 
-        print("💾 AI 스케줄 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
+        print("AI 스케줄 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (index, scheduleItem) in plan.schedules.enumerated() {
             let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
@@ -43,9 +43,9 @@ extension AIScheduleResultView {
 
         do {
             try CoreDataService.shared.saveContext()
-            print("💾 Core Data 저장 완료")
+            print("Core Data 저장 완료")
         } catch {
-            print("❌ 저장 실패: \(error)")
+            print("저장 실패: \(error)")
         }
     }
 }
