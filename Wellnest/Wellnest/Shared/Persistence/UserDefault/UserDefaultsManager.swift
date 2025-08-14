@@ -19,7 +19,7 @@ final class UserDefaultsManager: ObservableObject {
         }
     }
     
-    /// 건강 앱 동기화 토글 여부
+    /// 건강 앱 동기화 여부
     @Published var isHealthKitEnabled: Bool {
         didSet {
             defaults.set(isHealthKitEnabled, forKey: UserDefaultsKeys.Settings.isHealthDataEnabled)
@@ -32,11 +32,19 @@ final class UserDefaultsManager: ObservableObject {
             defaults.set(isNotificationEnabled, forKey: UserDefaultsKeys.Settings.isNotificationEnabled)
         }
     }
+    
+    /// 캘린더 연동 여부
+    @Published var isCalendarEnabled: Bool {
+        didSet {
+            defaults.set(isCalendarEnabled, forKey: UserDefaultsKeys.Settings.isCalendarEnable)
+        }
+    }
 
     private init() {
         self.isOnboarding = defaults.bool(forKey: UserDefaultsKeys.Onboarding.isOnboarding)
         self.isHealthKitEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isHealthDataEnabled)
         self.isNotificationEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isNotificationEnabled)
+        self.isCalendarEnabled = defaults.bool(forKey: UserDefaultsKeys.Settings.isCalendarEnable)
     }
 
     /// Codable 객체를 JSON으로 인코딩해 UserDefaults에 저장
