@@ -9,8 +9,6 @@ import SwiftUI
 
 struct UserInfoTabView: View {
     var userEntity: UserEntity
-    
-    var viewModel: UserInfoViewModel
 
     @Binding var currentPage: Int
     @Binding var title: String
@@ -22,6 +20,10 @@ struct UserInfoTabView: View {
     @State private var selectedGender = ""
     @State private var height: Int?
     @State private var weight: Int?
+
+    @State private var heightText: String = ""
+    @State private var shakeTrigger: CGFloat = 0
+    @State private var isInvalid: Bool = false
 
     let spacing = OnboardingCardLayout.spacing
 
@@ -97,8 +99,21 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: Binding(
-                            get: { height.map(String.init) ?? "" },
-                            set: { height = Int($0.onlyNumbers(maxLength: 3)) }
+                            get: { heightText },
+                            set: { newValue in
+                                // 숫자만 허용, 최대 3자리
+                                let filtered = newValue.onlyNumbers(maxLength: 3)
+                                if filtered != newValue {
+                                    // 숫자가 아닌 값이 들어오면 흔들림 트리거
+                                    withAnimation(.default) { shakeTrigger += 1 }
+                                    isInvalid = true
+                                } else {
+                                    isInvalid = false
+                                }
+
+                                heightText = filtered
+                                height = Int(filtered)
+                            }
                         ),
                         prompt: Text("cm 단위로 정수만 입력해주세요.")
                             .font(.footnote)
@@ -108,6 +123,7 @@ struct UserInfoTabView: View {
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 46)
+                    .modifier(ShakeEffect(animatableData: shakeTrigger))
                 }
 
                 /// 몸무게
@@ -221,6 +237,19 @@ struct GenderMenuLabel: View {
     }
 }
 
+struct ShakeEffect: GeometryEffect {
+    var amount: CGFloat = 10 // 흔드는 정도(거리)
+    var shakesPerUnit = 3 // 흔드는 횟수
+    var animatableData: CGFloat // 애니메이션 진행 정도(0 > 1)
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(
+            translationX: amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
+            y: 0
+        ))
+    }
+}
+
 extension UserInfoTabView {
     private func saveUserInfo() {
         // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
@@ -287,7 +316,6 @@ private struct Preview: View {
         if let userEntity = userInfoVM.userEntity {
             UserInfoTabView(
                 userEntity: userEntity,
-                viewModel: userInfoVM,
                 currentPage: $currentPage,
                 title: $title
             )

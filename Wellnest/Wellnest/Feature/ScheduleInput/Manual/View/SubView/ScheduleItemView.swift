@@ -31,9 +31,31 @@ struct ScheduleItemView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .fill(Color(.systemGray6))
+                .fill(colorFromNamedColorDescription(schedule.backgroundColor))
                 .defaultShadow()
         )
         .frame(height: 70)
+    }
+    
+}
+
+extension ScheduleItemView {
+    private func colorFromNamedColorDescription(_ backgroundStr: String) -> Color {
+        let pattern = #"NamedColor\(name:\s*"([^"]+)""#
+        guard
+            let regex = try? NSRegularExpression(pattern: pattern),
+            let match = regex.firstMatch(in: backgroundStr, range: NSRange(backgroundStr.startIndex..., in: backgroundStr)),
+            let nameRange = Range(match.range(at: 1), in: backgroundStr)
+        else {
+            return Color(.systemGray6)
+        }
+
+        let name = String(backgroundStr[nameRange])
+        
+        if let ui = UIColor(named: name, in: .main, compatibleWith: nil) {
+            return Color(uiColor: ui)
+        } else {
+            return Color(.systemGray6)
+        }
     }
 }

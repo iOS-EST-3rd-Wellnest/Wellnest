@@ -25,9 +25,9 @@ struct RecommendView: View {
                 
                 Text("깊은 명상은 마음의 평화를, 충분한 수면은 활기찬 내일을 선사합니다")
                     .font(.callout)
-                    .padding()
-                    .padding(.vertical, Spacing.inline)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Spacing.layout * 1.5)
+                    .padding(.vertical, Spacing.layout)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(Color(.systemGray6))
@@ -52,10 +52,9 @@ struct RecommendView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, Spacing.content * 1.5)
                 }
-                .padding()
-                .padding(.vertical, Spacing.inline)
+                .padding(.horizontal, Spacing.layout * 1.5)
+                .padding(.vertical, Spacing.layout)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
