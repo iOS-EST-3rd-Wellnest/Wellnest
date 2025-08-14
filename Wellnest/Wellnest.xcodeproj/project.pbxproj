@@ -424,6 +424,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "캘린더 앱과 연동하여 일정을 생성합니다.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "건강 앱에서 사용자 건강 정보를 가져옵니다.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "건강 앱에서 사용자 건강 정보를 가져옵니다.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치를 기반으로 서비스를 제공합니다.";
@@ -458,6 +459,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Wellnest/Secrets.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "캘린더 앱과 연동하여 일정을 생성합니다.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "건강 앱에서 사용자 건강 정보를 가져옵니다.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "건강 앱에서 사용자 건강 정보를 가져옵니다.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치를 기반으로 서비스를 제공합니다.";
