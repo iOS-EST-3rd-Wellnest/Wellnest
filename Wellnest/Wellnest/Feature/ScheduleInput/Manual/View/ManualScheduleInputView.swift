@@ -74,6 +74,8 @@ struct ManualScheduleInputView: View {
 
     @State var isKeyboardVisible: Bool = true
 
+    @State private var didInit = false
+
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
@@ -187,6 +189,12 @@ struct ManualScheduleInputView: View {
                 .onDisappear {
                     UIApplication.hideKeyboard()
                 }
+                .onAppear {
+                    guard !didInit else { return }
+                    startDate = Date().roundedUpToFiveMinutes()
+                    endDate = Date().addingTimeInterval(3600).roundedUpToFiveMinutes()
+                    didInit = true
+                }
                 .navigationTitle("새 일정")
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
@@ -263,3 +271,11 @@ extension ManualScheduleInputView {
     }
 }
 
+extension Date {
+    /// 5분 단위 '올림' (초 단위도 함께 버림)
+    func roundedUpToFiveMinutes() -> Date {
+        let interval: TimeInterval = 5 * 60
+        let t = timeIntervalSinceReferenceDate
+        return Date(timeIntervalSinceReferenceDate: ceil(t / interval) * interval)
+    }
+}
