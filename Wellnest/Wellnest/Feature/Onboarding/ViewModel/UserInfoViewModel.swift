@@ -45,6 +45,11 @@ class UserInfoViewModel: ObservableObject {
             userEntity = existing
         } else {
             let newUserInfo = UserEntity(context: context)
+            newUserInfo.id = UUID()
+            newUserInfo.createdAt = Date()
+            newUserInfo.nickname = ""
+            newUserInfo.ageRange = ""
+            newUserInfo.gender = ""
             userEntity = newUserInfo
 
             try? CoreDataService.shared.saveContext()
