@@ -55,11 +55,11 @@ struct CalendarInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: isAuthorizing ? "연동중..." : (userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"), action: {
+            FilledButton(title: isAuthorizing ? "연동중..." : (userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"), backgroundColor: userDefault.isCalendarEnabled ? .gray : .blue) {
                 Task {
                     await linkCalendar()
                 }
-            }, backgroundColor: userDefault.isCalendarEnabled ? .gray : .blue)
+            }
             .disabled(userDefault.isCalendarEnabled)
         }
         .padding()
