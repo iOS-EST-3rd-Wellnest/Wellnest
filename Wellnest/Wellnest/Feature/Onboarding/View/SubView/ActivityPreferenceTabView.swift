@@ -9,46 +9,38 @@ import SwiftUI
 
 struct ActivityPreferenceTabView: View {
     var userEntity: UserEntity
-    var viewModel: UserInfoViewModel
-    
+
+    @ObservedObject var viewModel: UserInfoViewModel
+
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var activities = ActivityPreference.activities
-
     var isButtonDisabled: Bool {
-        !activities.contains(where: { $0.isSelected })
+        !viewModel.activityPreferences.contains(where: { $0.isSelected })
     }
 
     var body: some View {
         ScrollView {
             OnboardingTitleDescription(description: "평소에 선호하는 운동이나 활동을 골라주세요.")
-            OnboardingCardContent(items: $activities)
+            OnboardingCardContent(items: $viewModel.activityPreferences)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            FilledButton(title: "다음") {
+            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveActivityPreference()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
-            .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .padding()
-//            .background(.white) // TODO: 방법 1) 하얀색 배경
-            .background(.ultraThinMaterial) // TODO: 방법 2) 블러 배경
-                                            // TODO: 방법 3) 배경 없음(투명)
         }
         .onAppear {
             title = "선호 활동"
+            viewModel.loadActivities()
         }
     }
 }
 
 extension ActivityPreferenceTabView {
     private func saveActivityPreference() {
-        let selectedActivities = activities.filter { $0.isSelected }
+        let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }
 
         if selectedActivities.contains(where: { $0.title == "특별히 없음" }) {
             userEntity.activityPreferences = nil
