@@ -68,7 +68,9 @@ struct MainTabView: View {
         .onChange(of: selectedTab) { _ in
             showScheduleMenu = false
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .padding(.bottom, 24)
+        .ignoresSafeArea(edges: .bottom)
+//        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
     
 }

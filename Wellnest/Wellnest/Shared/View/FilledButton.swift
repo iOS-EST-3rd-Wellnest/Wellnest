@@ -39,7 +39,7 @@ struct FilledButton: View {
         .disabled(disabled)
         .background(
             Capsule()
-                .fill(disabled ? .secondary : backgroundColor)
+                .fill(disabled ? .secondary.opacity(0.3) : backgroundColor)
         )
     }
     
