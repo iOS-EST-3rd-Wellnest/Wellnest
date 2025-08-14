@@ -259,16 +259,6 @@ extension HealthKitInterworkView {
         }
     }
     
-    /// 데이터 패치
-    //    func fetchHealthData() async throws {
-    //        stepCount = try await manager.fetchStepCount()
-    //        caloriesCount = try await manager.fetchCalorieCount()
-    //        sleepTime = Int(try await manager.fetchSleepDuration())
-    //        heartRate = try await manager.fetchAverageHeartRate()
-    //        bmi = try await manager.fetchBMI()
-    //        bodyFatPercentage = try await manager.fetchBodyFatPercentage()
-    //    }
-    
     func fetchHealthDataSafely() async {
         async let steps: Int = (try? manager.fetchStepCount()) ?? 0
         async let calories: Int = (try? manager.fetchCalorieCount()) ?? 0
