@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ComposeView: View {
+struct ColorPickerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Binding var selectedColorName: String
@@ -64,5 +64,5 @@ struct ComposeView: View {
 }
 
 #Preview {
-    ComposeView(selectedColorName: .constant("accentCardBlue"))
+    ColorPickerView(selectedColorName: .constant("accentCardBlue"))
 }

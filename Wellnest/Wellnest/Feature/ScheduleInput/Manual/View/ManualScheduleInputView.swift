@@ -178,7 +178,7 @@ struct ManualScheduleInputView: View {
                             }
                         }
                         .sheet(isPresented: $showColorPickerSheet) {
-                            ComposeView(selectedColorName: $selectedColorName)
+                            ColorPickerView(selectedColorName: $selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
                         }
                         Spacer()
