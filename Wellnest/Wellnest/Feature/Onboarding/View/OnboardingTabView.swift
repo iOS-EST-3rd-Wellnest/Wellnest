@@ -244,7 +244,6 @@ struct OnboardingButton: View {
             )
             .padding(.horizontal)
             .padding(.bottom, Spacing.content)
-//            .padding(.top, Spacing.inline)
             .background(.white)
         }
     }

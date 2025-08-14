@@ -20,10 +20,8 @@ struct UserInfoTabView: View {
     @State private var selectedGender = ""
     @State private var height: Int?
     @State private var weight: Int?
-
     @State private var heightText: String = ""
-    @State private var shakeTrigger: CGFloat = 0
-    @State private var isInvalid: Bool = false
+    @State private var weightText: String = ""
 
     let spacing = OnboardingCardLayout.spacing
 
@@ -98,50 +96,38 @@ struct UserInfoTabView: View {
                 UserInfoForm(title: "키") {
                     TextField(
                         "",
-                        text: Binding(
-                            get: { heightText },
-                            set: { newValue in
-                                // 숫자만 허용, 최대 3자리
-                                let filtered = newValue.onlyNumbers(maxLength: 3)
-                                if filtered != newValue {
-                                    // 숫자가 아닌 값이 들어오면 흔들림 트리거
-                                    withAnimation(.default) { shakeTrigger += 1 }
-                                    isInvalid = true
-                                } else {
-                                    isInvalid = false
-                                }
-
-                                heightText = filtered
-                                height = Int(filtered)
-                            }
-                        ),
+                        text: $heightText,
                         prompt: Text("cm 단위로 정수만 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.5))
+                            .foregroundColor(.secondary.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 46)
-                    .modifier(ShakeEffect(animatableData: shakeTrigger))
+                    .onChange(of: heightText) { newValue in
+                        heightText = newValue.onlyNumbers(maxLength: 3)
+                        height = Int(heightText)
+                    }
                 }
 
                 /// 몸무게
                 UserInfoForm(title: "몸무게") {
                     TextField(
                         "",
-                        text: Binding(
-                            get: { weight.map(String.init) ?? "" },
-                            set: { weight = Int($0.onlyNumbers(maxLength: 3)) }
-                        ),
+                        text: $weightText,
                         prompt: Text("kg 단위로 정수만 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.5))
+                            .foregroundColor(.secondary.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 18)
+                    .onChange(of: weightText) { newValue in
+                        weightText = newValue.onlyNumbers(maxLength: 3)
+                        weight = Int(weightText)
+                    }
                 }
             }
             .padding(.horizontal, spacing)
@@ -163,6 +149,7 @@ struct UserInfoTabView: View {
     }
 }
 
+/// 입력폼 타이틀 레이아웃
 struct UserInfoFormTitle: View {
     let title: String
 
@@ -176,6 +163,7 @@ struct UserInfoFormTitle: View {
     }
 }
 
+/// 입력폼 레이아웃
 struct UserInfoForm<Content: View>: View {
     let title: String
     let isRequired: Bool
@@ -200,6 +188,7 @@ struct UserInfoForm<Content: View>: View {
     }
 }
 
+/// 나이 선택 메뉴
 struct AgeMenuLabel: View {
     let selectedAge: String
 
@@ -220,6 +209,7 @@ struct AgeMenuLabel: View {
     }
 }
 
+/// 성별 선택 버튼
 struct GenderMenuLabel: View {
     let selectedGender: String
     let gender: UserInfo
@@ -237,20 +227,8 @@ struct GenderMenuLabel: View {
     }
 }
 
-struct ShakeEffect: GeometryEffect {
-    var amount: CGFloat = 10 // 흔드는 정도(거리)
-    var shakesPerUnit = 3 // 흔드는 횟수
-    var animatableData: CGFloat // 애니메이션 진행 정도(0 > 1)
-
-    func effectValue(size: CGSize) -> ProjectionTransform {
-        ProjectionTransform(CGAffineTransform(
-            translationX: amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
-            y: 0
-        ))
-    }
-}
-
 extension UserInfoTabView {
+    /// CoreData에 저장
     private func saveUserInfo() {
         // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
@@ -279,6 +257,7 @@ extension UserInfoTabView {
         try? CoreDataService.shared.saveContext()
     }
 
+    /// CoreData에서 불러옴
     private func loadUserEntity() {
         if let nicknameValue = userEntity.nickname {
             nickname = nicknameValue

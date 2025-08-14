@@ -38,6 +38,7 @@ struct ActivityPreferenceTabView: View {
     }
 }
 
+// TODO: 저장 로직 뷰모델로 빼기
 extension ActivityPreferenceTabView {
     private func saveActivityPreference() {
         let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }
