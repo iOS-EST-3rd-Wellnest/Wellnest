@@ -10,7 +10,7 @@ import SwiftUI
 struct VideoView: View {
     @ObservedObject var homeVM: HomeViewModel
     
-    @Environment(\.sizeCategory) private var sizeCategory   // 다이내믹 타입 대응
+    @State private var uiImage: UIImage?
 
     private let videoListTemp = VideoRecommendModel.videoList
     
@@ -26,32 +26,11 @@ struct VideoView: View {
             //ForEach(homeVM.videoList) { video in
             ForEach(videoListTemp) { video in
                 let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
+                let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
                 
                 Link(destination: url) {
                     VStack {
-                        Group {
-                            // 1) 캐시된 이미지가 있으면 사용
-                            if let uiImage = homeVM.images[video.id] {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .cornerRadius(CornerRadius.large)
-                                    .defaultShadow()
-                            }
-                            // 2) 아직 없으면 로딩 인디케이터 + 로드 트리거
-                            else {
-                                Rectangle()
-                                    .fill(.clear)
-                                    .overlay(
-                                        ProgressView()
-                                            .task {
-                                                await homeVM.loadImage(for: video)
-                                            }
-                                    )
-                            }
-                        }
-                        .aspectRatio(16/9, contentMode: .fill)
-                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 4))
-                        
+                        VideoImageView(urlString: video.thumbnail, width: thumbWidth)
                         
                         Text(video.title)
                             .multilineTextAlignment(.leading)
@@ -65,6 +44,35 @@ struct VideoView: View {
             }
         }
         .padding(.horizontal)
+    }
+}
+
+struct VideoImageView: View {
+    let urlString: String
+    let width: CGFloat
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        ZStack {
+            if let img = image {
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Rectangle()
+                    .fill(Color.clear)
+                    .overlay(ProgressView())
+            }
+        }
+        .aspectRatio(16/9, contentMode: .fill)
+        .frame(width: width)
+        .clipped()
+        .cornerRadius(CornerRadius.large)
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .task(id: urlString) {
+            image = await ImageLoader.shared.load(urlString)
+        }
     }
 }
 

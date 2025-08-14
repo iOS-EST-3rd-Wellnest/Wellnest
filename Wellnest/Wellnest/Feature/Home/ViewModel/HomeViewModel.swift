@@ -10,35 +10,62 @@ import UIKit
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    @Published var videoList: [VideoRecommendModel] = []
-    @Published var images = [String: UIImage]()
+    @Published var quoteOfTheDay: String?
+    
+    @Published var currentWeather: WeatherItem?
+    @Published var forecastWeather = [WeatherItem]()
+    
+    @Published var videoList = [VideoRecommendModel]()
+    
     
     private static let imageCache = NSCache<NSString, UIImage>()
     
-    let alanService = AlanAIService()
+    private let alanService = AlanAIService()
+    private let weatherService = WeatherService()
     
-    var prompt = HomePrompt()
+    private var prompt = HomePrompt()
     
+    // 프리패치 작업 취소를 위해 핸들 보관
+    private var prefetchTasks = [Task<Void, Never>]()
     
     // MARK: - 오늘의 한마디
     func quoteOfTheDayRequest() {
-        
+        Task {
+            do {
+                quoteOfTheDay = try await alanService.requestString(prompt: prompt.quoteOfTheDayPrompt())
+                
+                print("오늘의 한마디:", quoteOfTheDay)
+            } catch {
+                print("❌ 오늘의 한마디 요청 실패:", error.localizedDescription)
+            }
+        }
     }
     
-    // MARK: - 날씨 Recommend
+    // MARK: - 날씨
     func weatherRequest() {
-        
+        Task {
+            do {
+                let location = try await LocationManager().requestLocation()
+                let lat = location.coordinate.latitude
+                let lon = location.coordinate.longitude
+                
+                self.currentWeather = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
+                
+                self.forecastWeather = try await weatherService.fetch5dayWeather(lat: lat, lon: lon)
+                
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
-    
     
     // MARK: - Alan Ai를 활용한 추천 영상 Youtube 검색
     func videoRequest() {
         Task {
             do {
-                let response = try await alanService.requestString(prompt: prompt.promptStr())
+                let response = try await alanService.requestString(prompt: prompt.videoPrompt())
                 let keywords = extractContent(from: response)
-//                let keywords = "체중 감량과 증가를 위한 걷기 운동 및 요가 루틴"
-                //print(keywords)
+                print(keywords)
                 
                 if let items = try await fetchVideoList(keywords: keywords) {
                     let models = items.map { item in
@@ -50,40 +77,28 @@ final class HomeViewModel: ObservableObject {
                     }
                     self.videoList = models
                     
-                    // 각 비디오의 썸네일 미리 로드
-                    for video in models {
-                        await loadImage(for: video)
-                    }
+                    // 썸네일 프리패치
+                    prefetchThumbnails(for: models)
                 }
             } catch {
-                print("❌ 동영상 불러오기 실패:", error)
+                print("❌ 동영상 불러오기 실패:", error.localizedDescription)
             }
         }
     }
     
-    /// 비디오의 썸네일을 비동기 로드해서 images[id]에 저장
-    func loadImage(for video: VideoRecommendModel) async {
-        guard let url = URL(string: video.thumbnail) else { return }
-        let key = video.id as NSString
-        
-        // 캐시에 이미 있으면 곧장 사용
-        if let cached = Self.imageCache.object(forKey: key) {
-            images[video.id] = cached
-            return
-        }
-        
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let uiImage = UIImage(data: data) {
-                Self.imageCache.setObject(uiImage, forKey: key)
-                images[video.id] = uiImage
+    func prefetchThumbnails(for videos: [VideoRecommendModel]) {
+        // 이전 프리패치 취소
+        prefetchTasks.forEach { $0.cancel() }
+        prefetchTasks.removeAll()
+
+        // 너무 많으면 살짝 제한
+        for v in videos.prefix(12) {
+            let t = Task.detached(priority: .utility) {
+                _ = await ImageLoader.shared.load(v.thumbnail)
             }
-        } catch {
-            print("⚠️ 썸네일 로드 실패 (\(video.id)):", error)
+            prefetchTasks.append(t)
         }
     }
-    
-    
     /// Youtube API를 활용한 추천 영상 목록 검색
     /// - Parameter keywords: 자연어 형태의 검색어
     /// - Returns: 영상 목록으로 Item 배열을 반환
@@ -133,7 +148,7 @@ final class HomeViewModel: ObservableObject {
             let decoded = try JSONDecoder().decode(Response.self, from: data)
             return decoded.content
         } catch {
-            print("❌ JSON 파싱 오류:", error)
+            print("❌ JSON 파싱 오류:", error.localizedDescription)
             return nil
         }
     }

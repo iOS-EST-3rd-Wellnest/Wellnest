@@ -11,7 +11,7 @@ struct MainTabView: View {
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
@@ -21,22 +21,31 @@ struct MainTabView: View {
                 case .plan:
                     PlanView()
                 case .analysis:
-                    TestAnalyticsView()
+                    AnalyticsView()
                 case .settings:
                     SettingsView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
+            
             VStack {
                 if showScheduleMenu {
                     ScheduleFloatingMenu(selectedType: $selectedCreationType, showScheduleMenu: $showScheduleMenu)
                         .padding(.bottom, Spacing.layout * 2)
                 }
-
+                
                 CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
             }
-
+            .zIndex(1)
+            
+            if showScheduleMenu {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea(.all)
+                    .zIndex(0)
+                    .onTapGesture {
+                        showScheduleMenu = false
+                    }
+            }
         }
         .fullScreenCover(item: $selectedCreationType) { type in
             switch type {
@@ -53,16 +62,15 @@ struct MainTabView: View {
             }
         }
         .onChange(of: selectedCreationType) { _ in
-                showScheduleMenu = false
+            showScheduleMenu = false
+            
         }
         .onChange(of: selectedTab) { _ in
-            withAnimation {
-                showScheduleMenu = false
-            }
+            showScheduleMenu = false
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
-
+    
 }
 
 #Preview {

@@ -8,8 +8,26 @@
 import Foundation
 
 struct HomePrompt {
+    func quoteOfTheDayPrompt() -> String {
+        return """
+        건강 플래너 AI 프롬프트
+        
+        사용자 정보:
+        - 연령대: 30대
+        - 성별: 남자
+        - 키: 185cm
+        - 몸무게: 71kg
+        - 웰니스목표: 특별히 업음
+        - 선호활동: 명상,헬스
+        - 활동시간대: 밤/새벽
+        - 선호날씨: 맑음,눈
+        - 건강상태: 수면 문제
+        
+        위 사용자 정보를 바탕으로 분석하여 간략한 한 문장의 추천 글귀, 동기부여가되는 한마디 말, 문장, 명언 등을 생성해주세요.
+        """
+    }
     
-    func promptStr() -> String {
+    func videoPrompt() -> String {
 		return """
         건강 플래너 AI 프롬프트
         
