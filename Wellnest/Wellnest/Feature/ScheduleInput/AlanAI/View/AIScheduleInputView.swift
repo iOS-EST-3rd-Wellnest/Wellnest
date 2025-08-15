@@ -62,8 +62,6 @@ struct AIScheduleInputView: View {
         }
     }
 
-    // MARK: - View Components
-
     private var dateTimeInputSection: some View {
         VStack(alignment: .leading, spacing: Spacing.layout) {
             switch viewModel.selectedPlanType {

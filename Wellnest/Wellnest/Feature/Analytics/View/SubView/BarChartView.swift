@@ -16,7 +16,6 @@ struct BarChartView: View {
             ForEach(Array(data.enumerated()), id: \.offset) { index, value in
                 let maxValue = data.max() ?? 1
                 let normalizedHeight = CGFloat(value / maxValue) * 150
-
                 Rectangle()
                     .fill(color)
                     .frame(width: 30, height: normalizedHeight)

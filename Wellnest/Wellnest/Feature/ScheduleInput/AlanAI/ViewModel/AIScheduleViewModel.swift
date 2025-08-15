@@ -11,46 +11,38 @@ import UIKit
 
 @MainActor
 final class AIScheduleViewModel: ObservableObject {
-    // MARK: - Published Properties (View State)
     @Published var selectedPlanType: PlanType = .single
     @Published var selectedPreferences: Set<String> = []
     @Published var showResult: Bool = false
 
-    // 단일 일정용
     @Published var singleDate = Date()
     @Published var singleStartTime = Date()
     @Published var singleEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
 
-    // 여러 일정용
     @Published var multipleStartDate = Date()
     @Published var multipleEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     @Published var multipleStartTime = Date()
     @Published var multipleEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
 
-    // 루틴용
     @Published var selectedWeekdays: Set<Int> = []
     @Published var routineStartDate = Date()
     @Published var routineEndDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
     @Published var routineStartTime = Date()
     @Published var routineEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
 
-    // AI Service State
     @Published var healthPlan: HealthPlanResponse?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String = ""
     @Published var rawResponse: String = ""
 
-    // 저장 관련 상태
     @Published var isSaving: Bool = false
     @Published var saveSuccess: Bool = false
     @Published var saveError: String = ""
 
-    // MARK: - Dependencies
     private lazy var aiService = AlanAIService()
     private let userProfile: UserProfile
     private var cancellables = Set<AnyCancellable>()
 
-    // MARK: - Computed Properties
     var isValidInput: Bool {
         PlanValidationHelper.isValidInput(
             planType: selectedPlanType,
@@ -80,15 +72,12 @@ final class AIScheduleViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Initialization
     init(userProfile: UserProfile = .default) {
         self.userProfile = userProfile
         setupBindings()
     }
 
-    // MARK: - Private Methods
     private func setupBindings() {
-        // AI Service의 상태를 ViewModel에 바인딩
         aiService.$isLoading
             .receive(on: DispatchQueue.main)
             .assign(to: &$isLoading)
@@ -106,29 +95,25 @@ final class AIScheduleViewModel: ObservableObject {
             .sink { [weak self] plan in
                 self?.healthPlan = plan
                 if plan != nil {
-                    print("✅ HealthPlan 업데이트됨: \(plan?.title ?? "Unknown")")
+                    print("HealthPlan 업데이트됨: \(plan?.title ?? "Unknown")")
                 }
             }
             .store(in: &cancellables)
     }
 
-    // MARK: - Public Methods
     func resetDateTimeValues() {
         let now = Date()
         let oneHourLater = Calendar.current.date(byAdding: .hour, value: 1, to: now) ?? now
 
-        // 단일 일정 리셋
         singleDate = now
         singleStartTime = now
         singleEndTime = oneHourLater
 
-        // 여러 일정 리셋
         multipleStartDate = now
         multipleEndDate = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
         multipleStartTime = now
         multipleEndTime = oneHourLater
 
-        // 루틴 리셋
         selectedWeekdays.removeAll()
         routineStartDate = now
         routineEndDate = Calendar.current.date(byAdding: .month, value: 1, to: now) ?? now
@@ -137,14 +122,13 @@ final class AIScheduleViewModel: ObservableObject {
     }
 
     func generatePlan() {
-        print("🚀 generatePlan 호출됨")
+        print("generatePlan 호출됨")
         let request = createPlanRequest()
         aiService.generateHealthPlan(request, userProfile: userProfile)
 
-        // 결과 화면 표시를 약간 지연시켜서 바인딩이 완료되도록 함
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.showResult = true
-            print("📱 showResult = true 설정됨")
+            print("showResult = true 설정됨")
         }
     }
 
@@ -184,14 +168,13 @@ final class AIScheduleViewModel: ObservableObject {
         resetDateTimeValues()
     }
 
-    // MARK: - 저장 로직
     func saveAISchedules() {
         guard let plan = healthPlan else {
             saveError = "저장할 플랜이 없습니다."
             return
         }
 
-        print("💾 AI 스케줄 저장 시작")
+        print("AI 스케줄 저장 시작")
         isSaving = true
 
         Task {
@@ -200,19 +183,18 @@ final class AIScheduleViewModel: ObservableObject {
                 await MainActor.run {
                     isSaving = false
                     saveSuccess = true
-                    print("✅ 저장 성공!")
+                    print("저장 성공!")
                 }
             } catch {
                 await MainActor.run {
                     isSaving = false
                     saveError = error.localizedDescription
-                    print("❌ 저장 실패: \(error)")
+                    print("저장 실패: \(error)")
                 }
             }
         }
     }
 
-    // MARK: - Private Helpers
     private func createPlanRequest() -> PlanRequest {
         return PlanRequestFactory.createPlanRequest(
             planType: selectedPlanType,
@@ -233,7 +215,7 @@ final class AIScheduleViewModel: ObservableObject {
     }
 
     private func saveSchedulesToCoreData(plan: HealthPlanResponse) async throws {
-        print("💿 Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
+        print("Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (index, scheduleItem) in plan.schedules.enumerated() {
             let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
@@ -241,7 +223,6 @@ final class AIScheduleViewModel: ObservableObject {
             newSchedule.title = scheduleItem.activity
             newSchedule.detail = scheduleItem.notes ?? ""
 
-            // AIScheduleDateTimeHelper를 사용하여 날짜/시간 설정
             let dates = AIScheduleDateTimeHelper.parseDatesForCoreData(
                 scheduleItem: scheduleItem,
                 planType: plan.planType
@@ -259,14 +240,13 @@ final class AIScheduleViewModel: ObservableObject {
             newSchedule.createdAt = Date()
             newSchedule.updatedAt = Date()
 
-            print("📝 AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(newSchedule.startDate ?? Date()) - 종료: \(newSchedule.endDate ?? Date())")
+            print("AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(newSchedule.startDate ?? Date()) - 종료: \(newSchedule.endDate ?? Date())")
         }
 
         try CoreDataService.shared.saveContext()
-        print("💾 Core Data 저장 완료")
+        print("Core Data 저장 완료")
     }
 
-    // 헬퍼 메서드들 추가
     private func parseTime(from timeString: String) -> (hour: Int, minute: Int) {
         let cleanTime = timeString.components(separatedBy: "-")[0].trimmingCharacters(in: .whitespaces)
         let components = cleanTime.components(separatedBy: ":")
@@ -277,7 +257,7 @@ final class AIScheduleViewModel: ObservableObject {
             return (hour: hour, minute: minute)
         }
 
-        return (hour: 9, minute: 0) // 기본값
+        return (hour: 9, minute: 0)
     }
 
     private func parseEndTime(from timeString: String) -> (hour: Int, minute: Int) {
@@ -289,7 +269,6 @@ final class AIScheduleViewModel: ObservableObject {
             }
         }
 
-        // 기본값: 시작 시간 + 1시간
         let startTime = parseTime(from: timeString)
         return (hour: min(startTime.hour + 1, 23), minute: startTime.minute)
     }
@@ -311,13 +290,12 @@ final class AIScheduleViewModel: ObservableObject {
         var daysToAdd = targetWeekday - currentWeekday
 
         if daysToAdd <= 0 {
-            daysToAdd += 7 // 다음 주
+            daysToAdd += 7
         }
 
         return calendar.date(byAdding: .day, value: daysToAdd, to: today)
     }
 
-    // MARK: - View State Enum
     enum ViewState {
         case loading
         case error
