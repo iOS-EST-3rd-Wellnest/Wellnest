@@ -8,7 +8,6 @@
 import Foundation
 import Combine
 
-@MainActor
 final class AlanAIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String = ""
@@ -31,15 +30,21 @@ final class AlanAIService: ObservableObject {
     }
 
     func requestString(prompt: String) async throws -> String {
-        isLoading = true
-        resetState()
+        // UI 상태 업데이트는 메인 스레드에서
+        await MainActor.run {
+            isLoading = true
+            resetState()
+        }
 
         guard !clientID.isEmpty else {
-            isLoading = false
+            await MainActor.run {
+                isLoading = false
+            }
             throw NSError(domain: "AlanAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
         }
 
         do {
+            // 네트워크 작업은 백그라운드에서 실행
             let content = try await networkManager.requestString(
                 url: "https://kdt-api-function.azurewebsites.net/api/v1/question",
                 parameters: [
@@ -48,13 +53,19 @@ final class AlanAIService: ObservableObject {
                 ]
             )
 
-            isLoading = false
-            rawResponse = content
+            // UI 상태 업데이트는 메인 스레드에서
+            await MainActor.run {
+                isLoading = false
+                rawResponse = content
+            }
+
             return content
 
         } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
+            await MainActor.run {
+                isLoading = false
+                errorMessage = error.localizedDescription
+            }
             throw error
         }
     }
@@ -75,9 +86,13 @@ final class AlanAIService: ObservableObject {
         Task {
             do {
                 let result = try await requestString(prompt: prompt)
-                completion(.success(result))
+                await MainActor.run {
+                    completion(.success(result))
+                }
             } catch {
-                completion(.failure(error))
+                await MainActor.run {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -91,9 +106,13 @@ final class AlanAIService: ObservableObject {
         Task {
             do {
                 let result = try await request(prompt: prompt, responseType: responseType, jsonExtractor: jsonExtractor)
-                completion(.success(result))
+                await MainActor.run {
+                    completion(.success(result))
+                }
             } catch {
-                completion(.failure(error))
+                await MainActor.run {
+                    completion(.failure(error))
+                }
             }
         }
     }
