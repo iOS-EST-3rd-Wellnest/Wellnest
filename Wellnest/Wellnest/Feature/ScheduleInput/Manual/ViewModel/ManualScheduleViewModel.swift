@@ -98,7 +98,7 @@ final class ManualScheduleViewModel: ObservableObject {
             updatedAt: entity.updatedAt ?? Date(),
             backgroundColor: entity.backgroundColor ?? "",
             isAllDay: entity.isAllDay?.boolValue ?? false,
-            repeatRule: entity.repeatRule ?? "",
+            repeatRule: entity.repeatRule ?? nil,
             hasRepeatEndDate: entity.hasRepeatEndDate,
             repeatEndDate: entity.repeatEndDate,
             isCompleted: entity.isCompleted?.boolValue ?? false

@@ -38,7 +38,7 @@ struct ScheduleItemView: View {
                     .bold()
 
                 Spacer()
-
+                
                 if let repeatRule = schedule.repeatRule {
                     Text(repeatRule)
                         .font(.caption2)

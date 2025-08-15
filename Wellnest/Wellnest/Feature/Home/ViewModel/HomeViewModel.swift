@@ -17,13 +17,11 @@ final class HomeViewModel: ObservableObject {
     
     @Published var videoList = [VideoRecommendModel]()
     
-    
-    private static let imageCache = NSCache<NSString, UIImage>()
-    
     private let alanService = AlanAIService()
     private let weatherService = WeatherService()
+    private let locationManager = LocationManager()
     
-    private var prompt = HomePrompt()
+    private var prompt = RecommendPrompt()
     
     // 프리패치 작업 취소를 위해 핸들 보관
     private var prefetchTasks = [Task<Void, Never>]()
@@ -45,14 +43,11 @@ final class HomeViewModel: ObservableObject {
     func weatherRequest() {
         Task {
             do {
-                let location = try await LocationManager().requestLocation()
+                let location = try await locationManager.requestLocation()
                 let lat = location.coordinate.latitude
                 let lon = location.coordinate.longitude
                 
                 self.currentWeather = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
-                
-                self.forecastWeather = try await weatherService.fetch5dayWeather(lat: lat, lon: lon)
-                
             } catch {
                 print(error.localizedDescription)
             }
@@ -86,19 +81,18 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    func prefetchThumbnails(for videos: [VideoRecommendModel]) {
-        // 이전 프리패치 취소
-        prefetchTasks.forEach { $0.cancel() }
-        prefetchTasks.removeAll()
-
-        // 너무 많으면 살짝 제한
-        for v in videos.prefix(12) {
-            let t = Task.detached(priority: .utility) {
-                _ = await ImageLoader.shared.load(v.thumbnail)
-            }
-            prefetchTasks.append(t)
-        }
+    private func fetchUserInfo() {
+        
     }
+    
+    private func createDailySummary() {
+        
+    }
+    
+    private func updateDailySummary() {
+        
+    }
+    
     /// Youtube API를 활용한 추천 영상 목록 검색
     /// - Parameter keywords: 자연어 형태의 검색어
     /// - Returns: 영상 목록으로 Item 배열을 반환
@@ -126,7 +120,6 @@ final class HomeViewModel: ObservableObject {
             throw error
         }
     }
-
     
     /// JSON 문자열에서 "content" 키의 값을 꺼내 반환
     /// - Parameter jsonString: JSON 전체가 담긴 String
@@ -169,9 +162,20 @@ final class HomeViewModel: ObservableObject {
         } else {
             return str
         }
-        
     }
     
+    private func prefetchThumbnails(for videos: [VideoRecommendModel]) {
+        // 이전 프리패치 취소
+        prefetchTasks.forEach { $0.cancel() }
+        prefetchTasks.removeAll()
+
+        for v in videos {
+            let t = Task {
+                _ = await ImageLoader.shared.load(v.thumbnail)
+            }
+            prefetchTasks.append(t)
+        }
+    }
 }
 
 
