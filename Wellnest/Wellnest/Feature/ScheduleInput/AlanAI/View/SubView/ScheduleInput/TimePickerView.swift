@@ -21,7 +21,6 @@ struct TimePickerView: View {
                     .foregroundColor(.secondary)
                 Spacer()
 
-                // 시간 텍스트 버튼
                 Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         UIApplication.hideKeyboard()
@@ -44,7 +43,6 @@ struct TimePickerView: View {
             }
 
             if isPresented {
-                // 시간 선택용 Wheel Picker (5분 간격)
                 MinuteIntervalWheelDatePicker(date: $time, minuteInterval: 5, isAllDay: false)
                     .frame(height: 200)
                     .frame(maxWidth: .infinity)
@@ -54,7 +52,6 @@ struct TimePickerView: View {
         .animation(.easeInOut(duration: 0.25), value: isPresented)
     }
 
-    // 시간만 포맷
     func formattedTimeOnly(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")

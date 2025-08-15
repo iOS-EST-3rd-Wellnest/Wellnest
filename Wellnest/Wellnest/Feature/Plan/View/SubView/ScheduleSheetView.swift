@@ -20,36 +20,53 @@ struct ScheduleSheetView: View {
                 .fill(Color.secondary.opacity(0.3))
                 .frame(width: 60, height: 5)
                 .frame(maxWidth: .infinity)
-                .scaleEffect(isDragging ? 1.2 : 1.0)
-//                .animation(.easeInOut, value: isDragging)
+                .scaleEffect(isDragging ? 1.4 : 1.0)
+                .animation(.spring, value: isDragging)
 
             Text(planVM.selectedDate.dateFormat("M월 d일 E요일"))
                 .font(.headline)
                 .padding(.horizontal)
+                .opacity(isDragging ? 0.7 : 1.0)
 
             ScrollView {
                 LazyVStack(spacing: Spacing.layout) {
-                    scheduleCard(time: "10:00 - 11:20 AM", title: "아침 식사", color: .yellow)
-                    scheduleCard(time: "10:00 - 1:20 PM", title: "운동하기", color: .pink)
-                    scheduleCard(time: "10:00 - 11:20 AM", title: "아침 식사", color: .yellow)
-                    scheduleCard(time: "10:00 - 1:20 PM", title: "운동하기", color: .pink)
-                    scheduleCard(time: "10:00 - 11:20 AM", title: "아침 식사", color: .yellow)
-                    scheduleCard(time: "10:00 - 1:20 PM", title: "운동하기", color: .pink)
+                    if planVM.selectedDateScheduleItems.isEmpty {
+                        emptyStateView
+                    } else {
+                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
+                            let item = planVM.selectedDateScheduleItems[index]
+							ScheduleItemView(schedule: item)
+                        }
+                    }
                 }
-                .padding(.top, Spacing.content)
-                .padding(.horizontal)
+                .padding()
             }
             .scrollDisabled(isDragging || !isSheetExpanded)
+            .opacity(isDragging ? 0.7 : 1.0)
 
             Spacer()
         }
         .padding(.top, Spacing.layout)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)        .background(Color.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
-        //        .animation(.spring, value: isSheetExpanded)
-//        .animation(.spring, value: currentDragOffset)
+    }
+
+    @ViewBuilder
+    private var emptyStateView: some View {
+        VStack(spacing: Spacing.layout) {
+            Image(systemName: "calendar.badge.plus")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+
+            Text("예정된 일정이 없습니다.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.layout * 2)
     }
 
     private var dragGesture: some Gesture {
@@ -63,34 +80,20 @@ struct ScheduleSheetView: View {
             .onEnded { value in
                 isDragging = false
 
-                let threshold: CGFloat = 100
+                let threshold: CGFloat = 80
 
                 if value.translation.height < -threshold {
-                    isSheetExpanded = true
+                    withAnimation(.spring) {
+                        isSheetExpanded = true
+                    }
                 } else if value.translation.height > threshold {
-                    isSheetExpanded = false
+                    withAnimation(.spring) {
+                        isSheetExpanded = false
+                    }
                 }
 
                 currentDragOffset = 0
-
             }
-    }
-
-    func scheduleCard(time: String, title: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.content) {
-            Text(time)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(title)
-                .bold()
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)
-                .fill(color)
-                .defaultShadow()
-        }
     }
 }
 
