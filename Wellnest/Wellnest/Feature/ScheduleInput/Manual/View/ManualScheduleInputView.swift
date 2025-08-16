@@ -150,16 +150,10 @@ struct ManualScheduleInputView: View {
                             isOn: $isRepeated,
                             selectedTag: $selectedRepeatRule,
                             showDetail: selectedRepeatRule != nil,
-                            detailContent: {
-                                AnyView(
-                                    EndDateSelectorView(endDate: $repeatEndDate)
-                                )
-                            },
-                            onTagTap: { _ in
-                                UIApplication.hideKeyboard()
-                                isKeyboardVisible = false
-                            }
-                        )
+                            onTagTap: { _ in isKeyboardVisible = false }
+                        ) {
+                            EndDateSelectorView(endDate: $repeatEndDate)
+                        }
                         .padding(.bottom, 5)
                         .onChange(of: isRepeated) { newValue in
                             UIApplication.hideKeyboard()
@@ -168,9 +162,7 @@ struct ManualScheduleInputView: View {
                             title: "알람",
                             tags: AlarmRule.tags,
                             isOn: $isAlarmOn,
-                            selectedTag: $alarmRule,
-                            showDetail: false,
-                            detailContent: nil
+                            selectedTag: $alarmRule
                         )
                         .padding(.bottom, 5)
                         .onChange(of: isAlarmOn) { newValue in
@@ -202,8 +194,8 @@ struct ManualScheduleInputView: View {
                         Spacer()
                     }
                     .padding()
-
                 }
+                .padding(.bottom, 30)
                 .onDisappear {
                     UIApplication.hideKeyboard()
                 }
