@@ -10,7 +10,8 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
-    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
+//    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
+    @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
     
     @State var name: String = "홍길동"
@@ -131,10 +132,13 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .onAppear {
+//                    .onAppear {
+//                        manualScheduleVM.loadTodaySchedules()
+//                    }
+                    .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
-                    
+
                 }
                 .padding(.bottom, Spacing.layout * 2)
             }
@@ -153,5 +157,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
-        .environmentObject(ManualScheduleViewModel())
+        .environmentObject(ManualScheduleVMFactory.make())
 }
