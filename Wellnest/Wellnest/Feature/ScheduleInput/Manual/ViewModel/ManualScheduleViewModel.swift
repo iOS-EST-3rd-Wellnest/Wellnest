@@ -56,7 +56,9 @@ final class ManualScheduleViewModel: ObservableObject {
                 )
             }
 
-            self.todaySchedules = items
+            await MainActor.run {
+                self.todaySchedules = items
+            }
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
         }
@@ -83,9 +85,10 @@ final class ManualScheduleViewModel: ObservableObject {
                 e.isCompleted = NSNumber(value: !current)
                 e.updatedAt = Date()
             }
-
-            if let idx = todaySchedules.firstIndex(where: { $0.id == item.id }) {
-                todaySchedules[idx].isCompleted.toggle()
+            await MainActor.run {
+                if let idx = self.todaySchedules.firstIndex(where: { $0.id == item.id }) {
+                    self.todaySchedules[idx].isCompleted.toggle()
+                }
             }
         } catch {
             print("❌ 일정 완료 토글 실패:", error.localizedDescription)
@@ -108,7 +111,9 @@ final class ManualScheduleViewModel: ObservableObject {
             }
 
             try await store.delete(id: objectID)
-            todaySchedules.removeAll { $0.id == item.id }
+            await MainActor.run {
+                self.todaySchedules.removeAll { $0.id == item.id }
+            }
         } catch {
             print("❌ 일정 삭제 실패:", error.localizedDescription)
         }
