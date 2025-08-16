@@ -47,7 +47,7 @@ final class ManualScheduleInputViewModel {
         // 2) 알림 필요 시 MainActor에서 바인딩 후 예약
         if input.isAlarmOn {
             try await MainActor.run {
-                let obj = try viewContext.existingObject(with: id) as! ScheduleEntity
+                guard let obj = try viewContext.existingObject(with: id) as? ScheduleEntity else { return }
                 notifier.scheduleLocalNotification(for: obj)
             }
         }
