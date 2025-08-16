@@ -14,7 +14,7 @@ struct ManualScheduleInputView: View {
     @Binding var selectedCreationType: ScheduleCreationType?
 
     // 뷰모델(서비스) — 관찰 필요 없으므로 let
-    private let editor: ScheduleEditor = {
+    private let editor: ManualScheduleInputViewModel = {
         // 필요 시 DI로 주입 가능
         return ScheduleEditorFactory.makeDefault()
     }()
