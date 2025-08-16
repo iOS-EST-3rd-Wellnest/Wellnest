@@ -10,9 +10,20 @@ import CoreData
 
 final class ManualScheduleViewModel: ObservableObject {
     @Published var todaySchedules: [ScheduleItem] = []
-    
+
+    private let store: CoreDataStore
+
+    init(store: CoreDataStore) {
+        self.store = store
+    }
+
+    // MARK: - Load
     /// 오늘 날짜에 해당하는 일정 목록 조회하여 todaySchedules에 초기화
     func loadTodaySchedules() {
+        Task { await loadTodaySchedules() } // 위의 async 버전을 재사용
+    }
+
+    private func loadTodaySchedules() async {
         let (now, startOfTomorrow) = Self.todayBounds()
 
         let predicate = NSPredicate(
@@ -20,55 +31,84 @@ final class ManualScheduleViewModel: ObservableObject {
             now as NSDate,
             startOfTomorrow as NSDate
         )
-
-
         let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
 
         do {
-            let entities = try CoreDataService.shared.fetch(
+            // actor 내부에서 Entity -> DTO 변환
+            let items = try await store.fetchDTOs(
                 ScheduleEntity.self,
                 predicate: predicate,
                 sortDescriptors: [sort]
-            )
+            ) { e in
+                ScheduleItem(
+                    id: e.id ?? UUID(),
+                    title: e.title ?? "",
+                    startDate: e.startDate ?? Date(),
+                    endDate: e.endDate ?? Date(),
+                    createdAt: e.createdAt ?? Date(),
+                    updatedAt: e.updatedAt ?? Date(),
+                    backgroundColor: e.backgroundColor ?? "",
+                    isAllDay: e.isAllDay?.boolValue ?? false,
+                    repeatRule: e.repeatRule,
+                    hasRepeatEndDate: e.hasRepeatEndDate,
+                    repeatEndDate: e.repeatEndDate,
+                    isCompleted: e.isCompleted?.boolValue ?? false
+                )
+            }
 
-            todaySchedules = entities.map(Self.mapToItem)
+            self.todaySchedules = items
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
         }
     }
-    
-    /// 일정 완료 상태 변경
-    /// - Parameter item: 완료 상태를 변경하려는 ScheduleItem
+
+    // MARK: - Update Completed
+    /// 일정 완료 상태 토글
     func updateCompleted(item: ScheduleItem) {
-        guard let entity = fetchSchedule(id: item.id) else {
-            print("📛 대상 일정 entity fetch 실패")
-            return
-        }
-        
+        Task { await updateCompleted(item: item) } // 위의 async 버전을 재사용
+    }
+
+    private func updateCompleted(item: ScheduleItem) async {
+        // UUID로 해당 엔티티의 ObjectID 조회
+        let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
         do {
-            let current = entity.isCompleted?.boolValue ?? false
-            let newValue = !current
-            
-            try CoreDataService.shared.update(entity, by: \ScheduleEntity.isCompleted, to: NSNumber(value: newValue))
-            if let index = todaySchedules.firstIndex(where: { $0.id == item.id }) {
-                todaySchedules[index].isCompleted.toggle()
+            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
+            guard let objectID = ids.first else {
+                print("📛 대상 일정 ID 조회 실패")
+                return
+            }
+
+            try await store.update(id: objectID) { (e: ScheduleEntity) in
+                let current = e.isCompleted?.boolValue ?? false
+                e.isCompleted = NSNumber(value: !current)
+                e.updatedAt = Date()
+            }
+
+            if let idx = todaySchedules.firstIndex(where: { $0.id == item.id }) {
+                todaySchedules[idx].isCompleted.toggle()
             }
         } catch {
-            print("❌ 일정 삭제 실패:", error.localizedDescription)
+            print("❌ 일정 완료 토글 실패:", error.localizedDescription)
         }
     }
-    
-    /// 일정 삭제
-    /// - Parameter item: 삭제하려는 일정 ScheduleItem
-    func deleteSchedule(item: ScheduleItem) {
-        guard let entity = fetchSchedule(id: item.id) else {
-            print("📛 대상 일정 entity fetch 실패")
-            return
-        }
 
+    // MARK: - Delete
+    /// 일정 삭제
+    func deleteSchedule(item: ScheduleItem) {
+        Task { await deleteSchedule(item: item) } // 위의 async 버전을 재사용
+    }
+
+    func deleteSchedule(item: ScheduleItem) async {
+        let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
         do {
-            try CoreDataService.shared.delete(entity)
-            self.todaySchedules.removeAll { $0.id == item.id }
+            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
+            guard let objectID = ids.first else {
+                print("📛 대상 일정 ID 조회 실패")
+                return
+            }
+
+            try await store.delete(id: objectID)
+            todaySchedules.removeAll { $0.id == item.id }
         } catch {
             print("❌ 일정 삭제 실패:", error.localizedDescription)
         }
@@ -78,45 +118,16 @@ final class ManualScheduleViewModel: ObservableObject {
     private static func todayBounds() -> (Date, Date) {
         let now = Date()
         let calendar = Calendar.current
-
         let startOfToday = calendar.startOfDay(for: now)
         let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
-
         return (now, startOfTomorrow)
     }
+}
 
-    /// ScheduleItem 객체 생성
-    /// - Parameter entity: ScheduleItem 객체로 생성할 데이터로 ScheduleEntity를 파라미터로 받음
-    /// - Returns: 생성된 ScheduleItem 리턴
-    private static func mapToItem(entity: ScheduleEntity) -> ScheduleItem {
-        ScheduleItem(
-            id: entity.id ?? UUID(),
-            title: entity.title ?? "",
-            startDate: entity.startDate ?? Date(),
-            endDate: entity.endDate ?? Date(),
-            createdAt: entity.createdAt ?? Date(),
-            updatedAt: entity.updatedAt ?? Date(),
-            backgroundColor: entity.backgroundColor ?? "",
-            isAllDay: entity.isAllDay?.boolValue ?? false,
-            repeatRule: entity.repeatRule ?? nil,
-            hasRepeatEndDate: entity.hasRepeatEndDate,
-            repeatEndDate: entity.repeatEndDate,
-            isCompleted: entity.isCompleted?.boolValue ?? false
-        )
-    }
-    
-    /// id를 활용하여 일정 조회
-    /// - Parameter id: 조회하려는 id
-    /// - Returns: 조회한 ScheduleEntity
-    private func fetchSchedule(id: ScheduleItem.ID) -> ScheduleEntity? {
-        let predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        
-        do {
-            let entity = try CoreDataService.shared.fetch(ScheduleEntity.self, predicate: predicate)
-            return entity.first
-        } catch {
-            print("📛 대상 일정 fetch 실패:", error.localizedDescription)
-            return nil
-        }
+enum ManualScheduleVMFactory {
+    static func make() -> ManualScheduleViewModel {
+        let container = CoreDataStack.shared.container
+        let store = CoreDataStore(container: container)
+        return ManualScheduleViewModel(store: store)
     }
 }
