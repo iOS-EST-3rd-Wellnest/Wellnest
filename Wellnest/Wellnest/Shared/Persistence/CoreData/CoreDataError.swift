@@ -18,4 +18,6 @@ enum CoreDataError: Error {
 
     /// 데이터를 삭제하는 도중 발생한 오류
     case deleteError(any Error)
+
+    case castFailed(String)
 }
