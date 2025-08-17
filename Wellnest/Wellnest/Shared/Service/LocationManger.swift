@@ -16,7 +16,6 @@ enum LocationError: Error {
     case unableToFindLocation
 }
 
-@MainActor
 final class LocationManager: NSObject, ObservableObject {
     @Published var lastLocation: CLLocation?
     @Published var error: LocationError?
