@@ -13,9 +13,15 @@ struct UserInfoTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-    @State private var nickname: String = ""
-    @FocusState private var isNicknameFieldFocused: Bool
+    enum Field {
+        case nickname
+        case height
+        case weight
+    }
 
+    @FocusState private var isFieldFocused: Field?
+
+    @State private var nickname: String = ""
     @State private var selectedAge = ""
     @State private var selectedGender = ""
     @State private var height: Int?
@@ -46,16 +52,20 @@ struct UserInfoTabView: View {
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 10)
-                    .focused($isNicknameFieldFocused)
+                    .focused($isFieldFocused, equals: .nickname)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .submitLabel(.done)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
                     }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            isNicknameFieldFocused = true
+                            isFieldFocused = .nickname
                         }
+                    }
+                    .onSubmit {
+                        isFieldFocused = nil
                     }
                 }
 
@@ -105,6 +115,7 @@ struct UserInfoTabView: View {
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 46)
+                    .focused($isFieldFocused, equals: .height)
                     .onChange(of: heightText) { newValue in
                         heightText = newValue.onlyNumbers(maxLength: 3)
                         height = Int(heightText)
@@ -124,6 +135,7 @@ struct UserInfoTabView: View {
                     .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 18)
+                    .focused($isFieldFocused, equals: .weight)
                     .onChange(of: weightText) { newValue in
                         weightText = newValue.onlyNumbers(maxLength: 3)
                         weight = Int(weightText)
@@ -131,6 +143,16 @@ struct UserInfoTabView: View {
                 }
             }
             .padding(.horizontal, spacing)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    if isFieldFocused == .height {
+                        Button("다음") { isFieldFocused = .weight }
+                    } else if isFieldFocused == .weight {
+                        Button("완료") { isFieldFocused = nil }
+                    }
+                }
+            }
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
@@ -142,9 +164,6 @@ struct UserInfoTabView: View {
         .onAppear {
             title = "사용자 정보"
             loadUserEntity()
-        }
-        .onTapGesture {
-            UIApplication.hideKeyboard()
         }
     }
 }
@@ -270,12 +289,14 @@ extension UserInfoTabView {
         }
         if let heightValue = userEntity.height?.intValue, heightValue != 0 {
             height = heightValue
+            heightText = "\(heightValue)"
         } else {
             height = nil
         }
 
         if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
+            weightText = "\(weightValue)"
         } else {
             weight = nil
         }
