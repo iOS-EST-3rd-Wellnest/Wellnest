@@ -46,7 +46,7 @@ struct WellnessGoalTabView: View {
 
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .black : .secondary)
+                                .foregroundColor(goal.isSelected ? .black : .gray)
 
                             Spacer()
                         }

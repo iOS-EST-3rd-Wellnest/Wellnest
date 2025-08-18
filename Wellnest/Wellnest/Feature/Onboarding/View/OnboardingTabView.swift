@@ -160,7 +160,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
                             Text(item.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? .black : .secondary)
+                                .foregroundColor(item.isSelected ? .black : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
                         .background(item.isSelected ? .customGray : .customSecondary)
@@ -176,6 +176,8 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 }
 
 struct OnboardingButton: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let title: String
     let isDisabled: Bool
     let action: () -> Void
@@ -184,8 +186,8 @@ struct OnboardingButton: View {
         VStack(spacing: 0) {
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.white.opacity(0.0),
-                    Color.white.opacity(1.0)
+                    (colorScheme == .dark ? Color.black : Color.white).opacity(0.0),
+                    (colorScheme == .dark ? Color.black : Color.white).opacity(1.0)
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
@@ -199,7 +201,7 @@ struct OnboardingButton: View {
             )
             .padding(.horizontal)
             .padding(.bottom, Spacing.content)
-            .background(.white)
+            .background(colorScheme == .dark ? Color.black : Color.white)
         }
     }
 }

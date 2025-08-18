@@ -47,7 +47,7 @@ struct UserInfoTabView: View {
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.secondary.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -109,7 +109,7 @@ struct UserInfoTabView: View {
                         text: $heightText,
                         prompt: Text("cm 단위로 정수만 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.secondary.opacity(0.4))
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
@@ -129,7 +129,7 @@ struct UserInfoTabView: View {
                         text: $weightText,
                         prompt: Text("kg 단위로 정수만 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.secondary.opacity(0.4))
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
@@ -219,7 +219,6 @@ struct AgeMenuLabel: View {
 
             Spacer()
 
-            // TODO: 메뉴 클릭 시 chevron.up으로 바뀌는 것도 좋을 것 같음
             Image(systemName: "chevron.down")
                 .foregroundColor(.primary)
                 .imageScale(.small)
