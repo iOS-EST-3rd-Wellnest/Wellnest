@@ -7,7 +7,6 @@
 
 import Foundation
 
-// MARK: - Plan Request Model
 struct PlanRequest {
     let planType: PlanType
     let userGoal: String

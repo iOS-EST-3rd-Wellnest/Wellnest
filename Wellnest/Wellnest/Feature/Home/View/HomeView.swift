@@ -10,13 +10,16 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
-    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
+//    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
+    @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
     
     @State var name: String = "홍길동"
     
     @State private var swipedScheduleId: UUID? = nil
     @State private var swipedDirection: SwipeDirection? = nil
+    
+    private let dummyData = DataLoader.loadScheduleItems()
     
     var today: String {
         let df = DateFormatter()
@@ -28,6 +31,15 @@ struct HomeView: View {
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
+//        let now = Date()
+//        let cal = Calendar.current
+//        
+//        return dummyData
+//            .filter { item in
+//                !item.isCompleted && cal.isDate(item.startDate, inSameDayAs: now)
+//            }
+//            .sorted { $0.startDate < $1.startDate }
+        
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
 
@@ -52,6 +64,7 @@ struct HomeView: View {
 
                     Spacer()
                 }
+                .padding(.bottom, Spacing.layout)
 
                 HStack {
                     Text(today)
@@ -92,15 +105,15 @@ struct HomeView: View {
                 }
                 
                 HStack {
-                    
                     VStack {
                         if isCompleteSchedules.isEmpty {
                             Text("일정을 추가 해주세요.")
                                 .padding(.vertical, 40)
+                                .frame(maxWidth: .infinity)
                                 .background(
                                     RoundedRectangle(cornerRadius: CornerRadius.large)
                                         .fill(colorScheme == .dark ? Color(.gray) : .white)
-                                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 3), height: 100)
+                                        .frame(height: 100)
                                         .defaultShadow()
                                 )
                         } else {
@@ -119,12 +132,15 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .onAppear {
+//                    .onAppear {
+//                        manualScheduleVM.loadTodaySchedules()
+//                    }
+                    .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
-                    
+
                 }
-                .padding(.bottom, Spacing.layout)
+                .padding(.bottom, Spacing.layout * 2)
             }
             .padding(.horizontal)
     
@@ -141,5 +157,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
-        .environmentObject(ManualScheduleViewModel())
+        .environmentObject(ManualScheduleVMFactory.make())
 }

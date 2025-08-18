@@ -97,7 +97,6 @@ struct AIScheduleResultView: View {
         }
     }
 
-    // MARK: - Save Buttons Section
     private var saveButtonsSection: some View {
         HStack(spacing: Spacing.layout) {
 

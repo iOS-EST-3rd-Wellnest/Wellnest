@@ -6,41 +6,18 @@
 //
 
 import Foundation
-import SwiftUI
+import UIKit
 
-protocol ImageLoading {
-    func load(_ urlString: String) async -> UIImage?
-    func load(_ url: URL) async -> UIImage?
-    func removeCache(for urlString: String)
-}
-
-final class ImageLoader: ImageLoading {
+final class ImageLoader {
     static let shared = ImageLoader()
 
     private let cache = NSCache<NSString, UIImage>()
-    private let session: URLSession
-    
     private var memoryWarningObserver: NSObjectProtocol?
-    private var didEnterBackgroundObserver: NSObjectProtocol?
 
     private init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 15
-        config.requestCachePolicy = .returnCacheDataElseLoad
-        config.waitsForConnectivity = true
-        session = URLSession(configuration: config)
-        
         // 메모리 경고 시 캐시 비우기
         memoryWarningObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil, queue: .main
-        ) { [weak self] _ in
-            self?.cache.removeAllObjects()
-        }
-        
-        // 앱이 백그라운드로 갈 때 캐시 비우기
-        didEnterBackgroundObserver = NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
             self?.cache.removeAllObjects()
@@ -49,10 +26,6 @@ final class ImageLoader: ImageLoading {
     
     deinit {
         if let token = memoryWarningObserver {
-            NotificationCenter.default.removeObserver(token)
-        }
-        
-        if let token = didEnterBackgroundObserver {
             NotificationCenter.default.removeObserver(token)
         }
     }
@@ -72,7 +45,7 @@ final class ImageLoader: ImageLoading {
         }
 
         do {
-            let (data, response) = try await session.data(from: url)
+            let (data, response) = try await URLSession.shared.data(from: url)
             if let http = response as? HTTPURLResponse,
                !(200...299).contains(http.statusCode) {
                 return nil
@@ -83,12 +56,11 @@ final class ImageLoader: ImageLoading {
                 return img
             }
         } catch {
+            if (error as? URLError)?.code == .cancelled {
+                return nil   // 취소 무시
+            }
             print("⚠️ Image load failed (\(url)): \(error)")
         }
         return nil
-    }
-
-    func removeCache(for urlString: String) {
-        cache.removeObject(forKey: urlString as NSString)
     }
 }

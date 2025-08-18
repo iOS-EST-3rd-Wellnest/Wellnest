@@ -19,6 +19,8 @@ final class PlanViewModel: ObservableObject {
     @Published var calendarDates: [Date]
     @Published var months: [Date]
 
+	@Published var scheduleStore = ScheduleStore()
+
     private let calendar = Calendar.current
 
     init(selectedDate: Date = Date()) {
@@ -31,6 +33,14 @@ final class PlanViewModel: ObservableObject {
         self.months = (-12...12).compactMap {
             calendar.date(byAdding: .month, value: $0, to: normalized.startOfMonth)
         }
+    }
+
+    var selectedDateScheduleItems: [ScheduleItem] {
+        scheduleStore.scheduleItems(for: selectedDate)
+    }
+
+    func hasSchedule(for date: Date) -> Bool {
+        scheduleStore.hasSchedule(for: date)
     }
 }
 

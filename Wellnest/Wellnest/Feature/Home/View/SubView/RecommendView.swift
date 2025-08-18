@@ -23,13 +23,14 @@ struct RecommendView: View {
                     Spacer()
                 }
                 
-                Text("휴식도 하나의 전략입니다. 잠시 멈추어 숨을 고르고 다시 시작하세요.")
+                Text("깊은 명상은 마음의 평화를, 충분한 수면은 활기찬 내일을 선사합니다")
                     .font(.callout)
-                    .padding()
+                    .padding(.horizontal, Spacing.layout * 1.5)
+                    .padding(.vertical, Spacing.layout)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(Color(.systemGray6))
-                            .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 2))
                             .defaultShadow()
                     )
                 
@@ -42,24 +43,22 @@ struct RecommendView: View {
                     Spacer()
                 }
                 
-                HStack {
-                    VStack(alignment: .leading, spacing: Spacing.content) {
+                VStack(alignment: .leading, spacing: Spacing.content) {
+                    Group {
                         Text("오늘 날씨는 비가 내리네요.\n실내에서 할 수 있는 일정을 추천해드릴게요.")
                             .font(.callout)
                         
                         Text(" #헬스장")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                        
                     }
-                    
-                    Spacer()
                 }
-                .padding()
+                .padding(.horizontal, Spacing.layout * 1.5)
+                .padding(.vertical, Spacing.layout)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(Color(.systemGray6))
-                        .frame(width: UIScreen.main.bounds.width - (Spacing.layout * 2))
                         .defaultShadow()
                 )
                 

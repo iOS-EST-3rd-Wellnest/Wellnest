@@ -9,7 +9,8 @@ import SwiftUI
 
 struct MeditationStatCardView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+    let meditationData: MeditationData
+
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.gray) : .white)
@@ -17,20 +18,18 @@ struct MeditationStatCardView: View {
             .defaultShadow()
             .overlay {
                 HStack(spacing: Spacing.content) {
-                    // 아이콘
                     Image(systemName: "heart.fill")
                         .font(.title2)
                         .foregroundColor(.red)
                         .frame(width: 30)
-                    
-                    // 정보
+
                     VStack(alignment: .leading, spacing: Spacing.inline) {
                         Text("명상")
                             .font(.footnote)
                             .foregroundColor(.secondary)
-                        
+
                         HStack(alignment: .bottom, spacing: Spacing.inline) {
-                            Text("주 3회")
+                            Text("주 \(meditationData.weeklyCount)회")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             
@@ -39,16 +38,15 @@ struct MeditationStatCardView: View {
                                 .fontWeight(.semibold)
                         }
                     }
-                    
+
                     Spacer()
-                    
-                    // 변화량
+
                     HStack(spacing: Spacing.inline) {
                         Image(systemName: "arrow.up")
                             .font(.caption)
                             .foregroundColor(.green)
-                        
-                        Text("+1회")
+
+                        Text("+\(meditationData.changeCount)회")
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.green)
@@ -57,8 +55,4 @@ struct MeditationStatCardView: View {
                 .padding()
             }
     }
-}
-
-#Preview {
-    MeditationStatCardView()
 }

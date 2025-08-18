@@ -8,7 +8,6 @@
 import Foundation
 import Combine
 
-@MainActor
 final class AlanAIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String = ""
@@ -23,25 +22,29 @@ final class AlanAIService: ObservableObject {
            let plist = NSDictionary(contentsOfFile: path),
            let clientID = plist["ALAN_CLIENT_ID"] as? String {
             self.clientID = clientID
-            print("✅ Secrets.plist에서 Client ID 로드 성공 (길이: \(clientID.count))")
+            print("Secrets.plist에서 Client ID 로드 성공 (길이: \(clientID.count))")
         } else {
             self.clientID = ""
-            print("⚠️ ALAN_CLIENT_ID를 Secrets.plist에서 찾을 수 없습니다.")
+            print("ALAN_CLIENT_ID를 Secrets.plist에서 찾을 수 없습니다.")
         }
     }
 
-    // MARK: - Generic Request Methods (async/await 버전)
-
     func requestString(prompt: String) async throws -> String {
-        isLoading = true
-        resetState()
+        // UI 상태 업데이트는 메인 스레드에서
+        await MainActor.run {
+            isLoading = true
+            resetState()
+        }
 
         guard !clientID.isEmpty else {
-            isLoading = false
+            await MainActor.run {
+                isLoading = false
+            }
             throw NSError(domain: "AlanAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
         }
 
         do {
+            // 네트워크 작업은 백그라운드에서 실행
             let content = try await networkManager.requestString(
                 url: "https://kdt-api-function.azurewebsites.net/api/v1/question",
                 parameters: [
@@ -50,13 +53,19 @@ final class AlanAIService: ObservableObject {
                 ]
             )
 
-            isLoading = false
-            rawResponse = content
+            // UI 상태 업데이트는 메인 스레드에서
+            await MainActor.run {
+                isLoading = false
+                rawResponse = content
+            }
+
             return content
 
         } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
+            await MainActor.run {
+                isLoading = false
+                errorMessage = error.localizedDescription
+            }
             throw error
         }
     }
@@ -70,8 +79,6 @@ final class AlanAIService: ObservableObject {
         return try parseResponse(content, responseType: responseType, jsonExtractor: jsonExtractor)
     }
 
-    // MARK: - Callback 호환성을 위한 메소드들 (기존 코드와의 호환성)
-
     func requestString(
         prompt: String,
         completion: @escaping (Result<String, Error>) -> Void
@@ -79,9 +86,13 @@ final class AlanAIService: ObservableObject {
         Task {
             do {
                 let result = try await requestString(prompt: prompt)
-                completion(.success(result))
+                await MainActor.run {
+                    completion(.success(result))
+                }
             } catch {
-                completion(.failure(error))
+                await MainActor.run {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -95,9 +106,13 @@ final class AlanAIService: ObservableObject {
         Task {
             do {
                 let result = try await request(prompt: prompt, responseType: responseType, jsonExtractor: jsonExtractor)
-                completion(.success(result))
+                await MainActor.run {
+                    completion(.success(result))
+                }
             } catch {
-                completion(.failure(error))
+                await MainActor.run {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -106,8 +121,6 @@ final class AlanAIService: ObservableObject {
         errorMessage = ""
         rawResponse = ""
     }
-
-    // MARK: - Response Parsing
 
     private func parseResponse<T: Codable>(
         _ content: String,
@@ -124,11 +137,11 @@ final class AlanAIService: ObservableObject {
 
         guard let validJSONString = jsonString else {
             let error = NSError(domain: "AlanAIService", code: -2, userInfo: [NSLocalizedDescriptionKey: "유효한 JSON 형식을 찾을 수 없습니다."])
-            print("❌ JSON 추출 실패. 원본 응답:\n\(content)")
+            print("JSON 추출 실패. 원본 응답:\n\(content)")
             throw error
         }
 
-        print("📋 추출된 JSON:\n\(validJSONString)\n==================")
+        print("추출된 JSON:\n\(validJSONString)\n==================")
 
         guard let jsonData = validJSONString.data(using: .utf8) else {
             let error = NSError(domain: "AlanAIService", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON 데이터 변환 실패"])
@@ -139,15 +152,13 @@ final class AlanAIService: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let decodedObject = try decoder.decode(T.self, from: jsonData)
-            print("✅ JSON 파싱 성공!")
+            print("JSON 파싱 성공!")
             return decodedObject
         } catch {
-            print("❌ JSON 파싱 실패: \(error)")
+            print("JSON 파싱 실패: \(error)")
             throw error
         }
     }
-
-    // MARK: - JSON Extraction Methods (Internal for extensions)
 
     func extractJSONFromResponse(_ response: String) -> String? {
         if let json = extractJSONByBraces(response) {

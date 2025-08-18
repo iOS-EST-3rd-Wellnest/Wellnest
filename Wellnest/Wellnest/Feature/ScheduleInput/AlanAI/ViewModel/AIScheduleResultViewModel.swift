@@ -9,18 +9,15 @@ import Foundation
 
 @MainActor
 final class AIScheduleResultViewModel: ObservableObject {
-    // MARK: - Published Properties
     @Published var showRawResponse = false
     @Published var isSaving = false
 
-    // MARK: - Properties
     let healthPlan: HealthPlanResponse?
     let isLoading: Bool
     let errorMessage: String
     let rawResponse: String
     private weak var parentViewModel: AIScheduleViewModel?
 
-    // MARK: - Computed Properties
     var shouldShowRawResponseButton: Bool {
         !errorMessage.isEmpty && !rawResponse.isEmpty
     }
@@ -37,7 +34,6 @@ final class AIScheduleResultViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Initialization
     init(
         healthPlan: HealthPlanResponse?,
         isLoading: Bool,
@@ -51,14 +47,12 @@ final class AIScheduleResultViewModel: ObservableObject {
         self.rawResponse = rawResponse
         self.parentViewModel = parentViewModel
 
-        // 부모 ViewModel의 저장 상태 바인딩
         if let parent = parentViewModel {
             parent.$isSaving
                 .assign(to: &$isSaving)
         }
     }
 
-    // MARK: - Public Methods
     func showRawResponseSheet() {
         showRawResponse = true
     }
@@ -67,7 +61,6 @@ final class AIScheduleResultViewModel: ObservableObject {
         parentViewModel?.saveAISchedules()
     }
 
-    // MARK: - View State Enum
     enum ViewState {
         case loading
         case error

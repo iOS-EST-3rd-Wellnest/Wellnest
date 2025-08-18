@@ -27,6 +27,9 @@ struct CalendarLayoutView: View {
         let isSelected = isCurrentMonth && isSameDay
         let isToday = date.isToday
 
+        let scheduleItems = planVM.scheduleStore.scheduleItems(for: date)
+        let scheduleCount = scheduleItems.count
+
         VStack(spacing: 6) {
             Text("\(date.dayNumber)")
                 .font(.system(size: 16))
@@ -49,15 +52,24 @@ struct CalendarLayoutView: View {
 //                    }
                 }
                 .onTapGesture {
-                    planVM.select(date: date)
+                    withAnimation(.spring(response: 0.25)) {
+                        planVM.select(date: date)
+                    }
+
                 }
 
-            HStack(spacing: 2) {
-                ForEach(0..<3, id: \.self) { _ in
-                    Circle()
-                        .frame(width: 4, height: 4)
-                        .foregroundStyle(.green)
+            if scheduleCount > 0 && isCurrentMonth {
+                HStack(spacing: 2) {
+                    ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
+                        Circle()
+                            .frame(width: 4, height: 4)
+                            .foregroundStyle(Color.scheduleSolid(color: scheduleItems[index].backgroundColor))
+                    }
                 }
+            } else {
+                Circle()
+                    .frame(width: 4, height: 4)
+                    .foregroundStyle(.clear)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

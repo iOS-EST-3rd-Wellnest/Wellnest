@@ -6,16 +6,26 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
+
+    // 뷰모델(서비스) — 관찰 필요 없으므로 let
+    private let editor: ManualScheduleInputViewModel = {
+        // 필요 시 DI로 주입 가능
+        return ScheduleEditorFactory.makeDefault()
+    }()
+
+    @State private var lastSavedID: NSManagedObjectID?
+
     // 일정 제목
     @State private var title: String = ""
-
-    @State private var selectedColor: Color = Color("accentButtonColor")
-    @State var showColorPickerSheet: Bool = false
+    @State private var selectedColorName = "accentButtonColor"
+    @State private var previewColor: Color = Color("accentButtonColor")
+    @State private var showColorPickerSheet = false
 
     enum InputField: Hashable {
         case title
@@ -64,7 +74,7 @@ struct ManualScheduleInputView: View {
     // MARK: - alarmSection
 
     // 알람 여부
-    @State private var isAlarm: Bool = false
+    @State private var isAlarmOn: Bool = false
 
     // 알람 주기
     @State private var alarmRule: AlarmRule? = nil
@@ -75,6 +85,8 @@ struct ManualScheduleInputView: View {
     @State var isKeyboardVisible: Bool = true
 
     @State private var didInit = false
+    @State private var isSaving = false
+
 
     var body: some View {
         NavigationView {
@@ -138,16 +150,10 @@ struct ManualScheduleInputView: View {
                             isOn: $isRepeated,
                             selectedTag: $selectedRepeatRule,
                             showDetail: selectedRepeatRule != nil,
-                            detailContent: {
-                                AnyView(
-                                    EndDateSelectorView(endDate: $repeatEndDate)
-                                )
-                            },
-                            onTagTap: { _ in
-                                UIApplication.hideKeyboard()
-                                isKeyboardVisible = false
-                            }
-                        )
+                            onTagTap: { _ in isKeyboardVisible = false }
+                        ) {
+                            EndDateSelectorView(endDate: $repeatEndDate)
+                        }
                         .padding(.bottom, 5)
                         .onChange(of: isRepeated) { newValue in
                             UIApplication.hideKeyboard()
@@ -155,13 +161,11 @@ struct ManualScheduleInputView: View {
                         TagToggleSection(
                             title: "알람",
                             tags: AlarmRule.tags,
-                            isOn: $isAlarm,
-                            selectedTag: $alarmRule,
-                            showDetail: false,
-                            detailContent: nil
+                            isOn: $isAlarmOn,
+                            selectedTag: $alarmRule
                         )
                         .padding(.bottom, 5)
-                        .onChange(of: isAlarm) { newValue in
+                        .onChange(of: isAlarmOn) { newValue in
                             UIApplication.hideKeyboard()
                         }
                         HStack {
@@ -169,23 +173,29 @@ struct ManualScheduleInputView: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
+
                             Button {
                                 showColorPickerSheet = true
+                                isKeyboardVisible = false
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $selectedColor)
+                                ColorPicker("배경 색상 선택", selection: $previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }
                         }
                         .sheet(isPresented: $showColorPickerSheet) {
-                            ComposeView(selectedBackgroundColor: $selectedColor)
+                            ColorPickerView(selectedColorName: $selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
+
+                        }
+                        .onChange(of: selectedColorName) { newName in
+                            previewColor = Color(newName)
                         }
                         Spacer()
                     }
                     .padding()
-
                 }
+                .padding(.bottom, 30)
                 .onDisappear {
                     UIApplication.hideKeyboard()
                 }
@@ -243,58 +253,50 @@ struct ManualScheduleInputView: View {
 
 extension ManualScheduleInputView {
 
-    private func saveSchedule() {
-        let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
-        newSchedule.id = UUID()
-        newSchedule.title = title
-        newSchedule.location = location
-        newSchedule.detail = detail
-        newSchedule.startDate = startDate
-        newSchedule.endDate = endDate
-        newSchedule.isAllDay = isAllDay as NSNumber
-        newSchedule.isCompleted = false
-        newSchedule.backgroundColor = selectedColor.description
-        newSchedule.repeatRule = selectedRepeatRule?.name
-        newSchedule.hasRepeatEndDate = hasRepeatEndDate
-        newSchedule.repeatEndDate = repeatEndDate
-        newSchedule.alarm = alarmRule?.name
-        newSchedule.scheduleType = "custom"
-        newSchedule.createdAt = Date()
-        newSchedule.updatedAt = Date()
+    @MainActor
+    func saveSchedule() {
+        Task { await saveSchedule() } // 위의 async 버전을 재사용
+    }
+
+    @MainActor
+    func saveSchedule() async {
+        let input = ScheduleInput(
+            title: title,
+            location: location,
+            detail: detail,
+            startDate: startDate,
+            endDate: endDate,
+            isAllDay: isAllDay,
+            backgroundColorName: selectedColorName,
+            repeatRuleName: selectedRepeatRule?.name,
+            hasRepeatEndDate: hasRepeatEndDate,
+            repeatEndDate: repeatEndDate,
+            alarmRuleName: alarmRule?.name,
+            isAlarmOn: isAlarmOn,
+            isCompleted: false
+        )
         
         Task {
             do {
-                //                        let recurrences = CalendarManager.shared.recurrenceRules(
-                //                            name: newSchedule.repeatRule,
-                //                            endDate: (newSchedule.hasRepeatEndDate ? newSchedule.repeatEndDate : nil)
-                //                        )
-                //                        let alarms = CalendarManager.shared.alarms(
-                //                            name: newSchedule.alarm,
-                //                            eventStart: newSchedule.startDate ?? Date()
-                //                        )
+                let id = try await editor.saveSchedule(input)
+                lastSavedID = id
                 
-                let id = try await CalendarManager.shared.addOrUpdateEvent(
-                    existingId: newSchedule.eventIdentifier,      // 수정이면 전달
-                    title: newSchedule.title ?? "제목없음",
-                    location: newSchedule.location,
-                    notes: newSchedule.detail,
-                    startDate: newSchedule.startDate ?? Date(),
-                    endDate: (newSchedule.endDate ?? Date().addingTimeInterval(3600)),
-                    isAllDay: (newSchedule.isAllDay?.boolValue ?? false),
+                let evnetId = try await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: UUID().uuidString,     // 수정이면 전달
+                    title: title,
+                    location: location,
+                    notes: detail,
+                    startDate: startDate,
+                    endDate: endDate,
+                    isAllDay: isAllDay,
                     recurrenceRules: nil,
                     alarms: nil
                 )
-                newSchedule.eventIdentifier = id
+//                newSchedule.eventIdentifier = evnetId
             } catch {
-                print("Calendar add/update failed:", error)
+                print(error.localizedDescription)
             }
-        }
-        
-        print(newSchedule)
-        try? CoreDataService.shared.saveContext()
-        
-        if isAlarm {
-            LocalNotiManager.shared.scheduleLocalNotification(for: newSchedule)
+            isSaving = false
         }
     }
 }

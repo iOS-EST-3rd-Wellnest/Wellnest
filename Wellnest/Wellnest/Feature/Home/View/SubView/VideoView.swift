@@ -69,7 +69,7 @@ struct VideoImageView: View {
         .frame(width: width)
         .clipped()
         .cornerRadius(CornerRadius.large)
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .defaultShadow()
         .task(id: urlString) {
             image = await ImageLoader.shared.load(urlString)
         }

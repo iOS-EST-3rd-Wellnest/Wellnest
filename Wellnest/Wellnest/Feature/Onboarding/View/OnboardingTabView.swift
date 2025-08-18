@@ -29,7 +29,7 @@ struct OnboardingTabView: View {
                     case 1, 2:
                         IntroductionTabView(currentPage: $currentPage, title: $title)
                     case 3:
-                        UserInfoTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                        UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title)
                     case 4:
                         WellnessGoalTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
                     case 5:
@@ -230,23 +230,21 @@ struct OnboardingButton: View {
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.white.opacity(0.0),
-                    Color.white.opacity(0.9)
+                    Color.white.opacity(1.0)
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: Spacing.layout)
+            .frame(height: 24)
 
             FilledButton(
                 title: title,
-                action: action,
-                backgroundColor: isDisabled ? .secondary : .blue
+                disabled: isDisabled,
+                action: action
             )
-            .disabled(isDisabled)
-            .opacity(isDisabled ? 0.5 : 1.0)
             .padding(.horizontal)
             .padding(.bottom, Spacing.content)
-            .padding(.top, Spacing.inline)
+//            .padding(.top, Spacing.inline)
             .background(.white)
         }
     }

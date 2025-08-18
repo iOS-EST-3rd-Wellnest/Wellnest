@@ -9,14 +9,7 @@ import SwiftUI
 
 struct PlanCompletionCardView: View {
     @Environment(\.colorScheme) private var colorScheme
-
-    private let completedItems: Int = 4
-    private let totalItems: Int = 6
-
-    private var completionRate: Double {
-        guard totalItems > 0 else { return 0.0 }
-        return Double(completedItems) / Double(totalItems)
-    }
+    let planData: PlanCompletionData
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -30,9 +23,8 @@ struct PlanCompletionCardView: View {
                             Circle()
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 16)
                                 .frame(width: 100, height: 100)
-
                             Circle()
-                                .trim(from: 0, to: completionRate)
+                                .trim(from: 0, to: planData.completionRate)
                                 .stroke(
                                     LinearGradient(
                                         colors: [.green, .blue],
@@ -43,22 +35,19 @@ struct PlanCompletionCardView: View {
                                 )
                                 .frame(width: 100, height: 100)
                                 .rotationEffect(.degrees(-90))
-
                             Image(systemName: "flag.pattern.checkered")
                                 .font(.system(size: 35, weight: .bold))
                                 .foregroundStyle(.secondary)
-                            }
-                            .padding(8)
+                        }
+                        .padding(8)
 
                         VStack(alignment: .leading, spacing: Spacing.content) {
-                            Text("\(Int(completionRate * 100))%")
+                            Text("\(Int(planData.completionRate * 100))%")
                                 .font(.largeTitle)
                                 .bold()
-
-                            Text("오늘 일정이\n\(totalItems - completedItems)개 남았어요")
+                            Text("오늘 일정이\n\(planData.remainingItems)개 남았어요")
                                 .font(.headline)
                                 .foregroundColor(.secondary)
-
                             Spacer()
                         }
 
@@ -75,8 +64,4 @@ struct PlanCompletionCardView: View {
                 .padding()
             }
     }
-}
-
-#Preview {
-    PlanCompletionCardView()
 }

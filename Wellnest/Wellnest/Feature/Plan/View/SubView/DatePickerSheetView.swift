@@ -35,9 +35,9 @@ struct DatePickerSheetView: View {
                     .environment(\.locale, Locale(identifier: "ko_KR"))
                     .frame(maxWidth: .infinity)
                     .onChange(of: planVM.selectedDate) { newDate in
-                        planVM.displayedMonth = newDate
+                            planVM.selectedDate = newDate
+                            planVM.displayedMonth = newDate
                     }
-
                 }
                 //                 .frame(height: geo.size.height * 0.35)
                 .background(Color.white)
@@ -46,30 +46,32 @@ struct DatePickerSheetView: View {
                 )
                 .defaultShadow()
                 .offset(y: dragOffset)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if !isDragging {
-                                isDragging = true
-                            }
-
-                            if value.translation.height < 0 {
-                                dragOffset = value.translation.height
-                            }
-                        }
-                        .onEnded { value in
-                            isDragging = false
-
-                            if value.translation.height < -100 {
-                                showDatePicker = false
-                            }
-                            dragOffset = 0
-                            
-                        }
-                )
+                .gesture(dragGesture)
             }
         }
         .ignoresSafeArea(.all)
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                if !isDragging {
+                    isDragging = true
+                }
+
+                if value.translation.height < 0 {
+                    dragOffset = value.translation.height
+                }
+            }
+            .onEnded { value in
+                isDragging = false
+
+                if value.translation.height < -100 {
+                    showDatePicker = false
+                }
+
+                dragOffset = 0
+            }
     }
 }
 
