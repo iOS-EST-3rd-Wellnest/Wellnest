@@ -101,7 +101,8 @@ final class ManualScheduleViewModel: ObservableObject {
             repeatRule: entity.repeatRule ?? "",
             hasRepeatEndDate: entity.hasRepeatEndDate,
             repeatEndDate: entity.repeatEndDate,
-            isCompleted: entity.isCompleted?.boolValue ?? false
+            isCompleted: entity.isCompleted?.boolValue ?? false,
+            eventIdentifier: nil
         )
     }
     
