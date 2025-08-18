@@ -60,14 +60,12 @@ struct WellnessGoalTabView: View {
                 }
             }
             .padding(.horizontal, spacing)
-
-            Spacer()
-
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
             OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveWellnessGoal()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
         }
         .onAppear {
