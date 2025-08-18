@@ -261,7 +261,35 @@ extension ManualScheduleInputView {
         newSchedule.scheduleType = "custom"
         newSchedule.createdAt = Date()
         newSchedule.updatedAt = Date()
-
+        
+        Task {
+            do {
+                //                        let recurrences = CalendarManager.shared.recurrenceRules(
+                //                            name: newSchedule.repeatRule,
+                //                            endDate: (newSchedule.hasRepeatEndDate ? newSchedule.repeatEndDate : nil)
+                //                        )
+                //                        let alarms = CalendarManager.shared.alarms(
+                //                            name: newSchedule.alarm,
+                //                            eventStart: newSchedule.startDate ?? Date()
+                //                        )
+                
+                let id = try await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: newSchedule.eventIdentifier,      // 수정이면 전달
+                    title: newSchedule.title ?? "제목없음",
+                    location: newSchedule.location,
+                    notes: newSchedule.detail,
+                    startDate: newSchedule.startDate ?? Date(),
+                    endDate: (newSchedule.endDate ?? Date().addingTimeInterval(3600)),
+                    isAllDay: (newSchedule.isAllDay?.boolValue ?? false),
+                    recurrenceRules: nil,
+                    alarms: nil
+                )
+                newSchedule.eventIdentifier = id
+            } catch {
+                print("Calendar add/update failed:", error)
+            }
+        }
+        
         print(newSchedule)
         try? CoreDataService.shared.saveContext()
         
