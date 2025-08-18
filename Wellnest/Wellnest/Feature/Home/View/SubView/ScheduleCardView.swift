@@ -13,6 +13,7 @@ enum SwipeDirection {
 
 struct ScheduleCardView: View {
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
+    private let calManager = CalendarManager.shared
     
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
@@ -91,15 +92,18 @@ struct ScheduleCardView: View {
                                 onSwiped(nil, nil)
                             }
                             
-                            Task {
-                                // 애니메이션 효과 이후 삭제를 위한 sleep
-                                try? await Task.sleep(for: .milliseconds(300))
-                                await MainActor.run {
-                                    withAnimation(.easeInOut) {
-                                        manualScheduleVM.deleteSchedule(item: schedule)
-                                    }
-                                }
-                            }
+                            performDeleteFlow()
+                            
+//                            Task {
+//                                // 애니메이션 효과 이후 삭제를 위한 sleep
+//                                try? await Task.sleep(for: .milliseconds(300))
+//                                await MainActor.run {
+//                                    withAnimation(.easeInOut) {
+//                                        manualScheduleVM.deleteSchedule(item: schedule)
+//                                        
+//                                    }
+//                                }
+//                            }
                         } label: {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.white)
@@ -158,3 +162,30 @@ struct ScheduleCardView: View {
         .frame(height: 70)
     }
 }
+
+extension ScheduleCardView {
+    private func performDeleteFlow() {
+            Task {
+                // 애니메이션 효과 이후 삭제를 위한 sleep
+                try? await Task.sleep(for: .milliseconds(300))
+
+                // 캘린더 삭제
+                _ = await CalendarManager.shared.deleteEventOrBackfill(
+                    identifier: schedule.eventIdentifier,
+                    title: schedule.title,
+                    location: nil,
+                    isAllDay: schedule.isAllDay,
+                    startDate: schedule.startDate,
+                    endDate: schedule.endDate,
+                    in: nil
+                )
+
+                // Core Data에서 일정 삭제
+                await MainActor.run {
+                    withAnimation(.easeInOut) {
+                        manualScheduleVM.deleteSchedule(item: schedule)
+                    }
+                }
+            }
+        }
+    }
