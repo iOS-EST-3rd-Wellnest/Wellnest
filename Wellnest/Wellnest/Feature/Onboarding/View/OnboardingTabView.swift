@@ -62,6 +62,7 @@ struct OnboardingTabView: View {
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
