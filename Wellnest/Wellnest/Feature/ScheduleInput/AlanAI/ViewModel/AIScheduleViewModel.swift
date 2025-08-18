@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import UIKit
+import EventKit
 
 @MainActor
 final class AIScheduleViewModel: ObservableObject {
@@ -44,6 +45,27 @@ final class AIScheduleViewModel: ObservableObject {
     @Published var isSaving: Bool = false
     @Published var saveSuccess: Bool = false
     @Published var saveError: String = ""
+    
+    // AI 생성 일정을 담아놓는 배열
+    @Published var generatedPlans: [GeneratedPlanItem] = []
+    
+    // MARK: - AI 생성 일정 구조
+    struct GeneratedPlanItem {
+        enum Kind {
+            case single
+            case multiple
+            case routine(weekdays: [Int])
+        }
+        
+        let title: String
+        let location: String?
+        let memo: String?
+        let startDate: Date
+        let endDate: Date?
+        let isAllDay: Bool
+        let kind: Kind
+        let seriesEndDate: Date?
+    }
 
     // MARK: - Dependencies
     private lazy var aiService = AlanAIService()
@@ -196,7 +218,8 @@ final class AIScheduleViewModel: ObservableObject {
 
         Task {
             do {
-                try await saveSchedulesToCoreData(plan: plan)
+//                try await saveSchedulesToCoreData(plan: plan)
+                try await saveSchedulesToCalendarAndCoreData(plan: plan)
                 await MainActor.run {
                     isSaving = false
                     saveSuccess = true
@@ -323,5 +346,71 @@ final class AIScheduleViewModel: ObservableObject {
         case error
         case content
         case empty
+    }
+    
+    // MARK: - AI 생성 일정 캘린더 연동
+    private func saveSchedulesToCalendarAndCoreData(plan: HealthPlanResponse) async throws {
+        print("📆 EventKit 권한 확인")
+        try await CalendarManager.shared.ensureAccess()
+
+        print("💿 Core Data + 📆 Calendar 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
+
+        for (idx, scheduleItem) in plan.schedules.enumerated() {
+            let dates = AIScheduleDateTimeHelper.parseDatesForCoreData(
+                scheduleItem: scheduleItem,
+                planType: plan.planType
+            )
+            let startDate = dates.startDate
+            let endDate = dates.endDate
+
+            var recurrenceRules: [EKRecurrenceRule]? = nil
+            if plan.planType == "routine", !selectedWeekdays.isEmpty {
+                let weekdays = Array(selectedWeekdays).sorted()
+                let rule = CalendarManager.shared.weeklyRecurrence(weekdays: weekdays, end: routineEndDate)
+                recurrenceRules = [rule]
+            } else if plan.planType == "multiple" {
+
+                let endRule = EKRecurrenceEnd(end: multipleEndDate)
+                let rule = EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: endRule)
+                recurrenceRules = [rule]
+            }
+
+            // EventKit에 생성/업데이트
+            let eventId = try await CalendarManager.shared.addOrUpdateEvent(
+                existingId: nil,
+                title: scheduleItem.activity,
+                location: nil,
+                notes: scheduleItem.notes,
+                startDate: startDate,
+                endDate: endDate,
+                isAllDay: false,
+                calendar: nil,
+                recurrenceRules: recurrenceRules,
+                alarms: nil
+            )
+
+            // Core Data에 저장
+            let entity = CoreDataService.shared.create(ScheduleEntity.self)
+            entity.id = UUID()
+            entity.title = scheduleItem.activity
+            entity.detail = scheduleItem.notes ?? ""
+            entity.startDate = startDate
+            entity.endDate = endDate
+            entity.isAllDay = false
+            entity.isCompleted = false
+            entity.repeatRule = plan.planType == "routine" ? "weekly" : nil
+            entity.hasRepeatEndDate = false
+            entity.repeatEndDate = nil
+            entity.alarm = nil
+            entity.scheduleType = "ai_generated"
+            entity.createdAt = Date()
+            entity.updatedAt = Date()
+            entity.eventIdentifier = eventId // EventKit 식별자 저장
+
+            print("📝 저장 \(idx+1): \(entity.title ?? "제목없음") | \(startDate) ~ \(endDate) | id=\(eventId)")
+        }
+
+        try CoreDataService.shared.saveContext()
+        print("💾 Core Data 저장 완료 + 📆 캘린더 생성 완료")
     }
 }
