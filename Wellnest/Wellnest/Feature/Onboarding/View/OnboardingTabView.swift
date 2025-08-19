@@ -61,6 +61,9 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+            .onAppear {
+                viewModel.screenContext = .onboarding
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }

@@ -45,7 +45,6 @@ struct HealthConditionTabView: View {
         }
         .onAppear {
             title = "현재 건강 상태"
-            viewModel.loadActivities()
         }
     }
 }

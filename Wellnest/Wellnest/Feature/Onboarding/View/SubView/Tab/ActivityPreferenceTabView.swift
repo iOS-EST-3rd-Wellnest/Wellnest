@@ -41,6 +41,7 @@ struct ActivityPreferenceTabView: View {
         }
         .onAppear {
             title = "선호 활동"
+            viewModel.loadActivities()
         }
     }
 }

@@ -34,6 +34,14 @@ struct ModifyingSurveyView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            viewModel.screenContext = .settings
+            viewModel.loadActivities()
+            viewModel.loadWellnessGoals()
+            viewModel.loadPreferredTimeSlots()
+            viewModel.loadWeatherPreferences()
+            viewModel.loadHealthConditions()
+        }
     }
 }
 
