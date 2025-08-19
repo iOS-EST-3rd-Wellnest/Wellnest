@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ModifyingSurveyView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @StateObject private var viewModel = UserInfoViewModel()
 
     @State private var currentPage: Int = 0
@@ -34,6 +36,16 @@ struct ModifyingSurveyView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
         .onAppear {
             viewModel.screenContext = .settings
             viewModel.loadActivities()
