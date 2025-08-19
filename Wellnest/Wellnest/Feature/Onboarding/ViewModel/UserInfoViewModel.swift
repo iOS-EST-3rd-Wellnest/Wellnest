@@ -24,8 +24,8 @@ class UserInfoViewModel: ObservableObject {
         loadActivities()
     }
 
+    /// 성별에 따른 카드 아이콘 변경
     func loadActivities() {
-        // 성별에 따라 기본 아이콘 배열 세팅
         let gender = userEntity?.gender ?? "여성"
         let activitiesForGender = ActivityPreference.activities(for: gender)
 
@@ -36,6 +36,7 @@ class UserInfoViewModel: ObservableObject {
         )
     }
 
+    /// CoreData에서 현재 사용자의 정보(UserEntity)를 가져오거나, 없으면 생성
     private func fetchOrCreateUserInfo() {
         let request: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
         request.fetchLimit = 1
@@ -56,6 +57,7 @@ class UserInfoViewModel: ObservableObject {
         }
     }
 
+    /// CoreData에 저장된 카드 선택 상태 불러오기
     func restoreSelection<Item: SelectableItem>(items: [Item], savedString: String?) -> [Item] {
         guard let saved = savedString, !saved.isEmpty else {
             return items.map {

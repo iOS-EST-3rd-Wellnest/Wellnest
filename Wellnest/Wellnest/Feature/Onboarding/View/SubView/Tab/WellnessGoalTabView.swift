@@ -22,7 +22,7 @@ struct WellnessGoalTabView: View {
     }
 
     var body: some View {
-        VStack {
+        ScrollView {
             OnboardingTitleDescription(description: "삶의 질을 높이고 지속 가능한 건강 루틴을 만드는 것에 집중해보세요.")
 
             VStack {
@@ -46,7 +46,7 @@ struct WellnessGoalTabView: View {
 
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .black : .secondary)
+                                .foregroundColor(goal.isSelected ? .black : .gray)
 
                             Spacer()
                         }
@@ -60,14 +60,12 @@ struct WellnessGoalTabView: View {
                 }
             }
             .padding(.horizontal, spacing)
-
-            Spacer()
-
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
             OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
                 saveWellnessGoal()
-                withAnimation {
-                    currentPage += 1
-                }
+                withAnimation { currentPage += 1 }
             }
         }
         .onAppear {
