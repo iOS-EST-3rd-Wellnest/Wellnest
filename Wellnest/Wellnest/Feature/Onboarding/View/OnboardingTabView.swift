@@ -212,6 +212,7 @@ struct OnboardingButton: View {
                         disabled: false,
                         action: { withAnimation { currentPage -= 1 } }
                     )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
                 }
 
                 FilledButton(
@@ -220,7 +221,7 @@ struct OnboardingButton: View {
                     action: {
                         action()
                         if isLastStep {
-                            dismiss() // 마지막 단계면 닫기
+                            dismiss()
                         }
                     }
                 )
@@ -228,6 +229,7 @@ struct OnboardingButton: View {
             .padding(.horizontal)
             .padding(.bottom, Spacing.content)
             .background(colorScheme == .dark ? Color.black : Color.white)
+            .animation(.easeInOut, value: currentPage)
         }
     }
 }

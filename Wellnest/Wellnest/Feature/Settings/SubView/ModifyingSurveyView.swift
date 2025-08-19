@@ -37,12 +37,12 @@ struct ModifyingSurveyView: View {
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     withAnimation { dismiss() }
                 } label: {
-                    Image(systemName: "chevron.backward")
-                        .foregroundColor(.gray)
+                    Image(systemName: "xmark")
+                        .foregroundColor(.gray) // TODO: 다른 네비게이션 바와 색 맞추기
                 }
             }
         }
