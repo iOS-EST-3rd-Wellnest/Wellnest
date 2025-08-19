@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct VideoView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     @ObservedObject var homeVM: HomeViewModel
     
-    @State private var uiImage: UIImage?
-
     private let videoListTemp = VideoRecommendModel.videoList
     
     // .callout 두 줄 높이
@@ -23,8 +23,8 @@ struct VideoView: View {
     
     var body: some View {
         HStack(spacing: Spacing.layout * 1.5) {
-            //ForEach(homeVM.videoList) { video in
-            ForEach(videoListTemp) { video in
+            ForEach(homeVM.videoList) { video in
+            //ForEach(videoListTemp) { video in
                 let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
                 let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
                 
@@ -35,6 +35,7 @@ struct VideoView: View {
                         Text(video.title)
                             .multilineTextAlignment(.leading)
                             .font(.callout)
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
                             .lineLimit(2)
                             .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 6), minHeight: twoLineHeight, alignment: .topLeading)
                             .padding(.vertical, Spacing.inline)

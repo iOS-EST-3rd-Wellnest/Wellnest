@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct RecommendView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     @ObservedObject var homeVM: HomeViewModel
     
-    let videoListTemp = VideoRecommendModel.videoList
+    private let videoListTemp = VideoRecommendModel.videoList
     
     var body: some View {
         VStack {
@@ -23,14 +25,14 @@ struct RecommendView: View {
                     Spacer()
                 }
                 
-                Text("깊은 명상은 마음의 평화를, 충분한 수면은 활기찬 내일을 선사합니다")
+                Text(homeVM.quoteOfTheDay ?? "")
                     .font(.callout)
                     .padding(.horizontal, Spacing.layout * 1.5)
                     .padding(.vertical, Spacing.layout)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .fill(Color(.systemGray6))
+                            .fill(colorScheme == .dark ? Color(.gray) : .white)
                             .defaultShadow()
                     )
                 
@@ -44,13 +46,17 @@ struct RecommendView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: Spacing.content) {
-                    Group {
-                        Text("오늘 날씨는 비가 내리네요.\n실내에서 할 수 있는 일정을 추천해드릴게요.")
+                    if let weatherResponse = homeVM.weatherResponse {
+                        Text("\(weatherResponse.description)")
                             .font(.callout)
                         
-                        Text(" #헬스장")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            ForEach(weatherResponse.schedules, id:\.self) {
+                                Text("\($0)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, Spacing.layout * 1.5)
@@ -58,7 +64,7 @@ struct RecommendView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(Color(.systemGray6))
+                        .fill(colorScheme == .dark ? Color(.gray) : .white)
                         .defaultShadow()
                 )
                 

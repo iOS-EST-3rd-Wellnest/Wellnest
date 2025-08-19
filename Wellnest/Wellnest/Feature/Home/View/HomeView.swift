@@ -10,11 +10,8 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
-//    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
-    
-    @State var name: String = "홍길동"
     
     @State private var swipedScheduleId: UUID? = nil
     @State private var swipedDirection: SwipeDirection? = nil
@@ -53,13 +50,17 @@ struct HomeView: View {
                         .frame(width: 80, height: 80)
 
                     VStack(alignment: .leading, spacing: Spacing.content) {
-                        Text(name)
+                        Text(homeVM.userInfo?.nickname ?? "")
                             .font(.title3)
                             .bold()
 
-                        Text("#20대 #아침형 #식단관리")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            ForEach(homeVM.hashtagList, id: \.self) {
+                                Text("\($0)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
 
                     Spacer()
@@ -86,11 +87,10 @@ struct HomeView: View {
                                     .bold()
                                     .padding(.vertical, Spacing.content)
 
-                                Text("1,000kcal 태우기")
-                                    .font(.footnote)
-                                
-                                Text("10,000보 걷기")
-                                    .font(.footnote)
+                                ForEach(homeVM.goalList, id: \.self) {
+                                    Text("\($0)")
+                                        .font(.footnote)
+                                }
                             }
                             .padding()
                         }
@@ -132,9 +132,6 @@ struct HomeView: View {
                             }
                         }
                     }
-//                    .onAppear {
-//                        manualScheduleVM.loadTodaySchedules()
-//                    }
                     .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
@@ -147,10 +144,9 @@ struct HomeView: View {
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
         }
-        .onAppear {
-            //homeVM.quoteOfTheDayRequest()
-            //homeVM.weatherRequest()
-            //homeVM.videoRequest()
+        .task {
+            homeVM.fetchUserInfo()
+            await homeVM.fetchDailySummary()
         }
     }
 }
