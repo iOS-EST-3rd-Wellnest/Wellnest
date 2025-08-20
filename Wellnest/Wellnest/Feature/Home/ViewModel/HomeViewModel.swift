@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import UIKit
+import SwiftUI
 
 final class HomeViewModel: ObservableObject {
     @Published var userInfo: UserEntity?
@@ -18,38 +18,84 @@ final class HomeViewModel: ObservableObject {
     @Published var weatherResponse: WeatherRecommendModel?
     @Published var videoList = [VideoRecommendModel]()
     
+    private static var isRefreshWeather = false
+    
     private let aiRequest = AISerialProxy()
-    private let weatherService = WeatherService()
-    private let locationManager = LocationManager()
     private var prompt = RecommendPrompt()
     
     // 프리패치 작업 취소를 위해 핸들 보관
     private var prefetchTasks = [Task<Void, Never>]()
     
-    // MARK: - 사용자 정보 조회
+    /// 사용자 정보 조회
     func fetchUserInfo() {
         if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
             userInfo = result
         }
     }
     
-    // MARK: - DailySummaryEntity 조회
+    // MARK: - DailySummaryEntity 조회/생성/수정
+    /// DailySummaryEntity를 조회하여 Alan을 활용한 컨텐츠 데이터 세팅
     @MainActor
     func fetchDailySummary() async {
+        // entity 조회
         if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
             self.dailySummaryInfo = entity
-
+			
+            // entity의 날짜가 오늘 이라면
             if let date = entity.date, Calendar.current.isDate(date, inSameDayAs: Date()) {
-                self.hashtagList = decodeJSON(from: entity.hashtag ?? "[]") ?? []
-                self.goalList = decodeJSON(from: entity.goal ?? "[]") ?? []
-                self.quoteOfTheDay = entity.quoteOfTheDay
-                self.weatherResponse = decodeJSON(from: entity.weatherSummary ?? "")
-                self.videoList = decodeJSON(from: entity.videoRecommendation ?? "[]") ?? []
+                // 1) 존재하는 데이터 화면 바인딩
+                applyEntityToPublished(entity)
+                
+                // 2) 누락된 항목 채우기
+                await missingFieldsIfNeeded(for: entity)
             } else {
+                // entity date가 오늘이 아니라면 컨텐츠 데이터 생성하여 entity 업데이트
                 await updateDailySummary()
             }
         } else {
             await createDailySummary()
+        }
+    }
+
+    
+    /// 처음 앱 실행 시 날씨 정보 등록
+    func refreshWeatherContent() async {
+        guard !Self.isRefreshWeather else { return }
+        
+        do {
+            // 1) 앱 시작 시 프리로드된 예보를 사용
+            let forecast = await WeatherCenter.shared.waitForForecast()
+            guard let current = forecast.first, let userInfo else { return }
+            
+            // 2) 날씨 기반 컨텐츠 생성
+            let res = try await aiRequest.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
+            guard let json = await aiRequest.extractJSONFromResponse(res.content),
+                  let model: WeatherRecommendModel = decodeJSON(from: json) else { return }
+
+            // 3) 오늘자 엔티티 업데이트(없으면 생성)
+            if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
+                // 필드만 갱신 (화면 바인딩 포함)
+                print("refreshWeatherContent entity:", entity)
+                await updateWeather(model, on: entity)
+            } else {
+                // 엔티티가 없으면 새로 생성
+                let context = CoreDataService.shared.context
+                let entity = DailySummaryEntity(context: context)
+                entity.id = UUID()
+                entity.date = Date()
+                entity.weatherSummary = jsonString(model)
+                entity.completeRate = 0
+                try? CoreDataService.shared.saveContext()
+
+                await MainActor.run {
+                    self.dailySummaryInfo = entity
+                    self.weatherResponse = model
+                }
+            }
+            
+            Self.isRefreshWeather = true
+        } catch {
+            print("refreshWeatherContenty 실패:", error.localizedDescription)
         }
     }
     
@@ -72,21 +118,30 @@ final class HomeViewModel: ObservableObject {
         )
     }
     
-    private func createDailySummary() async {
-        let payload = await buildPayload()
-        
-        let context = CoreDataService.shared.context
-        let entity = DailySummaryEntity(context: context)
-        entity.id = UUID()
+    
+    /// 신규 생성/업데이트 공통 쓰기
+    /// - Parameters:
+    ///   - payload: 저장 내용
+    ///   - entity: 신규/업데이트 entity 정보
+    private func upsert(_ payload: DailySummaryModel, to entity: DailySummaryEntity) {
         entity.date = payload.date
         entity.hashtag = jsonString(payload.hashtags)
         entity.goal = jsonString(payload.goals)
         entity.quoteOfTheDay = payload.quote
         entity.weatherSummary = jsonString(payload.weather)
         entity.videoRecommendation = jsonString(payload.video)
-        entity.completeRate = 0
-        
         try? CoreDataService.shared.saveContext()
+    }
+    
+    
+    /// 신규 생성
+    private func createDailySummary() async {
+        let payload = await buildPayload()
+        
+        let context = CoreDataService.shared.context
+        let entity = DailySummaryEntity(context: context)
+        entity.id = UUID()
+        upsert(payload, to: entity)
         
         await MainActor.run {
             self.dailySummaryInfo = entity
@@ -98,15 +153,13 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
+    
+    /// 업데이트
     private func updateDailySummary() async {
         guard let entity = dailySummaryInfo else { return }
         
         let payload = await buildPayload()
-        entity.date = payload.date
-        entity.quoteOfTheDay = payload.quote
-        entity.goal = jsonString(payload.goals)
-        entity.weatherSummary = jsonString(payload.weather)
-        try? CoreDataService.shared.saveContext()
+        upsert(payload, to: entity)
 
         await MainActor.run {
             self.hashtagList = payload.hashtags
@@ -117,7 +170,111 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    // MARK: - 해시태그
+    /// 오늘 엔티티 존재하지만 일부 비어있는(없거나 "[]"/"{}"/공백) 필드 개별 생성해서 저장
+    /// - Parameter entity: 오늘 날짜의 entity
+    private func missingFieldsIfNeeded(for entity: DailySummaryEntity) async {
+        await withTaskGroup(of: Void.self) { group in
+            if isMissingJSON(entity.hashtag) {
+                group.addTask { [weak self] in
+                    guard let self else { return }
+                    let hashtags = await self.fetchHashtag()
+                    await self.updateHashtags(hashtags, on: entity)
+                }
+            }
+            
+            if isMissingJSON(entity.goal) {
+                group.addTask { [weak self] in
+                    guard let self else { return }
+                    let goals = await self.fetchGoals()
+                    await self.updateGoals(goals, on: entity)
+                }
+            }
+            
+            if (entity.quoteOfTheDay ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                group.addTask { [weak self] in
+                    guard let self else { return }
+                    let quote = await self.fetchQuoteOfTheDay()
+                    await self.updateQuote(quote, on: entity)
+                }
+            }
+            
+            if isMissingJSON(entity.weatherSummary) {
+                group.addTask { [weak self] in
+                    guard let self else { return }
+                    let weather = await self.fetchWeather()
+                    await self.updateWeather(weather, on: entity)
+                }
+            }
+            
+            if isMissingJSON(entity.videoRecommendation) {
+                group.addTask { [weak self] in
+                    guard let self else { return }
+                    let videos = await self.fetchVideo()
+                    await self.updateVideos(videos, on: entity)
+                }
+            }
+        }
+    }
+    
+    // MARK: - 필드별 업데이트 (개별 저장 및 화면 반영)
+    @MainActor
+    private func updateHashtags(_ hashtags: [String], on entity: DailySummaryEntity) {
+        entity.hashtag = jsonString(hashtags)
+        self.hashtagList = hashtags
+        try? CoreDataService.shared.saveContext()
+    }
+
+    @MainActor
+    private func updateGoals(_ goals: [String], on entity: DailySummaryEntity) {
+        entity.goal = jsonString(goals)
+        self.goalList = goals
+        try? CoreDataService.shared.saveContext()
+    }
+
+    @MainActor
+    private func updateQuote(_ quote: String, on entity: DailySummaryEntity) {
+        entity.quoteOfTheDay = quote
+        self.quoteOfTheDay = quote
+        try? CoreDataService.shared.saveContext()
+    }
+
+    @MainActor
+    private func updateWeather(_ weather: WeatherRecommendModel?, on entity: DailySummaryEntity) {
+        entity.weatherSummary = jsonString(weather)
+        self.weatherResponse = weather
+        try? CoreDataService.shared.saveContext()
+    }
+
+    @MainActor
+    private func updateVideos(_ videos: [VideoRecommendModel], on entity: DailySummaryEntity) {
+        entity.videoRecommendation = jsonString(videos)
+        self.videoList = videos
+        try? CoreDataService.shared.saveContext()
+    }
+    
+    private func isMissingJSON(_ json: String?) -> Bool {
+        guard let json, !json.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return true
+        }
+        
+        let compact = json.replacingOccurrences(of: "\\s", with: "", options: .regularExpression)
+        if compact == "[]" || compact == "{}" { return true }
+        return false
+    }
+
+    @MainActor
+    private func applyEntityToPublished(_ entity: DailySummaryEntity) {
+        self.hashtagList = decodeJSON(from: entity.hashtag ?? "[]") ?? []
+        self.goalList = decodeJSON(from: entity.goal ?? "[]") ?? []
+        self.quoteOfTheDay = entity.quoteOfTheDay
+        self.weatherResponse = decodeJSON(from: entity.weatherSummary ?? "")
+        self.videoList = decodeJSON(from: entity.videoRecommendation ?? "[]") ?? []
+    }
+    
+    // MARK: - Alan 연동
+    
+    /// 사용자 해시태그 생성
+    /// - Returns: 해시태그 목록
     private func fetchHashtag() async -> [String] {
         do {
             guard let userInfo else { return [] }
@@ -132,7 +289,9 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    // MARK: - 목표
+    
+    /// 하루동안 달성 가능한 목표 추천
+    /// - Returns: 목표 목록
     private func fetchGoals() async -> [String] {
         do {
             guard let userInfo else { return [] }
@@ -147,7 +306,9 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    // MARK: - 오늘의 한마디
+    
+    /// 동기부여되는 문장, 명언 등의 오늘의 한마디
+    /// - Returns: 오늘의 한마디 문자열
     private func fetchQuoteOfTheDay() async -> String {
         do {
             guard let userInfo else { return "" }
@@ -160,29 +321,28 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    // MARK: - 날씨
+    
+    /// 현재 날씨 정보를 바당으로 일정 컨텐츠 추천
+    /// - Returns: 날씨 안내 및 추천 일정
     private func fetchWeather() async -> WeatherRecommendModel? {
         do {
-            let location = try await locationManager.requestLocation()
-            let lat = location.coordinate.latitude
-            let lon = location.coordinate.longitude
-
-            let current = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
-
-            guard let userInfo else { return nil }
+            let forecast = await WeatherCenter.shared.waitForForecast()
+            
+            guard let userInfo, let current = forecast.first  else { return nil }
             let weatherRes = try await aiRequest.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
             let decodeWeather = await aiRequest.extractJSONFromResponse(weatherRes.content)
 
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             return weatherModel
         } catch {
-            print("LocationManager 권한 오류:", error.localizedDescription)
+            print("weather 요청 실패:", error.localizedDescription)
             return nil
         }
     }
     
-    // MARK: - Alan Ai를 활용한 추천 영상 Youtube 검색
-     func fetchVideo() async -> [VideoRecommendModel] {
+    /// Alan AI에 검색어를 받아 추천 영상 검색
+    /// - Returns: 영상 목록
+    private func fetchVideo() async -> [VideoRecommendModel] {
         do {
             guard let userInfo else { return [] }
             let response = try await aiRequest.request(prompt: prompt.videoPrompt(entity: userInfo))
@@ -256,6 +416,10 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
+    
+    /// 다양한 타입의 JSON String 형태로 변환
+    /// - Parameter value: 변환하려는 값
+    /// - Returns: JSON 형태의 문자열
     private func jsonString<T: Encodable>(_ value: T?) -> String? {
         guard let value else { return nil }
         do {
@@ -269,7 +433,10 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
+    
     /// 문자열에서 엔티티(&#39;, &quot;, &amp; 등)를 실제 문자(기호)로 변환하여 반환
+    /// - Parameter str: 문자열
+    /// - Returns: 변환된 문자열
     private func htmlDecoded(from str: String) -> String {
         guard let data = str.data(using: .utf8) else { return str }
         
@@ -301,6 +468,7 @@ final class HomeViewModel: ObservableObject {
     }
 }
 
+// MARK: - AlanAIService
 actor AISerialProxy {
     private let alanAiService = AlanAIService()
 

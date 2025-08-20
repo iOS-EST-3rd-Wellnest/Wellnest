@@ -105,7 +105,7 @@ struct HomeView: View {
                 }
                 
                 HStack {
-                    VStack {
+                    VStack(spacing: 0) {
                         if isCompleteSchedules.isEmpty {
                             Text("일정을 추가 해주세요.")
                                 .padding(.vertical, 40)
@@ -147,6 +147,7 @@ struct HomeView: View {
         .task {
             homeVM.fetchUserInfo()
             await homeVM.fetchDailySummary()
+            await homeVM.refreshWeatherContent()
         }
     }
 }

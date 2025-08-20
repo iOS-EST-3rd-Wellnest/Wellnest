@@ -29,7 +29,7 @@ struct RecommendView: View {
                     .font(.callout)
                     .padding(.horizontal, Spacing.layout * 1.5)
                     .padding(.vertical, Spacing.layout)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(colorScheme == .dark ? Color(.gray) : .white)
@@ -61,7 +61,7 @@ struct RecommendView: View {
                 }
                 .padding(.horizontal, Spacing.layout * 1.5)
                 .padding(.vertical, Spacing.layout)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(colorScheme == .dark ? Color(.gray) : .white)
