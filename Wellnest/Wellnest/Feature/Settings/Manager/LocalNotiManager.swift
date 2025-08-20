@@ -10,7 +10,9 @@ import UserNotifications
 
 final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = LocalNotiManager()
-    
+
+    private let morningCheckInId = "wellnest.morning-checkin.9am"
+
     /// 알림 설정 권한 확인
     func requestNotificationAuthorization() {
         let notificationCenter = UNUserNotificationCenter.current()
@@ -21,7 +23,9 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
             
             if granted {
                 print("알람 설정 허용")
+                LocalNotiManager.shared.ensureMorningCheckInScheduled()
             } else {
+                LocalNotiManager.shared.cancelMorningCheckIn()
                 print("알람 설정 거부")
             }
         }
@@ -106,5 +110,68 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound])
+    }
+}
+
+extension LocalNotiManager {
+
+    func ensureMorningCheckInScheduled() {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { [weak self] settings in
+            guard let self else { return }
+
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                // 이미 허용됨 → 스케줄 보장
+                self.scheduleMorningCheckInAt9AM()
+
+            case .notDetermined:
+                // 아직 미정 → 권한 요청 후 스케줄
+                center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+                    if granted { self.scheduleMorningCheckInAt9AM() }
+                }
+
+            case .denied:
+                // 거부 상태 → 스케줄 안 함 (원하면 설정으로 보내는 처리 추가 가능)
+                print("알림 권한 거부됨: 설정에서 허용 필요")
+
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    /// 매일 오전 9시 “오늘 컨디션은 어떤가요?” 알림 등록 (중복 방지 포함)
+    func scheduleMorningCheckInAt9AM() {
+        let center = UNUserNotificationCenter.current()
+
+        // 중복 방지: 동일 ID의 기존 예약 제거
+        center.removePendingNotificationRequests(withIdentifiers: [morningCheckInId])
+
+        let content = UNMutableNotificationContent()
+        content.title = "오늘 컨디션은 어떤가요?"
+        content.body  = "아침 체크인으로 하루를 가볍게 시작해요."
+        content.sound = .default
+
+        var comps = DateComponents()
+        comps.hour = 9
+        comps.minute = 0
+        // 기기 로컬 타임존에 맞춰 동작 (Asia/Seoul이면 9시에 뜸)
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: morningCheckInId, content: content, trigger: trigger)
+
+        center.add(request) { error in
+            if let error {
+                print("아침 체크인 알림 등록 실패: \(error.localizedDescription)")
+            } else {
+                print("아침 9시 체크인 알림 등록 완료")
+            }
+        }
+    }
+
+    /// 아침 체크인 알림 해제
+    func cancelMorningCheckIn() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [morningCheckInId])
     }
 }
