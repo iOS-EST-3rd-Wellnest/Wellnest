@@ -39,13 +39,21 @@ struct SettingList: View {
                             SettingsRow(icon: "calendar", title: "캘린더 앱 연동")
                                 .foregroundStyle(darkMode == .dark ? .white : .black)
                         }
-                        
+
+                        NavigationLink {
+                            CheckInMainView()
+                        } label: {
+                            SettingsRow(icon: "calendar", title: "Sentiment Score")
+                                .foregroundStyle(.black)
+                        }
+
                         NavigationLink {
                             ResetDataView()
                         } label: {
                             SettingsRow(icon: "trash", title: "데이터 초기화")
                                 .foregroundStyle(.red)
                         }
+
                     }
                     .font(.subheadline)
                     .fontWeight(.semibold)

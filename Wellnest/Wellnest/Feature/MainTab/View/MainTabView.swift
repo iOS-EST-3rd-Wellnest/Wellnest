@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var navBus: NavBus
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
@@ -59,6 +60,11 @@ struct MainTabView: View {
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType
                 )
+            }
+        }
+        .onChange(of: navBus.openSettingsCheckIn) { go in
+            if go {
+                selectedTab = .settings     // ✅ 먼저 탭을 옮김
             }
         }
         .onChange(of: selectedCreationType) { _ in

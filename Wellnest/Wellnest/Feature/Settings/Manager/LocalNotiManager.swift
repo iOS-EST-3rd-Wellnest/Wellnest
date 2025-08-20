@@ -7,6 +7,7 @@
 
 import Foundation
 import UserNotifications
+import UIKit
 
 final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = LocalNotiManager()
@@ -153,9 +154,16 @@ extension LocalNotiManager {
         content.body  = "아침 체크인으로 하루를 가볍게 시작해요."
         content.sound = .default
 
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = .timeSensitive
+        }
+
+        // ✅ 알림 탭 시 열어줄 딥링크
+        content.userInfo = ["deeplink": "wellnest://settings/checkin"]
+
         var comps = DateComponents()
-        comps.hour = 9
-        comps.minute = 0
+        comps.hour = 17
+        comps.minute = 3
         // 기기 로컬 타임존에 맞춰 동작 (Asia/Seoul이면 9시에 뜸)
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
@@ -174,4 +182,34 @@ extension LocalNotiManager {
     func cancelMorningCheckIn() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [morningCheckInId])
     }
+}
+
+extension LocalNotiManager {
+    // 알림을 탭했을 때 호출됨 (백그라운드/종료/포그라운드 모두)
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        // 디버그 로그로 실제 호출 여부 먼저 확인
+        print("✅ didReceive tapped: \(response.notification.request.identifier)")
+
+        // URL 스킴을 쓰지 않아도 확실히 이동되도록 내부 노티를 항상 보냄
+        NotificationCenter.default.post(name: .openSettingsCheckIn, object: nil)
+
+        // (선택) 딥링크도 같이 심었다면 여기에 추가로 열어도 OK
+        // if let link = response.notification.request.content.userInfo["deeplink"] as? String,
+        //    let url = URL(string: link) { UIApplication.shared.open(url) }
+
+        completionHandler()
+    }
+}
+
+extension Notification.Name {
+    static let openSettingsCheckIn = Notification.Name("openSettingsCheckIn")
+}
+
+final class NavBus: ObservableObject {
+    /// true로 바뀌면 Settings 탭으로 전환하고 CheckInMainView를 푸시
+    @Published var openSettingsCheckIn: Bool = false
+
+    func triggerSettingsCheckIn() { openSettingsCheckIn = true }
 }
