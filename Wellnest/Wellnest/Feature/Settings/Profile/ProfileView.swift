@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @Binding var name: String
+    @ObservedObject var userEntity: UserEntity
     @Binding var profileImage: UIImage?
     
     var body: some View {
@@ -16,7 +16,7 @@ struct ProfileView: View {
             HStack {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("\(name)")
+                        Text(userEntity.nickname ?? "홍길동")
                             .foregroundStyle(.indigo)
                             .font(.title)
                             .fontWeight(.bold)
@@ -78,6 +78,6 @@ struct ProfileView: View {
     }
 }
 
-#Preview {
-    ProfileView(name: .constant("홍길동"), profileImage: .constant(nil))
-}
+//#Preview {
+//    ProfileView(name: , profileImage: .constant(nil))
+//}

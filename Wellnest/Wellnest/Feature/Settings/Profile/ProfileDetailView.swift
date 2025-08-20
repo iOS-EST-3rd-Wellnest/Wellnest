@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 
 struct ProfileDetailView: View {
+    @ObservedObject var viewModel: UserInfoViewModel
     var userEntity: UserEntity
 
     enum Field {
@@ -48,6 +49,7 @@ struct ProfileDetailView: View {
     
     var body: some View {
         VStack {
+            /// 사용자 프로필 사진
             HStack {
                 Spacer()
                 ZStack {
@@ -85,6 +87,7 @@ struct ProfileDetailView: View {
                 }
             }
 
+            /// 사용자 정보 입력 폼
             VStack {
                 /// 닉네임
                 UserInfoForm(title: "닉네임", isRequired: true) {
@@ -205,6 +208,7 @@ struct ProfileDetailView: View {
 
             Spacer()
 
+            /// 저장 버튼
             FilledButton(title: "저장") {
                 saveUserInfo()
                 withAnimation { dismiss() }
@@ -390,6 +394,7 @@ private struct Preview: View {
     var body: some View {
         if let userEntity = userInfoVM.userEntity {
             ProfileDetailView(
+                viewModel: userInfoVM,
                 userEntity: userEntity,
                 profileImage: .constant(nil)
             )
