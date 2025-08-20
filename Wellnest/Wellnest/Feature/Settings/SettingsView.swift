@@ -8,11 +8,9 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @StateObject private var viewModel = UserInfoViewModel()
+
     @State var name: String = "홍길동"
-    @State private var height: String = ""
-    @State private var weight: String = ""
-    @State private var age: String = ""
-    @State private var gender: String = ""
     @State var profileImage: UIImage?
     
     var body: some View {
@@ -20,7 +18,9 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading) {
                     NavigationLink {
-                        ProfileDetailView(name: $name, height: $height, weight: $weight, profileImage: $profileImage)
+                        if let user = viewModel.userEntity {
+                            ProfileDetailView(userEntity: user, profileImage: $profileImage)
+                        }
                     } label: {
                         ProfileView(name: $name, profileImage: $profileImage)
                     }
