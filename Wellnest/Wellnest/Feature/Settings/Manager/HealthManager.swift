@@ -13,7 +13,7 @@ enum HealthAuthError: Error {
     case unknown(Error)
 }
 
-struct AuthCheck {
+struct MissingSampleCheck {
     let missingCore: [HKObjectType]
     let missingOptional: [HKObjectType]
 }
@@ -61,8 +61,8 @@ final class HealthManager {
     /// 모든 읽기 타입을 포함
     private var requiredReadTypes: Set<HKObjectType> { requiredCoreTypes.union(optionalTypes) }
     
-    /// 읽기 권한이 AuthCheck에 포함되었는지 확인
-    func authorizationSnapshotByReadProbe() async -> AuthCheck {
+    /// 읽기 권한이 MissingSampleCheck에 포함되었는지 확인
+    func authorizationSnapshotByReadProbe() async -> MissingSampleCheck {
         @Sendable func canRead(_ type: HKObjectType) async -> Bool {
             if let qt = type as? HKQuantityType {
                 // 오늘~내일 범위에 대한 가벼운 샘플 쿼리
@@ -100,7 +100,7 @@ final class HealthManager {
         let missingCore     = core.filter { !$0.1 }.map { $0.0 }
         let missingOptional = opt.filter  { !$0.1 }.map { $0.0 }
         
-        return AuthCheck(missingCore: missingCore, missingOptional: missingOptional)
+        return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
     /// Quantity 타입의 (걸음수, 심박수, 칼로리 등) 데이터의 읽기 권한이 있는지 확인
@@ -151,7 +151,7 @@ final class HealthManager {
     }
     
     /// 권한이 필요한 상황이면 권한 요청
-    func requestAuthorizationIfNeeded() async throws -> AuthCheck {
+    func requestAuthorizationIfNeeded() async throws -> MissingSampleCheck {
         guard HKHealthStore.isHealthDataAvailable() else { throw HealthAuthError.notAvailable }
         let before = await finalAuthSnapshot()
         if before.missingCore.isEmpty { return before }
@@ -168,7 +168,7 @@ final class HealthManager {
     }
     
     /// 권한 허용 최종 스냅샷
-    func finalAuthSnapshot() async -> AuthCheck {
+    func finalAuthSnapshot() async -> MissingSampleCheck {
         var missingCore: [HKObjectType] = []
         var missingOptional: [HKObjectType] = []
         
@@ -195,7 +195,7 @@ final class HealthManager {
             if !can { missingOptional.append(t) }
         }
         
-        return AuthCheck(missingCore: missingCore, missingOptional: missingOptional)
+        return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
     private func canReadByProbe(_ type: HKObjectType) async -> Bool {
