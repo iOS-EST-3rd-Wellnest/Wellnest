@@ -156,10 +156,15 @@ struct UserInfoTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
-                saveUserInfo()
-                withAnimation { currentPage += 1 }
-            }
+            OnboardingButton(
+                title: "다음",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveUserInfo()
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage
+            )
         }
         .onAppear {
             title = "사용자 정보"

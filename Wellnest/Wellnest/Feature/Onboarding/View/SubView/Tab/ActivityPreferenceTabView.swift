@@ -15,6 +15,8 @@ struct ActivityPreferenceTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
+    var isInSettings: Bool = false
+
     var isButtonDisabled: Bool {
         !viewModel.activityPreferences.contains(where: { $0.isSelected })
     }
@@ -26,10 +28,16 @@ struct ActivityPreferenceTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
-                saveActivityPreference()
-                withAnimation { currentPage += 1 }
-            }
+            OnboardingButton(
+                title: "다음",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveActivityPreference()
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage,
+                showPrevious: isInSettings
+            )
         }
         .onAppear {
             title = "선호 활동"
@@ -38,7 +46,6 @@ struct ActivityPreferenceTabView: View {
     }
 }
 
-// TODO: 저장 로직 뷰모델로 빼기
 extension ActivityPreferenceTabView {
     private func saveActivityPreference() {
         let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }

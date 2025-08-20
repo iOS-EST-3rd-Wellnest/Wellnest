@@ -61,6 +61,9 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+            .onAppear {
+                viewModel.screenContext = .onboarding
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
@@ -183,6 +186,13 @@ struct OnboardingButton: View {
     let isDisabled: Bool
     let action: () -> Void
 
+    @Binding var currentPage: Int
+
+    var showPrevious: Bool = false
+    var isLastStep: Bool = false
+
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         VStack(spacing: 0) {
             LinearGradient(
@@ -195,11 +205,27 @@ struct OnboardingButton: View {
             )
             .frame(height: 24)
 
-            FilledButton(
-                title: title,
-                disabled: isDisabled,
-                action: action
-            )
+            HStack {
+                if showPrevious, currentPage > 0 {
+                    FilledButton(
+                        title: "이전",
+                        disabled: false,
+                        action: { withAnimation { currentPage -= 1 } }
+                    )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+
+                FilledButton(
+                    title: title,
+                    disabled: isDisabled,
+                    action: {
+                        action()
+                        if isLastStep {
+                            dismiss()
+                        }
+                    }
+                )
+            }
             .padding(.horizontal)
             .padding(.bottom, Spacing.content)
             .background(colorScheme == .dark ? Color.black : Color.white)
