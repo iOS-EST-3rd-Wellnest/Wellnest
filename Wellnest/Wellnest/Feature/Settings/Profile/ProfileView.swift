@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var userEntity: UserEntity
-    @Binding var profileImage: UIImage?
+//    @Binding var profileImage: UIImage?
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -34,8 +34,9 @@ struct ProfileView: View {
                 }
 
                 Spacer()
-                
-                if let image = profileImage {
+
+                if let data = userEntity.profileImage,
+                let image = UIImage(data: data) {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()

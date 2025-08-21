@@ -43,7 +43,7 @@ struct ProfileDetailView: View {
     @State private var tempImage: UIImage? = nil
     @State private var isImagePickerPresented: Bool = false
     
-    @Binding var profileImage: UIImage?
+//    @Binding var profileImage: UIImage?
     
     @Environment(\.dismiss) var dismiss
     
@@ -82,8 +82,10 @@ struct ProfileDetailView: View {
                 ImagePicker(selectedImage: $tempImage)
             }
             .onAppear {
-                if tempImage == nil {
-                    tempImage = profileImage
+                if tempImage == nil,
+                   let data = userEntity.profileImage,
+                   let savedImage = UIImage(data: data) {
+                    tempImage = savedImage
                 }
             }
 
@@ -336,6 +338,11 @@ extension ProfileDetailView {
             userEntity.createdAt = Date()
         }
 
+        if let image = tempImage,
+           let data = image.jpegData(compressionQuality: 0.8) {
+            userEntity.profileImage = data
+        }
+
         userEntity.nickname = nickname
         userEntity.ageRange = selectedAge
         userEntity.gender = selectedGender
@@ -357,6 +364,10 @@ extension ProfileDetailView {
 
     /// CoreData에서 불러옴
     private func loadUserEntity() {
+        if let data = userEntity.profileImage,
+           let image = UIImage(data: data) {
+            tempImage = image
+        }
         if let nicknameValue = userEntity.nickname {
             nickname = nicknameValue
         }
@@ -372,7 +383,6 @@ extension ProfileDetailView {
         } else {
             height = nil
         }
-
         if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
             weightText = "\(weightValue)"
@@ -395,8 +405,7 @@ private struct Preview: View {
         if let userEntity = userInfoVM.userEntity {
             ProfileDetailView(
                 viewModel: userInfoVM,
-                userEntity: userEntity,
-                profileImage: .constant(nil)
+                userEntity: userEntity
             )
         } else {
             ProgressView("Loading...")

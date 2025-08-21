@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var viewModel = UserInfoViewModel()
 
-    @State var profileImage: UIImage?
+//    @State var profileImage: UIImage?
 
     var body: some View {
         NavigationStack {
@@ -18,9 +18,9 @@ struct SettingsView: View {
                 VStack(alignment: .leading) {
                     if let user = viewModel.userEntity {
                         NavigationLink {
-                            ProfileDetailView(viewModel: viewModel, userEntity: user, profileImage: $profileImage)
+                            ProfileDetailView(viewModel: viewModel, userEntity: user)
                         } label: {
-                            ProfileView(userEntity: user, profileImage: $profileImage)
+                            ProfileView(userEntity: user)
                         }
                     }
 
