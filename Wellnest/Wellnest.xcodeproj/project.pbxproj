@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */; };
+		D6A9D4142E55B0B800EB82BC /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = D6A9D4132E55B0B800EB82BC /* SkeletonUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */,
+				D6A9D4142E55B0B800EB82BC /* SkeletonUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = Wellnest;
 			packageProductDependencies = (
 				B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */,
+				D6A9D4132E55B0B800EB82BC /* SkeletonUI */,
 			);
 			productName = Wellnest;
 			productReference = B05A1EEF2E3B222800AA8F36 /* Wellnest.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D6A9D4122E55B0B800EB82BC /* XCRemoteSwiftPackageReference "SkeletonUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B05A1EF02E3B222800AA8F36 /* Products */;
@@ -596,6 +600,14 @@
 				minimumVersion = 12.0.0;
 			};
 		};
+		D6A9D4122E55B0B800EB82BC /* XCRemoteSwiftPackageReference "SkeletonUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CSolanaM/SkeletonUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -603,6 +615,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		D6A9D4132E55B0B800EB82BC /* SkeletonUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6A9D4122E55B0B800EB82BC /* XCRemoteSwiftPackageReference "SkeletonUI" */;
+			productName = SkeletonUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import SkeletonUI
 
 struct VideoView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @ObservedObject var homeVM: HomeViewModel
     
-    private let videoListTemp = VideoRecommendModel.videoList
+    private let placeholderCount = 5
     
     // .callout 두 줄 높이
     private var twoLineHeight: CGFloat {
@@ -22,33 +23,47 @@ struct VideoView: View {
     }
     
     var body: some View {
+        let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
+        let titleWidth = UIScreen.main.bounds.width - (Spacing.layout * 6)
+        let isLoading = homeVM.videoList.isEmpty
+
         HStack(spacing: Spacing.layout * 1.5) {
-            ForEach(homeVM.videoList) { video in
-            //ForEach(videoListTemp) { video in
-                let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
-                let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
-                
-                Link(destination: url) {
-                    VStack {
-                        VideoImageView(urlString: video.thumbnail, width: thumbWidth)
-                        
-                        Text(video.title)
-                            .multilineTextAlignment(.leading)
-                            .font(.callout)
-                            .foregroundStyle(colorScheme == .dark ? .white : .black)
-                            .lineLimit(2)
-                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 6), minHeight: twoLineHeight, alignment: .topLeading)
-                            .padding(.vertical, Spacing.inline)
-                    }
+            if isLoading {
+                ForEach(0..<placeholderCount, id: \.self) { _ in
+                    VideoCardSkeleton(
+                        thumbWidth: thumbWidth,
+                        titleWidth: titleWidth,
+                        twoLineHeight: twoLineHeight,
+                        isLoading: isLoading
+                    )
                 }
-                .tint(.black)
+            } else {
+                ForEach(homeVM.videoList) { video in
+                    let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
+                    
+                    Link(destination: url) {
+                        VStack {
+                            VideoImageView(urlString: video.thumbnail, width: thumbWidth)
+                            
+                            Text(video.title)
+                                .multilineTextAlignment(.leading)
+                                .font(.callout)
+                                .foregroundStyle(colorScheme == .dark ? .white : .black)
+                                .lineLimit(2)
+                                .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
+                                .padding(.vertical, Spacing.inline)
+                        }
+                    }
+                    .tint(.black)
+                }
             }
         }
         .padding(.horizontal)
+        .allowsHitTesting(!isLoading)
     }
 }
 
-struct VideoImageView: View {
+private struct VideoImageView: View {
     let urlString: String
     let width: CGFloat
 
@@ -73,6 +88,26 @@ struct VideoImageView: View {
         .defaultShadow()
         .task(id: urlString) {
             image = await ImageLoader.shared.load(urlString)
+        }
+    }
+}
+
+private struct VideoCardSkeleton: View {
+    let thumbWidth: CGFloat
+    let titleWidth: CGFloat
+    let twoLineHeight: CGFloat
+    let isLoading: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.inline) {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
+            
+            RoundedRectangle(cornerRadius: 6)
+                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .frame(width: titleWidth, height: twoLineHeight / 2, alignment: .topLeading)
+                .padding(.vertical, Spacing.inline)
         }
     }
 }

@@ -26,25 +26,24 @@ final class HomeViewModel: ObservableObject {
     // 프리패치 작업 취소를 위해 핸들 보관
     private var prefetchTasks = [Task<Void, Never>]()
     
-    /// 사용자 정보 조회
-    func fetchUserInfo() {
-        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
-            userInfo = result
-        }
-    }
-    
     // MARK: - DailySummaryEntity 조회/생성/수정
     /// DailySummaryEntity를 조회하여 Alan을 활용한 컨텐츠 데이터 세팅
     @MainActor
     func fetchDailySummary() async {
+        // 사용자 정보 조회
+        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
+            self.userInfo = result
+        }
+        
         // entity 조회
         if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
             self.dailySummaryInfo = entity
 			
+            // 1) 존재하는 데이터 화면 바인딩
+            applyEntityToPublished(entity)
+            
             // entity의 날짜가 오늘 이라면
             if let date = entity.date, Calendar.current.isDate(date, inSameDayAs: Date()) {
-                // 1) 존재하는 데이터 화면 바인딩
-                applyEntityToPublished(entity)
                 
                 // 2) 누락된 항목 채우기
                 await missingFieldsIfNeeded(for: entity)
@@ -56,7 +55,6 @@ final class HomeViewModel: ObservableObject {
             await createDailySummary()
         }
     }
-
     
     /// 처음 앱 실행 시 날씨 정보 등록
     func refreshWeatherContent() async {
@@ -75,7 +73,6 @@ final class HomeViewModel: ObservableObject {
             // 3) 오늘자 엔티티 업데이트(없으면 생성)
             if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
                 // 필드만 갱신 (화면 바인딩 포함)
-                print("refreshWeatherContent entity:", entity)
                 await updateWeather(model, on: entity)
             } else {
                 // 엔티티가 없으면 새로 생성
@@ -118,7 +115,6 @@ final class HomeViewModel: ObservableObject {
         )
     }
     
-    
     /// 신규 생성/업데이트 공통 쓰기
     /// - Parameters:
     ///   - payload: 저장 내용
@@ -132,7 +128,6 @@ final class HomeViewModel: ObservableObject {
         entity.videoRecommendation = jsonString(payload.video)
         try? CoreDataService.shared.saveContext()
     }
-    
     
     /// 신규 생성
     private func createDailySummary() async {
@@ -152,7 +147,6 @@ final class HomeViewModel: ObservableObject {
             self.videoList = payload.video
         }
     }
-    
     
     /// 업데이트
     private func updateDailySummary() async {
@@ -289,7 +283,6 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    
     /// 하루동안 달성 가능한 목표 추천
     /// - Returns: 목표 목록
     private func fetchGoals() async -> [String] {
@@ -305,7 +298,6 @@ final class HomeViewModel: ObservableObject {
             return []
         }
     }
-
     
     /// 동기부여되는 문장, 명언 등의 오늘의 한마디
     /// - Returns: 오늘의 한마디 문자열
@@ -320,7 +312,6 @@ final class HomeViewModel: ObservableObject {
             return ""
         }
     }
-
     
     /// 현재 날씨 정보를 바당으로 일정 컨텐츠 추천
     /// - Returns: 날씨 안내 및 추천 일정
@@ -416,7 +407,6 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    
     /// 다양한 타입의 JSON String 형태로 변환
     /// - Parameter value: 변환하려는 값
     /// - Returns: JSON 형태의 문자열
@@ -432,7 +422,6 @@ final class HomeViewModel: ObservableObject {
             return nil
         }
     }
-    
     
     /// 문자열에서 엔티티(&#39;, &quot;, &amp; 등)를 실제 문자(기호)로 변환하여 반환
     /// - Parameter str: 문자열

@@ -6,38 +6,26 @@
 //
 import SwiftUI
 
-// 좌우 스와이프 구분 열거형
-enum SwipeDirection {
-    case left, right
-}
-
 struct ScheduleCardView: View {
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
+    @EnvironmentObject var swipe: SwipeCoordinator
     
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
-
+    
     @State private var isCompleted = false
     @State private var completedOffset: CGFloat = 0
     
     let schedule: ScheduleItem
-
-    let swipedScheduleId: UUID?
-    let swipedDirection: SwipeDirection?
-    let onSwiped: (UUID?, SwipeDirection?) -> Void
-
     let maxSwipeDistance: CGFloat = 27
     
-    var currentOffset: CGFloat {
-        guard swipedScheduleId == schedule.id, let direction = swipedDirection else {
-            return 0
-        }
-        switch direction {
-        case .right:
-            return maxSwipeDistance
-        case .left:
-            return -maxSwipeDistance
-        }
+    private var currentOffset: CGFloat {
+        guard swipe.openId == schedule.id, let direction = swipe.direction else { return 0 }
+        return direction == .right ? maxSwipeDistance : -maxSwipeDistance
+    }
+    
+    private var cardWidth: CGFloat {
+        UIScreen.main.bounds.width - (Spacing.layout * 2)
     }
     
     private var animationOffset: CGFloat {
@@ -56,7 +44,7 @@ struct ScheduleCardView: View {
                                 isDeleting = false
                                 isCompleted = true
                                 completedOffset = geo.size.width + 30
-                                onSwiped(nil, nil)
+                                swipe.offSwipe()
                             }
                             
                             Task {
@@ -88,7 +76,7 @@ struct ScheduleCardView: View {
                                 isDeleting = true
                                 isCompleted = false
                                 deleteOffset = -geo.size.width - 30
-                                onSwiped(nil, nil)
+                                swipe.offSwipe()
                             }
                             
                             Task {
@@ -117,7 +105,7 @@ struct ScheduleCardView: View {
                     .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
                     .offset(x: animationOffset)
                     .gesture(
-                        DragGesture(minimumDistance: 35)
+                        DragGesture(minimumDistance: 30)
                             .onChanged { value in
                                 let horizontal = value.translation.width
                                 let vertical = value.translation.height
@@ -125,8 +113,8 @@ struct ScheduleCardView: View {
                                 guard abs(horizontal) > abs(vertical) else { return }
                                 
                                 let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                                if swipedScheduleId != schedule.id || swipedDirection != direction {
-                                    onSwiped(schedule.id, direction)
+                                if swipe.openId != schedule.id || swipe.direction != direction {
+                                    swipe.onSwipe(id: schedule.id, direction: direction)
                                 }
                             }
                             .onEnded { value in
@@ -134,22 +122,22 @@ struct ScheduleCardView: View {
                                 let vertical = value.translation.height
                                 
                                 guard abs(horizontal) > abs(vertical) else {
-                                    onSwiped(nil, nil)
+                                    swipe.offSwipe()
                                     return
                                 }
                                 
                                 if abs(horizontal) > maxSwipeDistance / 2 {
                                     let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                                    onSwiped(schedule.id, direction)
+                                    swipe.onSwipe(id: schedule.id, direction: direction)
                                 } else {
-                                    onSwiped(nil, nil)
+                                    swipe.offSwipe()
                                 }
                             },
                         including: .gesture
                     )
                     .simultaneousGesture(
                         TapGesture().onEnded {
-                            onSwiped(nil, nil)
+                            swipe.offSwipe()
                         }
                     )
             }

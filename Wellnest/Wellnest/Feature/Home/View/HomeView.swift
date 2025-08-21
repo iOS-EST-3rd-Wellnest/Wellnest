@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import SkeletonUI
 
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
+    @StateObject private var swipe = SwipeCoordinator()
     
     @State private var swipedScheduleId: UUID? = nil
     @State private var swipedDirection: SwipeDirection? = nil
@@ -76,32 +78,36 @@ struct HomeView: View {
                 }
 
                 HStack(spacing: Spacing.layout) {
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.gray) : .white)
-                        .frame(minHeight: 180)
-                        .defaultShadow()
-                        .overlay(alignment: .topLeading) {
-                            VStack(alignment: .leading, spacing: Spacing.content) {
-                                Text("목표")
-                                    .font(.title3)
-                                    .bold()
-                                    .padding(.vertical, Spacing.content)
-
-                                ForEach(homeVM.goalList, id: \.self) {
-                                    Text("\($0)")
-                                        .font(.footnote)
+                    if homeVM.goalList.isEmpty {
+                        SkeletonView()
+                    } else {
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .frame(minHeight: 180)
+                            .defaultShadow()
+                            .overlay(alignment: .topLeading) {
+                                VStack(alignment: .leading, spacing: Spacing.content) {
+                                    Text("목표")
+                                        .font(.title3)
+                                        .bold()
+                                        .padding(.vertical, Spacing.content)
+                                    
+                                    ForEach(homeVM.goalList, id: \.self) {
+                                        Text("\($0)")
+                                            .font(.footnote)
+                                    }
                                 }
+                                .padding()
                             }
-                            .padding()
-                        }
-                    
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.gray) : .white)
-                        .frame(minHeight: 180)
-                        .defaultShadow()
-                        .overlay {
-                            
-                        }
+                        
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .frame(minHeight: 180)
+                            .defaultShadow()
+                            .overlay {
+                                
+                            }
+                    }
                 }
                 
                 HStack {
@@ -118,16 +124,8 @@ struct HomeView: View {
                                 )
                         } else {
                             ForEach(isCompleteSchedules) { schedule in
-                                ScheduleCardView(
-                                    manualScheduleVM: manualScheduleVM,
-                                    schedule: schedule,
-                                    swipedScheduleId: swipedScheduleId,
-                                    swipedDirection: swipedDirection) { id, direction in
-                                        withAnimation {
-                                            swipedScheduleId = id
-                                            swipedDirection = direction
-                                        }
-                                    }
+                                ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule)
+                                    .environmentObject(swipe)
                                     .padding(.vertical, Spacing.content)
                             }
                         }
@@ -145,7 +143,6 @@ struct HomeView: View {
                 .padding(.bottom, 100)
         }
         .task {
-            homeVM.fetchUserInfo()
             await homeVM.fetchDailySummary()
             await homeVM.refreshWeatherContent()
         }
@@ -155,4 +152,18 @@ struct HomeView: View {
 #Preview {
     HomeView()
         .environmentObject(ManualScheduleVMFactory.make())
+}
+
+private struct SkeletonView: View {
+    var body: some View {
+        HStack {
+            Rectangle()
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .frame(minHeight: 180)
+            
+            Rectangle()
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .frame(minHeight: 180)
+        }
+    }
 }
