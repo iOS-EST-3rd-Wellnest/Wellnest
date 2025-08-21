@@ -11,6 +11,7 @@ struct AnalyticsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel = AnalyticsViewModel()
+    @StateObject var vm = SentimentalScoreViewModel()
 
     var body: some View {
         NavigationView {
@@ -33,6 +34,7 @@ struct AnalyticsView: View {
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
             SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
             MeditationStatCardView(meditationData: viewModel.healthData.meditation)
+            ScoreScreen(vm: vm)
         }
         .padding(.horizontal)
         .padding(.top, Spacing.layout)
