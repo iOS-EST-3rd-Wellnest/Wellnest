@@ -208,6 +208,17 @@ struct ProfileDetailView: View {
             .padding(.bottom, Spacing.content)
         }
         .navigationTitle("사용자 정보")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.gray) // TODO: 다른 네비게이션 바와 색 맞추기
+                }
+            }
+        }
     }
 }
 
