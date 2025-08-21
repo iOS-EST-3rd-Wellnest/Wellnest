@@ -266,6 +266,7 @@ extension ManualScheduleInputView {
             endDate: endDate,
             isAllDay: isAllDay,
             backgroundColorName: selectedColorName,
+            isRepeat: isRepeated,
             repeatRuleName: selectedRepeatRule?.name,
             hasRepeatEndDate: hasRepeatEndDate,
             repeatEndDate: repeatEndDate,
@@ -276,7 +277,7 @@ extension ManualScheduleInputView {
 
         Task {
             do {
-                let id = try await editor.saveSchedule(input)
+                let id = try await editor.saveScheduleAdvanced(input)
                 lastSavedID = id
 
                 // 캘린더(EKEvent) 연동은 선택

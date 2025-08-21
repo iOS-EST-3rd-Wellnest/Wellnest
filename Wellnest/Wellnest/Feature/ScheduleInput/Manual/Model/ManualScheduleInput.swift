@@ -17,6 +17,7 @@ struct ScheduleInput {
     let backgroundColorName: String
 
     // 반복
+    let isRepeat: Bool
     let repeatRuleName: String?        // UI의 태그 이름(없으면 nil)
     let hasRepeatEndDate: Bool
     let repeatEndDate: Date?

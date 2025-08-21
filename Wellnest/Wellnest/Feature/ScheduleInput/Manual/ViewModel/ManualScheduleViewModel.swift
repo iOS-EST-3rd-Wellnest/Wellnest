@@ -20,10 +20,10 @@ final class ManualScheduleViewModel: ObservableObject {
     // MARK: - Load
     /// 오늘 날짜에 해당하는 일정 목록 조회하여 todaySchedules에 초기화
     func loadTodaySchedules() {
-        Task { await loadTodaySchedules() } // 위의 async 버전을 재사용
+        Task { await loadTodaySchedulesAdvanced() } // 위의 async 버전을 재사용
     }
 
-    private func loadTodaySchedules() async {
+    private func loadTodaySchedulesAdvanced() async {
         let (now, startOfTomorrow) = Self.todayBounds()
 
         let predicate = NSPredicate(
@@ -31,32 +31,31 @@ final class ManualScheduleViewModel: ObservableObject {
             now as NSDate,
             startOfTomorrow as NSDate
         )
-        let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
+        let sort = NSSortDescriptor(keyPath: \EventSeriesEntity.startDate, ascending: true)
 
         do {
             // actor 내부에서 Entity -> DTO 변환
             let items = try await store.fetchDTOs(
-                ScheduleEntity.self,
+                EventSeriesEntity.self,
                 predicate: predicate,
                 sortDescriptors: [sort]
-            ) { e in
+            ) { seriesEntity in
                 ScheduleItem(
-                    id: e.id ?? UUID(),
-                    title: e.title ?? "",
-                    startDate: e.startDate ?? Date(),
-                    endDate: e.endDate ?? Date(),
-                    createdAt: e.createdAt ?? Date(),
-                    updatedAt: e.updatedAt ?? Date(),
-                    backgroundColor: e.backgroundColor ?? "",
-                    isAllDay: e.isAllDay?.boolValue ?? false,
-                    repeatRule: e.repeatRule,
-                    hasRepeatEndDate: e.hasRepeatEndDate,
-                    repeatEndDate: e.repeatEndDate,
-                    isCompleted: e.isCompleted?.boolValue ?? false,
+                    id: seriesEntity.id ?? UUID(),
+                    title: seriesEntity.title ?? "",
+                    startDate: seriesEntity.startDate ?? Date(),
+                    endDate: seriesEntity.endDate ?? Date(),
+                    createdAt: Date(),
+                    updatedAt: Date(),
+                    backgroundColor: seriesEntity.colorName ?? "",
+                    isAllDay: seriesEntity.isAllDay,
+                    repeatRule: seriesEntity.recurrenceRule?.frequency,
+                    hasRepeatEndDate: seriesEntity.recurrenceRule?.until != nil,
+                    repeatEndDate: seriesEntity.recurrenceRule?.until,
+                    isCompleted: seriesEntity.isCompleted,
                     eventIdentifier: nil
                 )
             }
-
             await MainActor.run {
                 self.todaySchedules = items
             }
@@ -75,16 +74,15 @@ final class ManualScheduleViewModel: ObservableObject {
         // UUID로 해당 엔티티의 ObjectID 조회
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
         do {
-            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
+            let ids = try await store.fetchIDs(EventSeriesEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
             guard let objectID = ids.first else {
                 print("📛 대상 일정 ID 조회 실패")
                 return
             }
 
-            try await store.update(id: objectID) { (e: ScheduleEntity) in
-                let current = e.isCompleted?.boolValue ?? false
-                e.isCompleted = NSNumber(value: !current)
-                e.updatedAt = Date()
+            try await store.update(id: objectID) { (e: EventSeriesEntity) in
+                let current = e.isCompleted
+                e.isCompleted = true
             }
             await MainActor.run {
                 if let idx = self.todaySchedules.firstIndex(where: { $0.id == item.id }) {
@@ -105,7 +103,7 @@ final class ManualScheduleViewModel: ObservableObject {
     func deleteSchedule(item: ScheduleItem) async {
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
         do {
-            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
+            let ids = try await store.fetchIDs(EventSeriesEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
             guard let objectID = ids.first else {
                 print("📛 대상 일정 ID 조회 실패")
                 return
