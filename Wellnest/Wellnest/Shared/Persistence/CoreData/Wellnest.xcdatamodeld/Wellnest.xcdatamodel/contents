@@ -30,7 +30,7 @@
         <attribute name="anchorDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="colorName" optional="YES" attributeType="String"/>
         <attribute name="defaultAlertOffsetMinutes" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="endTimeOfDay" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endTimeOfDay" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isAllDay" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="location" optional="YES" attributeType="String"/>
@@ -44,7 +44,7 @@
     <entity name="RecurrenceRuleEntity" representedClassName="RecurrenceRuleEntity" syncable="YES" codeGenerationType="class">
         <attribute name="byWeekdaysMask" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="count" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="excludeDatesData" optional="YES" attributeType="Transformable"/>
+        <attribute name="excludeDatesData" optional="YES" attributeType="Binary"/>
         <attribute name="frequencyRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="interval" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

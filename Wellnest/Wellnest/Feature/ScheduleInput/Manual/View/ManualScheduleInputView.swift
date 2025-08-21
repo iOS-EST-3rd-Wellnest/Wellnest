@@ -10,6 +10,7 @@ import CoreData
 
 struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.managedObjectContext) private var ctx
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
@@ -255,11 +256,8 @@ extension ManualScheduleInputView {
 
     @MainActor
     func saveSchedule() {
-        Task { await saveSchedule() } // 위의 async 버전을 재사용
-    }
+        isSaving = true
 
-    @MainActor
-    func saveSchedule() async {
         let input = ScheduleInput(
             title: title,
             location: location,
@@ -275,14 +273,15 @@ extension ManualScheduleInputView {
             isAlarmOn: isAlarmOn,
             isCompleted: false
         )
-        
+
         Task {
             do {
                 let id = try await editor.saveSchedule(input)
                 lastSavedID = id
-                
-                let evnetId = try await CalendarManager.shared.addOrUpdateEvent(
-                    existingId: UUID().uuidString,     // 수정이면 전달
+
+                // 캘린더(EKEvent) 연동은 선택
+                _ = try? await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: nil,
                     title: title,
                     location: location,
                     notes: detail,
@@ -292,9 +291,11 @@ extension ManualScheduleInputView {
                     recurrenceRules: nil,
                     alarms: nil
                 )
-//                newSchedule.eventIdentifier = evnetId
             } catch {
-                print(error.localizedDescription)
+                let ns = error as NSError
+                print("domain=\(ns.domain) code=\(ns.code)")
+                print("userInfo keys:", ns.userInfo.keys)   // NSValidationError* 키가 있나 확인
+                print("type=", type(of: error))
             }
             isSaving = false
         }

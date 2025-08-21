@@ -127,3 +127,16 @@ public actor CoreDataStore {
         }
     }
 }
+
+extension CoreDataStore {
+    // 여러 객체를 한 트랜잭션으로 처리하고 싶을 때 유용 (선택사항)
+    @discardableResult
+    public func performWrite<R>(_ work: @escaping (NSManagedObjectContext) throws -> R) async throws -> R {
+        let context = self.ctx
+        return try await context.perform {
+            let result = try work(context)
+            if context.hasChanges { try context.save() }
+            return result
+        }
+    }
+}

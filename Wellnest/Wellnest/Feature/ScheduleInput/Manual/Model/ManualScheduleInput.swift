@@ -8,17 +8,23 @@
 import Foundation
 
 struct ScheduleInput {
-    var title: String
-    var location: String?
-    var detail: String?
-    var startDate: Date
-    var endDate: Date
-    var isAllDay: Bool
-    var backgroundColorName: String
-    var repeatRuleName: String?
-    var hasRepeatEndDate: Bool
-    var repeatEndDate: Date?
-    var alarmRuleName: String?
-    var isAlarmOn: Bool
-    var isCompleted: Bool
+    let title: String
+    let location: String
+    let detail: String
+    let startDate: Date
+    let endDate: Date
+    let isAllDay: Bool
+    let backgroundColorName: String
+
+    // 반복
+    let repeatRuleName: String?        // UI의 태그 이름(없으면 nil)
+    let hasRepeatEndDate: Bool
+    let repeatEndDate: Date?
+
+    // 알람
+    let alarmRuleName: String?
+    let isAlarmOn: Bool
+
+    // 완료 플래그(신규는 보통 false)
+    let isCompleted: Bool
 }
