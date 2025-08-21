@@ -226,7 +226,7 @@ struct OnboardingButton: View {
                     }
                 )
             }
-            .padding(.horizontal)
+            .padding(.horizontal, OnboardingCardLayout.spacing)
             .padding(.bottom, Spacing.content)
             .background(colorScheme == .dark ? Color.black : Color.white)
         }
