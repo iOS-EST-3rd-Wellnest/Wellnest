@@ -22,7 +22,7 @@ final class LocationManager: NSObject, ObservableObject {
 
     private let shared = CLLocationManager()
     private var continuation: CheckedContinuation<CLLocation, Error>?
-    private var authContinuation: CheckedContinuation<Void, Error>?
+    private var authContinuation = [CheckedContinuation<Void, Error>]()
 
     override init() {
         super.init()
@@ -51,7 +51,7 @@ final class LocationManager: NSObject, ObservableObject {
 
     private func waitForAuthorization() async throws {
         try await withCheckedThrowingContinuation { continuation in
-            self.authContinuation = continuation
+            self.authContinuation.append(continuation)
         }
     }
 }
@@ -59,12 +59,32 @@ final class LocationManager: NSObject, ObservableObject {
 extension LocationManager: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
-            if [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) {
-                authContinuation?.resume(returning: ())
-            } else if manager.authorizationStatus == .denied {
-                authContinuation?.resume(throwing: LocationError.denied)
+//            if [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) {
+//                authContinuation.resume(returning: ())
+//            } else if manager.authorizationStatus == .denied {
+//                authContinuation?.resume(throwing: LocationError.denied)
+//            }
+//            authContinuation = nil
+            
+            let status = manager.authorizationStatus
+
+            // 아직 결정 전이면 대기자 유지
+            guard status != .notDetermined else { return }
+
+            // 대기자 한번에 꺼내 처리
+            let waiters = self.authContinuation
+            self.authContinuation.removeAll()
+
+            switch status {
+            case .authorizedAlways, .authorizedWhenInUse:
+                waiters.forEach { $0.resume() }
+            case .denied:
+                waiters.forEach { $0.resume(throwing: LocationError.denied) }
+            case .restricted:
+                waiters.forEach { $0.resume(throwing: LocationError.restricted) }
+            default:
+                waiters.forEach { $0.resume(throwing: LocationError.denied) }
             }
-            authContinuation = nil
         }
     }
 
