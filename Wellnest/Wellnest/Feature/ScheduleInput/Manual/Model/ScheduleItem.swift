@@ -20,4 +20,5 @@ struct ScheduleItem: Identifiable, Codable {
     let hasRepeatEndDate: Bool
     let repeatEndDate: Date?
     var isCompleted: Bool
+    let eventIdentifier: String?
 }

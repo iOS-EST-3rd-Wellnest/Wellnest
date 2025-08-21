@@ -17,6 +17,7 @@ enum UserDefaultsKeys {
     enum Settings {
         static let isNotificationEnabled = "isNotificationEnabled"
         static let isHealthDataEnabled = "isHealthDataEnabled"
+        static let isCalendarEnable = "isCalendarEnable"
         // 설정 관련 키를 여기에 추가해주세요.
     }
 

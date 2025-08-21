@@ -8,7 +8,14 @@
 import Foundation
 import CoreData
 
+enum ScreenContext {
+    case onboarding
+    case settings
+}
+
 class UserInfoViewModel: ObservableObject {
+    @Published var screenContext: ScreenContext = .onboarding
+
     @Published var userEntity: UserEntity?
 
     @Published var wellnessGoals: [WellnessGoal] = WellnessGoal.goals
@@ -21,21 +28,57 @@ class UserInfoViewModel: ObservableObject {
 
     init() {
         fetchOrCreateUserInfo()
+        loadWellnessGoals()
         loadActivities()
+        loadPreferredTimeSlots()
+        loadWeatherPreferences()
+        loadHealthConditions()
     }
 
+    /// 웰니스 목표 로드
+    func loadWellnessGoals() {
+        wellnessGoals = restoreSelection(
+            items: WellnessGoal.goals,
+            savedString: userEntity?.goal
+        )
+    }
+
+    /// 성별에 따른 선호 활동 로드
     func loadActivities() {
-        // 성별에 따라 기본 아이콘 배열 세팅
         let gender = userEntity?.gender ?? "여성"
         let activitiesForGender = ActivityPreference.activities(for: gender)
 
-        // Core Data에 저장된 선택값 반영
         activityPreferences = restoreSelection(
             items: activitiesForGender,
             savedString: userEntity?.activityPreferences
         )
     }
 
+    /// 선호 시간 로드
+    func loadPreferredTimeSlots() {
+        preferredTimeSlots = restoreSelection(
+            items: PreferredTimeSlot.timeSlots,
+            savedString: userEntity?.preferredTimeSlot
+        )
+    }
+
+    /// 선호 날씨 로드
+    func loadWeatherPreferences() {
+        weatherPreferences = restoreSelection(
+            items: WeatherPreference.weathers,
+            savedString: userEntity?.weatherPreferences
+        )
+    }
+
+    /// 건강 상태 로드
+    func loadHealthConditions() {
+        healthConditions = restoreSelection(
+            items: HealthCondition.conditions,
+            savedString: userEntity?.healthConditions
+        )
+    }
+
+    /// CoreData에서 현재 사용자의 정보(UserEntity)를 가져오거나, 없으면 생성
     private func fetchOrCreateUserInfo() {
         let request: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
         request.fetchLimit = 1
@@ -56,11 +99,16 @@ class UserInfoViewModel: ObservableObject {
         }
     }
 
+    /// CoreData에 저장된 카드 선택 상태 불러오기
     func restoreSelection<Item: SelectableItem>(items: [Item], savedString: String?) -> [Item] {
         guard let saved = savedString, !saved.isEmpty else {
             return items.map {
                 var item = $0
-                item.isSelected = false
+                if screenContext == .settings && item.title == "특별히 없음" {
+                    item.isSelected = true
+                } else {
+                    item.isSelected = false
+                }
                 return item
             }
         }

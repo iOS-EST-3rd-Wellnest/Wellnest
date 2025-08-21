@@ -19,6 +19,8 @@ struct ScheduleCardView: View {
     let schedule: ScheduleItem
     let maxSwipeDistance: CGFloat = 27
     
+    private let calManager = CalendarManager.shared
+    
     private var currentOffset: CGFloat {
         guard swipe.openId == schedule.id, let direction = swipe.direction else { return 0 }
         return direction == .right ? maxSwipeDistance : -maxSwipeDistance
@@ -79,15 +81,18 @@ struct ScheduleCardView: View {
                                 swipe.offSwipe()
                             }
                             
-                            Task {
-                                // 애니메이션 효과 이후 삭제를 위한 sleep
-                                try? await Task.sleep(for: .milliseconds(300))
-                                await MainActor.run {
-                                    withAnimation(.easeInOut) {
-                                        manualScheduleVM.deleteSchedule(item: schedule)
-                                    }
-                                }
-                            }
+                            performDeleteFlow()
+                            
+//                            Task {
+//                                // 애니메이션 효과 이후 삭제를 위한 sleep
+//                                try? await Task.sleep(for: .milliseconds(300))
+//                                await MainActor.run {
+//                                    withAnimation(.easeInOut) {
+//                                        manualScheduleVM.deleteSchedule(item: schedule)
+//                                        
+//                                    }
+//                                }
+//                            }
                         } label: {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.white)
@@ -146,3 +151,30 @@ struct ScheduleCardView: View {
         .frame(height: 70)
     }
 }
+
+extension ScheduleCardView {
+    private func performDeleteFlow() {
+            Task {
+                // 애니메이션 효과 이후 삭제를 위한 sleep
+                try? await Task.sleep(for: .milliseconds(300))
+
+                // 캘린더 삭제
+                _ = await CalendarManager.shared.deleteEventOrBackfill(
+                    identifier: schedule.eventIdentifier,
+                    title: schedule.title,
+                    location: nil,
+                    isAllDay: schedule.isAllDay,
+                    startDate: schedule.startDate,
+                    endDate: schedule.endDate,
+                    in: nil
+                )
+
+                // Core Data에서 일정 삭제
+                await MainActor.run {
+                    withAnimation(.easeInOut) {
+                        manualScheduleVM.deleteSchedule(item: schedule)
+                    }
+                }
+            }
+        }
+    }
