@@ -101,11 +101,11 @@ private struct VideoCardSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.inline) {
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
             
             RoundedRectangle(cornerRadius: 6)
-                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(width: titleWidth, height: twoLineHeight / 2, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
         }

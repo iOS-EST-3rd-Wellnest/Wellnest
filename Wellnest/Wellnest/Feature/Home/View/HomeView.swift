@@ -158,11 +158,11 @@ private struct SkeletonView: View {
     var body: some View {
         HStack {
             Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(minHeight: 180)
             
             Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(minHeight: 180)
         }
     }

@@ -20,7 +20,7 @@ final class HomeViewModel: ObservableObject {
     
     private static var isRefreshWeather = false
     
-    private let aiRequest = AISerialProxy()
+    private let aiRequest = AIServiceProxy()
     private var prompt = RecommendPrompt()
     
     // 프리패치 작업 취소를 위해 핸들 보관
@@ -35,25 +35,23 @@ final class HomeViewModel: ObservableObject {
             self.userInfo = result
         }
         
-        // entity 조회
-        if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
-            self.dailySummaryInfo = entity
-			
-            // 1) 존재하는 데이터 화면 바인딩
-            applyEntityToPublished(entity)
-            
-            // entity의 날짜가 오늘 이라면
-            if let date = entity.date, Calendar.current.isDate(date, inSameDayAs: Date()) {
-                
-                // 2) 누락된 항목 채우기
-                await missingFieldsIfNeeded(for: entity)
-            } else {
-                // entity date가 오늘이 아니라면 컨텐츠 데이터 생성하여 entity 업데이트
-                await updateDailySummary()
-            }
-        } else {
-            await createDailySummary()
+        // 오늘 엔티티 확보(없으면 생성, 있으면 재사용)
+        let entity = ensureTodayEntity()
+        self.dailySummaryInfo = entity
+        
+        // 화면에 기존 값 바인딩
+        applyEntityToPublished(entity)
+        
+        // 오늘이면 누락만 채우고, 어제(이전) 데이터면 전체 갱신
+        var isOnlyMissing = true
+        if let date = entity.date, !Calendar.current.isDate(date, inSameDayAs: Date()) {
+            entity.date = Date()
+            try? CoreDataService.shared.saveContext()
+            isOnlyMissing = false
         }
+        
+        // 필드별 병렬 요청 → 끝나는 즉시 저장 & 반영
+        await populateFieldsConcurrently(on: entity, isOnlyMissing: isOnlyMissing)
     }
     
     /// 처음 앱 실행 시 날씨 정보 등록
@@ -65,30 +63,15 @@ final class HomeViewModel: ObservableObject {
             let forecast = await WeatherCenter.shared.waitForForecast()
             guard let current = forecast.first, let userInfo else { return }
             
-            // 2) 날씨 기반 컨텐츠 생성
-            let res = try await aiRequest.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
-            guard let json = await aiRequest.extractJSONFromResponse(res.content),
+            // 2) 날씨 기반 컨텐츠 생성 (요청당 프록시 생성)
+            let aiService = AIServiceProxy()
+            let res = try await aiService.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
+            guard let json = await aiService.extractJSONFromResponse(res.content),
                   let model: WeatherRecommendModel = decodeJSON(from: json) else { return }
-
+            
             // 3) 오늘자 엔티티 업데이트(없으면 생성)
-            if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
-                // 필드만 갱신 (화면 바인딩 포함)
-                await updateWeather(model, on: entity)
-            } else {
-                // 엔티티가 없으면 새로 생성
-                let context = CoreDataService.shared.context
-                let entity = DailySummaryEntity(context: context)
-                entity.id = UUID()
-                entity.date = Date()
-                entity.weatherSummary = jsonString(model)
-                entity.completeRate = 0
-                try? CoreDataService.shared.saveContext()
-
-                await MainActor.run {
-                    self.dailySummaryInfo = entity
-                    self.weatherResponse = model
-                }
-            }
+            let entity = ensureTodayEntity()
+            await updateWeather(model, on: entity)
             
             Self.isRefreshWeather = true
         } catch {
@@ -96,79 +79,27 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    private func buildPayload() async -> DailySummaryModel {
-        async let hashtagsTask: [String] = fetchHashtag()
-        async let goalsTask: [String] = fetchGoals()
-        async let quoteTask: String = fetchQuoteOfTheDay()
-        async let weatherTask: WeatherRecommendModel? = fetchWeather()
-        async let videoTask: [VideoRecommendModel] = fetchVideo()
-
-        let (hashtags, goals, quote, weather, video) = await (hashtagsTask, goalsTask, quoteTask, weatherTask, videoTask)
-        
-        return DailySummaryModel(
-            date: Date(),
-            hashtags: hashtags,
-            goals: goals,
-            quote: quote,
-            weather: weather,
-            video: video
-        )
+    private func ensureTodayEntity() -> DailySummaryEntity {
+        if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
+            return entity
+        } else {
+            let context = CoreDataService.shared.context
+            let entity = DailySummaryEntity(context: context)
+            entity.id = UUID()
+            entity.date = Date()
+            try? CoreDataService.shared.saveContext()
+            return entity
+        }
     }
     
-    /// 신규 생성/업데이트 공통 쓰기
+    
+    /// 컨텐츠 개별 fetch 및 저장
     /// - Parameters:
-    ///   - payload: 저장 내용
-    ///   - entity: 신규/업데이트 entity 정보
-    private func upsert(_ payload: DailySummaryModel, to entity: DailySummaryEntity) {
-        entity.date = payload.date
-        entity.hashtag = jsonString(payload.hashtags)
-        entity.goal = jsonString(payload.goals)
-        entity.quoteOfTheDay = payload.quote
-        entity.weatherSummary = jsonString(payload.weather)
-        entity.videoRecommendation = jsonString(payload.video)
-        try? CoreDataService.shared.saveContext()
-    }
-    
-    /// 신규 생성
-    private func createDailySummary() async {
-        let payload = await buildPayload()
-        
-        let context = CoreDataService.shared.context
-        let entity = DailySummaryEntity(context: context)
-        entity.id = UUID()
-        upsert(payload, to: entity)
-        
-        await MainActor.run {
-            self.dailySummaryInfo = entity
-            self.hashtagList = payload.hashtags
-            self.goalList = payload.goals
-            self.quoteOfTheDay = payload.quote
-            self.weatherResponse = payload.weather
-            self.videoList = payload.video
-        }
-    }
-    
-    /// 업데이트
-    private func updateDailySummary() async {
-        guard let entity = dailySummaryInfo else { return }
-        
-        let payload = await buildPayload()
-        upsert(payload, to: entity)
-
-        await MainActor.run {
-            self.hashtagList = payload.hashtags
-            self.goalList = payload.goals
-            self.quoteOfTheDay = payload.quote
-            self.weatherResponse = payload.weather
-            self.videoList = payload.video
-        }
-    }
-    
-    /// 오늘 엔티티 존재하지만 일부 비어있는(없거나 "[]"/"{}"/공백) 필드 개별 생성해서 저장
-    /// - Parameter entity: 오늘 날짜의 entity
-    private func missingFieldsIfNeeded(for entity: DailySummaryEntity) async {
+    ///   - entity: 기존 또느 생성된 entity
+    ///   - isOnlyMissing: 어떤 작업을 처리할지 여부, false: 모든 작업, true: 누락된 것만 추가 작업
+    private func populateFieldsConcurrently(on entity: DailySummaryEntity, isOnlyMissing: Bool) async {
         await withTaskGroup(of: Void.self) { group in
-            if isMissingJSON(entity.hashtag) {
+            if !isOnlyMissing || isMissingJSON(entity.hashtag) {
                 group.addTask { [weak self] in
                     guard let self else { return }
                     let hashtags = await self.fetchHashtag()
@@ -176,7 +107,7 @@ final class HomeViewModel: ObservableObject {
                 }
             }
             
-            if isMissingJSON(entity.goal) {
+            if !isOnlyMissing || isMissingJSON(entity.goal) {
                 group.addTask { [weak self] in
                     guard let self else { return }
                     let goals = await self.fetchGoals()
@@ -184,7 +115,7 @@ final class HomeViewModel: ObservableObject {
                 }
             }
             
-            if (entity.quoteOfTheDay ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if !isOnlyMissing || (entity.quoteOfTheDay ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 group.addTask { [weak self] in
                     guard let self else { return }
                     let quote = await self.fetchQuoteOfTheDay()
@@ -192,7 +123,7 @@ final class HomeViewModel: ObservableObject {
                 }
             }
             
-            if isMissingJSON(entity.weatherSummary) {
+            if !isOnlyMissing || isMissingJSON(entity.weatherSummary) {
                 group.addTask { [weak self] in
                     guard let self else { return }
                     let weather = await self.fetchWeather()
@@ -200,7 +131,7 @@ final class HomeViewModel: ObservableObject {
                 }
             }
             
-            if isMissingJSON(entity.videoRecommendation) {
+            if !isOnlyMissing || isMissingJSON(entity.videoRecommendation) {
                 group.addTask { [weak self] in
                     guard let self else { return }
                     let videos = await self.fetchVideo()
@@ -272,8 +203,9 @@ final class HomeViewModel: ObservableObject {
     private func fetchHashtag() async -> [String] {
         do {
             guard let userInfo else { return [] }
-            let response = try await aiRequest.request(prompt: prompt.hashtagPrompt(entity: userInfo))
-            let decodeHashtag = await aiRequest.extractJSONFromResponse(response.content)
+            let aiSevice = AIServiceProxy()
+            let response = try await aiSevice.request(prompt: prompt.hashtagPrompt(entity: userInfo))
+            let decodeHashtag = await aiSevice.extractJSONFromResponse(response.content)
             let hashtagModel: RespnseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
 
             return hashtagModel?.contents ?? []
@@ -288,8 +220,9 @@ final class HomeViewModel: ObservableObject {
     private func fetchGoals() async -> [String] {
         do {
             guard let userInfo else { return [] }
-            let response = try await aiRequest.request(prompt: prompt.goalPrompt(entity: userInfo))
-            let decodeGoal = await aiRequest.extractJSONFromResponse(response.content)
+            let aiSevice = AIServiceProxy()
+            let response = try await aiSevice.request(prompt: prompt.goalPrompt(entity: userInfo))
+            let decodeGoal = await aiSevice.extractJSONFromResponse(response.content)
             let goalModel: RespnseArrayModel? = decodeJSON(from: decodeGoal ?? "")
             
             return goalModel?.contents ?? []
@@ -304,7 +237,8 @@ final class HomeViewModel: ObservableObject {
     private func fetchQuoteOfTheDay() async -> String {
         do {
             guard let userInfo else { return "" }
-            let response = try await aiRequest.request(prompt: prompt.quoteOfTheDayPrompt(entity: userInfo))
+            let aiSevice = AIServiceProxy()
+            let response = try await aiSevice.request(prompt: prompt.quoteOfTheDayPrompt(entity: userInfo))
 
             return response.content
         } catch {
@@ -320,8 +254,10 @@ final class HomeViewModel: ObservableObject {
             let forecast = await WeatherCenter.shared.waitForForecast()
             
             guard let userInfo, let current = forecast.first  else { return nil }
-            let weatherRes = try await aiRequest.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
-            let decodeWeather = await aiRequest.extractJSONFromResponse(weatherRes.content)
+            
+            let aiSevice = AIServiceProxy()
+            let weatherRes = try await aiSevice.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
+            let decodeWeather = await aiSevice.extractJSONFromResponse(weatherRes.content)
 
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             return weatherModel
@@ -336,7 +272,9 @@ final class HomeViewModel: ObservableObject {
     private func fetchVideo() async -> [VideoRecommendModel] {
         do {
             guard let userInfo else { return [] }
-            let response = try await aiRequest.request(prompt: prompt.videoPrompt(entity: userInfo))
+            
+            let aiSevice = AIServiceProxy()
+            let response = try await aiSevice.request(prompt: prompt.videoPrompt(entity: userInfo))
             
             guard let items = try await fetchVideoList(keywords: response.content) else { return [] }
             
@@ -458,7 +396,7 @@ final class HomeViewModel: ObservableObject {
 }
 
 // MARK: - AlanAIService
-actor AISerialProxy {
+actor AIServiceProxy {
     private let alanAiService = AlanAIService()
 
     func request(prompt: String) async throws -> Response {

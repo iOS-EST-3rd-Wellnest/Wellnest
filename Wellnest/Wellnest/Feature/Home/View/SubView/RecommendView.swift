@@ -13,16 +13,24 @@ struct RecommendView: View {
     
     @ObservedObject var homeVM: HomeViewModel
     
+    // .title 한줄 높이
+    private var oneLineHeight: CGFloat {
+        let base = UIFont.preferredFont(forTextStyle: .title2)
+        let scaled = UIFontMetrics(forTextStyle: .title2).scaledFont(for: base)
+        return ceil(scaled.lineHeight)
+    }
+    
     var body: some View {
         VStack {
             Group {
                 if homeVM.quoteOfTheDay == nil || homeVM.quoteOfTheDay == "" {
-                    SkeletonView()
+                    SkeletonView(oneLineHeight: oneLineHeight)
                 } else {
                     HStack {
                         Text("오늘의 한마디")
                             .font(.title2)
                             .bold()
+                            .frame(minHeight: oneLineHeight)
                         
                         Spacer()
                     }
@@ -40,13 +48,14 @@ struct RecommendView: View {
                 }
                 
                 if homeVM.weatherResponse == nil {
-                    SkeletonView()
-                        .padding(.top)
+                    SkeletonView(oneLineHeight: oneLineHeight)
+                        .padding(.top, Spacing.layout)
                 } else {
                     HStack {
                         Text("날씨")
                             .font(.title2)
                             .bold()
+                            .frame(minHeight: oneLineHeight)
                             .padding(.top, Spacing.layout)
                         
                         Spacer()
@@ -81,9 +90,9 @@ struct RecommendView: View {
             VStack(alignment: .leading) {
                 if homeVM.videoList.isEmpty {
                     Rectangle()
-                        .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                        .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                         .frame(width: 130)
-                        .frame(minHeight: 30, alignment: .leading)
+                        .frame(minHeight: oneLineHeight, alignment: .leading)
                         .padding(.horizontal)
                         .padding(.top, Spacing.layout)
                 } else {
@@ -108,16 +117,17 @@ struct RecommendView: View {
 }
 
 private struct SkeletonView: View {
+    let oneLineHeight: CGFloat
     var body: some View {
         VStack(alignment: .leading ) {
             Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(width: 130)
-                .frame(minHeight: 30, alignment: .leading)
+                .frame(minHeight: oneLineHeight, alignment: .leading)
             
             Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .continuous)))
-                .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+                .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
         }
     }
 }
