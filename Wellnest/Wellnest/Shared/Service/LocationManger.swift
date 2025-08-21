@@ -59,13 +59,6 @@ final class LocationManager: NSObject, ObservableObject {
 extension LocationManager: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
-//            if [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) {
-//                authContinuation.resume(returning: ())
-//            } else if manager.authorizationStatus == .denied {
-//                authContinuation?.resume(throwing: LocationError.denied)
-//            }
-//            authContinuation = nil
-            
             let status = manager.authorizationStatus
 
             // 아직 결정 전이면 대기자 유지
