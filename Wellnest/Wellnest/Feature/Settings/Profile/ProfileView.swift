@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var userEntity: UserEntity
-//    @Binding var profileImage: UIImage?
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -50,32 +49,6 @@ struct ProfileView: View {
             }
         }
         .padding()
-//        HStack {
-//            if let image = profileImage {
-//                Image(uiImage: image)
-//                    .resizable()
-//                    .scaledToFill()
-//                    .frame(width: 40, height: 40)
-//                    .clipShape(Circle())
-//            } else {
-//                Circle()
-//                    .frame(width: 40, height: 40)
-//                    .foregroundStyle(.gray)
-//            }
-//            
-//            //            Circle()
-//            //                .frame(width: 40, height: 40)
-//            //                .foregroundStyle(.indigo)
-//            
-//            Text(name)
-//                .font(.title3)
-//                .fontWeight(.bold)
-//            
-//            Spacer()
-//            
-//            Image(systemName: "pencil.line")
-//                .font(.title2)
-//        }
     }
 }
 

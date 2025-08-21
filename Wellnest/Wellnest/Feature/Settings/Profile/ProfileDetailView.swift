@@ -10,7 +10,7 @@ import UIKit
 
 struct ProfileDetailView: View {
     @ObservedObject var viewModel: UserInfoViewModel
-    var userEntity: UserEntity
+    @ObservedObject var userEntity: UserEntity
 
     enum Field {
         case nickname
@@ -20,6 +20,8 @@ struct ProfileDetailView: View {
 
     @FocusState private var isFieldFocused: Field?
 
+    @State private var tempImage: UIImage? = nil
+    @State private var isImagePickerPresented: Bool = false
     @State private var nickname: String = ""
     @State private var selectedAge = ""
     @State private var selectedGender = ""
@@ -31,19 +33,6 @@ struct ProfileDetailView: View {
     var isButtonDisabled: Bool {
         nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
     }
-
-//    @Binding var name: String
-//    @Binding var height: String
-//    @Binding var weight: String
-//    @State private var selectedAge: UserAgeRange? = nil // 임시
-////    @State private var selectedGender: UserGender? = nil // 임시
-//    @State private var selectedGender: String = "여자"
-//    var genderOptions = ["여자", "남자"]
-    
-    @State private var tempImage: UIImage? = nil
-    @State private var isImagePickerPresented: Bool = false
-    
-//    @Binding var profileImage: UIImage?
     
     @Environment(\.dismiss) var dismiss
     
@@ -217,119 +206,14 @@ struct ProfileDetailView: View {
             }
             .padding(.horizontal, OnboardingCardLayout.spacing)
             .padding(.bottom, Spacing.content)
-
-            //                Section {
-            //                    HStack {
-            //                        Text("이름")
-            //                            .foregroundStyle(.secondary)
-            //                            .padding(.trailing)
-            //
-            //                        TextField("이름을 입력해주세요.", text: $name)
-            //                    }
-            //
-            //                    HStack {
-            //                        Text("나이")
-            //                            .foregroundStyle(.secondary)
-            //                            .padding(.trailing)
-            //
-            //                        Menu {
-            //                            ForEach(UserAgeRange.allCases) { group in
-            //                                Button(group.rawValue) {
-            //                                    selectedAge = group
-            //                                }
-            //                            }
-            //                        } label: {
-            //                            HStack {
-            //                                Text(selectedAge?.rawValue ?? "나이를 선택해주세요.")
-            //                                    .foregroundStyle(selectedAge == nil ? .gray.opacity(0.5) : .primary)
-            //
-            //                                Spacer()
-            //
-            //                                Image(systemName: "chevron.down")
-            //                                    .foregroundStyle(selectedAge == nil ? .gray.opacity(0.5) : .primary)
-            //
-            //                            }
-            //                        }
-            //                    }
-            //
-            //                    HStack {
-            //                        Text("성별")
-            //                            .padding(.trailing)
-            //                            .foregroundStyle(.secondary)
-            //
-            //                        Picker("", selection: $selectedGender) {
-            //                            ForEach(genderOptions, id: \.self) {
-            //                                Text($0)
-            //                            }
-            //                        }
-            //                        .pickerStyle(.segmented)
-            //                        .padding(.leading, 20)
-            //
-            //                        //                        Menu {
-            //                        //                            ForEach(UserGender.allCases) { group in
-            //                        //                                Button(group.rawValue) {
-            //                        //                                    selectedGender = group
-            //                        //                                }
-            //                        //                            }
-            //                        //                        } label: {
-            //                        //                            Text(selectedGender?.rawValue ?? "성별을 선택해주세요.")
-            //                        //                                .foregroundStyle(selectedGender == nil ? .gray.opacity(0.5) : .primary)
-            //                        //
-            //                        //                            Spacer()
-            //                        //
-            //                        //                            Image(systemName: "chevron.down")
-            //                        //                                .foregroundStyle(selectedGender == nil ? .gray.opacity(0.5) : .primary)
-            //                        //                        }
-            //                    }
-            //
-            //                    HStack {
-            //                        Text("키 / 몸무게")
-            //                            .foregroundStyle(.secondary)
-            //                            .padding(.trailing)
-            //
-            //                        Spacer()
-            //
-            //                        HStack {
-            //                            TextField("키", text: $height)
-            //                                .keyboardType(.numberPad)
-            //                                .frame(width: 50)
-            //
-            //                            Text("cm")
-            //                                .foregroundStyle(.secondary)
-            //                        }
-            //                        .frame(maxWidth: .infinity, alignment: .leading)
-            //
-            //                        HStack {
-            //                            TextField("몸무게", text: $weight)
-            //                                .keyboardType(.numberPad)
-            //                                .frame(width: 50)
-            //
-            //                            Text("kg")
-            //                                .foregroundStyle(.secondary)
-            //                        }
-            //                        .frame(maxWidth: .infinity, alignment: .trailing)
-            //                    }
-            //                }
-            //                .navigationTitle("프로필 수정")
-            //                .navigationBarTitleDisplayMode(.inline)
-
         }
         .navigationTitle("사용자 정보")
-//        .toolbar {
-//            ToolbarItem(placement: .navigationBarTrailing) {
-//                Button {
-//                    withAnimation { dismiss() }
-//                } label: {
-//                    Image(systemName: "xmark")
-//                        .foregroundColor(.gray) // TODO: 다른 네비게이션 바와 색 맞추기
-//                }
-//            }
-//        }
     }
 }
 
+/// 사용자 정보 CoreData 저장 및 로드
 extension ProfileDetailView {
-    /// CoreData에 저장
+    /// CoreData 저장
     private func saveUserInfo() {
         if userEntity.id == nil {
             userEntity.id = UUID()
@@ -362,7 +246,7 @@ extension ProfileDetailView {
         try? CoreDataService.shared.saveContext()
     }
 
-    /// CoreData에서 불러옴
+    /// CoreData 로드
     private func loadUserEntity() {
         if let data = userEntity.profileImage,
            let image = UIImage(data: data) {

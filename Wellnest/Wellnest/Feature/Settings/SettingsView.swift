@@ -10,8 +10,6 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var viewModel = UserInfoViewModel()
 
-//    @State var profileImage: UIImage?
-
     var body: some View {
         NavigationStack {
             ScrollView {
