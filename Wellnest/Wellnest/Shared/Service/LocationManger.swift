@@ -61,6 +61,8 @@ extension LocationManager: CLLocationManagerDelegate {
         Task { @MainActor in
             if [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) {
                 authContinuation?.resume(returning: ())
+            } else if manager.authorizationStatus == .restricted {
+                authContinuation?.resume(throwing: LocationError.restricted)
             } else if manager.authorizationStatus == .denied {
                 authContinuation?.resume(throwing: LocationError.denied)
             }
