@@ -87,7 +87,7 @@ struct ProfileDetailView: View {
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -215,7 +215,7 @@ struct ProfileDetailView: View {
                     withAnimation { dismiss() }
                 } label: {
                     Image(systemName: "xmark")
-                        .foregroundColor(.gray) // TODO: 다른 네비게이션 바와 색 맞추기
+                        .foregroundColor(.gray)
                 }
             }
         }
@@ -253,7 +253,6 @@ extension ProfileDetailView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 

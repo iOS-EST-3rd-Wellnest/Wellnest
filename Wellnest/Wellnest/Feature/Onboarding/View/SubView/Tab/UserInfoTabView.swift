@@ -47,7 +47,7 @@ struct UserInfoTabView: View {
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -254,7 +254,7 @@ struct GenderMenuLabel: View {
 extension UserInfoTabView {
     /// CoreData 저장
     private func saveUserInfo() {
-        // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
+        /// 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
             userEntity.id = UUID()
         }
@@ -277,7 +277,6 @@ extension UserInfoTabView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 
@@ -298,7 +297,6 @@ extension UserInfoTabView {
         } else {
             height = nil
         }
-
         if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
             weightText = "\(weightValue)"

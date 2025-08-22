@@ -80,6 +80,7 @@ struct WellnessGoalTabView: View {
 }
 
 extension WellnessGoalTabView {
+    /// CoreData 저장
     private func saveWellnessGoal() {
         let selectedGoals = viewModel.wellnessGoals.filter { $0.isSelected }
 
@@ -90,7 +91,6 @@ extension WellnessGoalTabView {
             userEntity.goal = goals
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }
