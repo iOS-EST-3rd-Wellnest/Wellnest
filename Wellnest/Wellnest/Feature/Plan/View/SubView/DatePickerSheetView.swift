@@ -35,11 +35,9 @@ struct DatePickerSheetView: View {
                     .environment(\.locale, Locale(identifier: "ko_KR"))
                     .frame(maxWidth: .infinity)
                     .onChange(of: planVM.selectedDate) { newDate in
-                            planVM.selectedDate = newDate
-                            planVM.displayedMonth = newDate
+                        planVM.jumpToDate(newDate)
                     }
                 }
-                //                 .frame(height: geo.size.height * 0.35)
                 .background(Color.white)
                 .clipShape(
                     RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)

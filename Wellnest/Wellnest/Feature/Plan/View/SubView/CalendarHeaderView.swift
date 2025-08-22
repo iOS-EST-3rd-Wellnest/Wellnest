@@ -21,7 +21,7 @@ struct CalendarHeaderView: View {
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        Text(planVM.displayedMonth.dateFormat("YYYY년 M월"))
+                        Text(planVM.visibleMonth.dateFormat("YYYY년 M월"))
                             .font(.title2)
                             .fontWeight(.semibold)
                         Image(systemName:"arrowtriangle.down.fill")
@@ -32,12 +32,9 @@ struct CalendarHeaderView: View {
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer()
-
                 Button {
                     withAnimation(.spring(response: 0.25)) {
-                        planVM.selectedDate = Date().startOfDay
-                        planVM.displayedMonth = Date().startOfMonth
+                        planVM.jumpToDate(Date())
                     }
                 } label: {
                     Text("오늘")
