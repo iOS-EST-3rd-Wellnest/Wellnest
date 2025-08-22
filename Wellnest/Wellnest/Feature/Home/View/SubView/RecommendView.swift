@@ -30,7 +30,7 @@ struct RecommendView: View {
                         Text("오늘의 한마디")
                             .font(.title2)
                             .bold()
-                            .frame(minHeight: oneLineHeight)
+                            .frame(height: oneLineHeight)
                         
                         Spacer()
                     }
@@ -55,7 +55,7 @@ struct RecommendView: View {
                         Text("날씨")
                             .font(.title2)
                             .bold()
-                            .frame(minHeight: oneLineHeight)
+                            .frame(height: oneLineHeight)
                             .padding(.top, Spacing.layout)
                         
                         Spacer()
@@ -92,7 +92,7 @@ struct RecommendView: View {
                     Rectangle()
                         .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                         .frame(width: 130)
-                        .frame(minHeight: oneLineHeight, alignment: .leading)
+                        .frame(height: oneLineHeight, alignment: .leading)
                         .padding(.horizontal)
                         .padding(.top, Spacing.layout)
                 } else {

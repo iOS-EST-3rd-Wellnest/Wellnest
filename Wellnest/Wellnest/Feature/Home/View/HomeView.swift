@@ -144,7 +144,7 @@ struct HomeView: View {
         }
         .task {
             await homeVM.fetchDailySummary()
-            await homeVM.refreshWeatherContent()
+            //await homeVM.refreshWeatherContent()
         }
     }
 }

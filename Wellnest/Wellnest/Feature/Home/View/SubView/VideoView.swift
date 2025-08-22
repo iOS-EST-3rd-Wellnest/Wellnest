@@ -7,11 +7,15 @@
 
 import SwiftUI
 import SkeletonUI
+import SafariServices
 
 struct VideoView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @ObservedObject var homeVM: HomeViewModel
+    
+    @State private var isOnVideo = false
+    @State private var videoId: String = ""
     
     private let placeholderCount = 5
     
@@ -39,27 +43,29 @@ struct VideoView: View {
                 }
             } else {
                 ForEach(homeVM.videoList) { video in
-                    let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
-                    
-                    Link(destination: url) {
-                        VStack {
-                            VideoImageView(urlString: video.thumbnail, width: thumbWidth)
-                            
-                            Text(video.title)
-                                .multilineTextAlignment(.leading)
-                                .font(.callout)
-                                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                                .lineLimit(2)
-                                .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
-                                .padding(.vertical, Spacing.inline)
-                        }
+                    VStack {
+                        VideoImageView(urlString: video.thumbnail, width: thumbWidth)
+                        
+                        Text(video.title)
+                            .multilineTextAlignment(.leading)
+                            .font(.callout)
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .lineLimit(2)
+                            .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
+                            .padding(.vertical, Spacing.inline)
                     }
-                    .tint(.black)
+                    .onTapGesture {
+                        videoId = video.id
+                        isOnVideo = true
+                    }
                 }
             }
         }
         .padding(.horizontal)
         .allowsHitTesting(!isLoading)
+        .fullScreenCover(isPresented: $isOnVideo) {
+            SafariView(videoId: $videoId)
+        }
     }
 }
 
@@ -110,6 +116,20 @@ private struct VideoCardSkeleton: View {
                 .padding(.vertical, Spacing.inline)
         }
     }
+}
+
+struct SafariView: UIViewControllerRepresentable {
+    @Binding var videoId: String
+    
+    private var url: URL {
+        URL(string: "https://www.youtube.com/watch?v=\(videoId)")!
+    }
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
+        return SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) { }
 }
 
 #Preview {

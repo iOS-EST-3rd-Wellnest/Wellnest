@@ -26,10 +26,6 @@ struct ScheduleCardView: View {
         return direction == .right ? maxSwipeDistance : -maxSwipeDistance
     }
     
-    private var cardWidth: CGFloat {
-        UIScreen.main.bounds.width - (Spacing.layout * 2)
-    }
-    
     private var animationOffset: CGFloat {
         if isDeleting { return deleteOffset }
         if isCompleted { return completedOffset }
@@ -82,17 +78,6 @@ struct ScheduleCardView: View {
                             }
                             
                             performDeleteFlow()
-                            
-//                            Task {
-//                                // 애니메이션 효과 이후 삭제를 위한 sleep
-//                                try? await Task.sleep(for: .milliseconds(300))
-//                                await MainActor.run {
-//                                    withAnimation(.easeInOut) {
-//                                        manualScheduleVM.deleteSchedule(item: schedule)
-//                                        
-//                                    }
-//                                }
-//                            }
                         } label: {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.white)
