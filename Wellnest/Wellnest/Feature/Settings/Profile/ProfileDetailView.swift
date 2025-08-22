@@ -202,7 +202,7 @@ struct ProfileDetailView: View {
             Spacer()
 
             /// 저장 버튼
-            FilledButton(title: "저장") {
+            FilledButton(title: "저장", disabled: isButtonDisabled) {
                 saveUserInfo()
                 withAnimation { dismiss() }
             }
