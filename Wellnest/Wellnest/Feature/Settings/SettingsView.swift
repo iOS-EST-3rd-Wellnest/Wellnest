@@ -11,6 +11,9 @@ struct SettingsView: View {
     @StateObject private var viewModel = UserInfoViewModel()
 
     @State private var isProfileDetailPresented = false
+    @State private var currentPage: Int = 0
+
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationStack {
@@ -28,8 +31,8 @@ struct SettingsView: View {
             }
             .fullScreenCover(isPresented: $isProfileDetailPresented) {
                 if let user = viewModel.userEntity {
-                    NavigationStack {
-                        ProfileDetailView(viewModel: viewModel, userEntity: user)
+                    NavigationView {
+                        ProfileDetailView(viewModel: viewModel, userEntity: user, currentPage: $currentPage)
                     }
                 }
             }

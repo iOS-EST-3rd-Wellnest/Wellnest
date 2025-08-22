@@ -212,7 +212,7 @@ struct UserInfoForm<Content: View>: View {
     }
 }
 
-/// 나이 선택 메뉴
+/// 나이 선택 버튼
 struct AgeMenuLabel: View {
     let selectedAge: String
 
