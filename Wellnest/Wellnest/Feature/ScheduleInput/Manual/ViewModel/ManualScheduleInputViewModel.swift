@@ -26,6 +26,7 @@ final class ManualScheduleInputViewModel {
         // 1) 백그라운드 컨텍스트에서 생성
         let id = try await store.create(ScheduleEntity.self) { e in
             e.id = UUID()
+            e.eventIdentifier = input.eventIdentifier
             e.title = input.title
             e.location = input.location
             e.detail = input.detail
@@ -52,6 +53,16 @@ final class ManualScheduleInputViewModel {
             }
         }
         return id
+    }
+    
+    /// CoreData에 저장된 일정에 Event Kit의 Identifier를 붙임
+    /// Event Kit 일정과 CoreData일정이 서로 연결
+    @MainActor
+    func attachEventIdentifier(_ ekId: String, to objectID: NSManagedObjectID) async throws {
+        guard let obj = try? viewContext.existingObject(with: objectID) as? ScheduleEntity else { return }
+        obj.eventIdentifier = ekId
+        obj.updatedAt = Date()
+        try viewContext.save()
     }
 }
 

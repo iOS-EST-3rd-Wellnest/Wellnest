@@ -86,6 +86,8 @@ struct ManualScheduleInputView: View {
 
     @State private var didInit = false
     @State private var isSaving = false
+    
+    @State private var eventIdentifier: String?
 
 
     var body: some View {
@@ -273,7 +275,8 @@ extension ManualScheduleInputView {
             repeatEndDate: repeatEndDate,
             alarmRuleName: alarmRule?.name,
             isAlarmOn: isAlarmOn,
-            isCompleted: false
+            isCompleted: false,
+            eventIdentifier: eventIdentifier
         )
         
         Task {
@@ -281,17 +284,24 @@ extension ManualScheduleInputView {
                 let id = try await editor.saveSchedule(input)
                 lastSavedID = id
                 
-                let evnetId = try await CalendarManager.shared.addOrUpdateEvent(
-                    existingId: UUID().uuidString,     // 수정이면 전달
-                    title: title,
-                    location: location,
-                    notes: detail,
-                    startDate: startDate,
-                    endDate: endDate,
-                    isAllDay: isAllDay,
-                    recurrenceRules: nil,
-                    alarms: nil
-                )
+//                if UserDefaultsManager.shared.isCalendarEnabled {
+                    if let eventId = try? await CalendarManager.shared.addOrUpdateEvent(
+                        existingId: eventIdentifier,     // 수정이면 전달
+                        title: title,
+                        location: location,
+                        notes: detail,
+                        startDate: startDate,
+                        endDate: endDate,
+                        isAllDay: isAllDay,
+                        recurrenceRules: nil,
+                        alarms: nil
+                    ) {
+                        try await editor.attachEventIdentifier(eventId, to: id)
+                    }
+//                }
+//                if let oid = lastSavedID {
+//                    try await editor.attachEventIdentifier(evnetId, to: oid)   // 아래 B에 추가하는 메서드
+//                }
 //                newSchedule.eventIdentifier = evnetId
             } catch {
                 print(error.localizedDescription)

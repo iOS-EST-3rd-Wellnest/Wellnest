@@ -53,7 +53,7 @@ final class ManualScheduleViewModel: ObservableObject {
                     hasRepeatEndDate: e.hasRepeatEndDate,
                     repeatEndDate: e.repeatEndDate,
                     isCompleted: e.isCompleted?.boolValue ?? false,
-                    eventIdentifier: nil
+                    eventIdentifier: e.eventIdentifier
                 )
             }
 
@@ -62,6 +62,68 @@ final class ManualScheduleViewModel: ObservableObject {
             }
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
+        }
+    }
+    
+    /// 사용자가 만든 일정을 CoreData와 Event Kit에 저장하고 앱 상태를 갱신
+    @MainActor
+    func createManualSchedule(
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool
+    ) async {
+        // Core Data insert
+        let newId = UUID()
+        let container = CoreDataStack.shared.container
+        let context = container.newBackgroundContext()
+
+        do {
+            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                context.perform {
+                    let e = ScheduleEntity(context: context)
+                    e.id = newId
+                    e.title = title
+                    e.startDate = startDate
+                    e.endDate = endDate
+                    e.isAllDay = NSNumber(value: isAllDay)
+                    e.createdAt = Date()
+                    e.updatedAt = Date()
+                    e.isCompleted = NSNumber(value: false)
+                    // e.eventIdentifier = nil
+
+                    do {
+                        try context.save()
+                        cont.resume()
+                    } catch {
+                        cont.resume(throwing: error)
+                    }
+                }
+            }
+
+            // EventKit 백필 → identifier 획득
+            var ekId: String? = nil
+            if UserDefaultsManager.shared.isCalendarEnabled {
+                let ekId = try await CalendarManager.shared.createEventAndReturnIdentifier(
+                    title: title, location: nil, isAllDay: isAllDay, startDate: startDate, endDate: endDate, in: nil
+                )
+            }
+           
+
+            // 같은 레코드에 EK id 업데이트
+            let predicate = NSPredicate(format: "id == %@", newId as CVarArg)
+            if let objectID = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1).first, let ekId {
+                try await store.update(id: objectID) { (e: ScheduleEntity) in
+                    e.eventIdentifier = ekId
+                    e.updatedAt = Date()
+                }
+            }
+
+            // 오늘목록 갱신
+            await loadTodaySchedules()
+
+        } catch {
+            print("❌ 수동 일정 생성 실패:", error.localizedDescription)
         }
     }
 
