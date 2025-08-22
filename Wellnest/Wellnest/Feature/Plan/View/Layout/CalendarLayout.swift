@@ -16,10 +16,10 @@ struct CalendarLayout: Layout {
     let spacing: CGFloat
     let fixedHeight: CGFloat?
 
-    init(columns: Int = 7, spacing: CGFloat = 4, fixedCellHeight: CGFloat? = nil) {
+    init(columns: Int = 7, spacing: CGFloat = 4, fixedHeight: CGFloat? = nil) {
         self.columns = columns
         self.spacing = spacing
-        self.fixedHeight = fixedCellHeight
+        self.fixedHeight = fixedHeight
     }
 
     func makeCache(subviews: Subviews) -> CalendarLayoutCache {
@@ -29,7 +29,7 @@ struct CalendarLayout: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout CalendarLayoutCache) -> CGSize {
         let width = proposal.width ?? 0
 
-        let totalSpacingWidth = spacing * CGFloat(columns - 1)
+//        let totalSpacingWidth = spacing * CGFloat(columns - 1)
 //        let totalSpacingHeight = spacing * CGFloat(rows - 1)
         
 //        let itemWidth = (width - totalSpacingWidth) / CGFloat(columns)
