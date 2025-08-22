@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-enum RepeatFrequency: String, Codable {
-    case daily = "매일"
-    case weekly = "매주"
-    case monthly = "매월"
-    case yearly = "매년"
-}
-
 final class ScheduleStore: ObservableObject {
     @Published var scheduleItems: [ScheduleItem] = []
 
