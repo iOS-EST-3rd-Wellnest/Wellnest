@@ -15,7 +15,7 @@ struct VideoView: View {
     @ObservedObject var homeVM: HomeViewModel
     
     @State private var isOnVideo = false
-    @State private var videoId: String = ""
+    @State private var videoId: String?
     
     private let placeholderCount = 5
     
@@ -107,11 +107,17 @@ private struct VideoCardSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.inline) {
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+                .skeleton(
+                    with: isLoading,
+                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
+                )
                 .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
             
-            RoundedRectangle(cornerRadius: 6)
-                .skeleton(with: isLoading, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+            RoundedRectangle(cornerRadius: CornerRadius.medium)
+                .skeleton(
+                    with: isLoading,
+                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
+                )
                 .frame(width: titleWidth, height: twoLineHeight / 2, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
         }
@@ -119,14 +125,19 @@ private struct VideoCardSkeleton: View {
 }
 
 struct SafariView: UIViewControllerRepresentable {
-    @Binding var videoId: String
+    @Binding var videoId: String?
     
     private var url: URL {
-        URL(string: "https://www.youtube.com/watch?v=\(videoId)")!
+        URL(string: "https://www.youtube.com/watch?v=\(videoId ?? "")")!
     }
 
     func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
-        return SFSafariViewController(url: url)
+        let safariController = SFSafariViewController(url: url)
+        safariController.dismissButtonStyle = .close
+        safariController.preferredControlTintColor = .orange
+        
+        return safariController
+            
     }
 
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) { }

@@ -15,11 +15,6 @@ struct HomeView: View {
     @StateObject private var homeVM = HomeViewModel()
     @StateObject private var swipe = SwipeCoordinator()
     
-    @State private var swipedScheduleId: UUID? = nil
-    @State private var swipedDirection: SwipeDirection? = nil
-    
-    private let dummyData = DataLoader.loadScheduleItems()
-    
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
@@ -30,15 +25,6 @@ struct HomeView: View {
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
-//        let now = Date()
-//        let cal = Calendar.current
-//        
-//        return dummyData
-//            .filter { item in
-//                !item.isCompleted && cal.isDate(item.startDate, inSameDayAs: now)
-//            }
-//            .sorted { $0.startDate < $1.startDate }
-        
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
 
@@ -146,6 +132,7 @@ struct HomeView: View {
             await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()
         }
+        .background(Color(.systemBackground))
     }
 }
 

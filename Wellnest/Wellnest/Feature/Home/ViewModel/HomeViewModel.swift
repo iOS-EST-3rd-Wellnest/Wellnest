@@ -79,6 +79,10 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
+    
+    /// entity 데이터  조회 및 생성
+    /// 기존 entity 데이터 조회 후 없으면 생성
+    /// - Returns: 조회 또는 신규 생성 DailySummaryEntity
     private func ensureTodayEntity() -> DailySummaryEntity {
         if let entity = try? CoreDataService.shared.fetch(DailySummaryEntity.self).first {
             return entity
@@ -196,8 +200,7 @@ final class HomeViewModel: ObservableObject {
         self.videoList = decodeJSON(from: entity.videoRecommendation ?? "[]") ?? []
     }
     
-    // MARK: - Alan 연동
-    
+    // MARK: - Alan AI 연동
     /// 사용자 해시태그 생성
     /// - Returns: 해시태그 목록
     private func fetchHashtag() async -> [String] {
@@ -311,7 +314,7 @@ final class HomeViewModel: ObservableObject {
             key = ""
             print("YOUTUBE_KEY를 Secrets.plist에서 찾을 수 없습니다.")
         }
-        
+
         guard let keywords else { return nil }
         let url = "https://www.googleapis.com/youtube/v3/search?part=snippet&relevanceLanguage=ko&type=video&videoEmbeddable=true&videoDuration=medium&key=\(key)&q=\(keywords)"
         

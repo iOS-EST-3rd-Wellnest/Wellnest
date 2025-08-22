@@ -20,22 +20,18 @@ struct RecommendView: View {
         return ceil(scaled.lineHeight)
     }
     
+    private var isQuoteOfTheDay: Bool {
+        homeVM.quoteOfTheDay == nil || homeVM.quoteOfTheDay == ""
+    }
+    
     var body: some View {
         VStack {
             Group {
-                if homeVM.quoteOfTheDay == nil || homeVM.quoteOfTheDay == "" {
-                    SkeletonView(oneLineHeight: oneLineHeight)
-                } else {
-                    HStack {
-                        Text("오늘의 한마디")
-                            .font(.title2)
-                            .bold()
-                            .frame(height: oneLineHeight)
-                        
-                        Spacer()
-                    }
-                    
-                    Text(homeVM.quoteOfTheDay ?? "")
+                SectionHeader(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
+                    .frame(height: oneLineHeight, alignment: .leading)
+                
+                if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
+                    Text(quoteOfTheDay)
                         .font(.callout)
                         .padding(.horizontal, Spacing.layout * 1.5)
                         .padding(.vertical, Spacing.layout)
@@ -45,33 +41,25 @@ struct RecommendView: View {
                                 .fill(colorScheme == .dark ? Color(.gray) : .white)
                                 .defaultShadow()
                         )
+                } else {
+                    SkeletonView()
                 }
                 
-                if homeVM.weatherResponse == nil {
-                    SkeletonView(oneLineHeight: oneLineHeight)
-                        .padding(.top, Spacing.layout)
-                } else {
-                    HStack {
-                        Text("날씨")
-                            .font(.title2)
-                            .bold()
-                            .frame(height: oneLineHeight)
-                            .padding(.top, Spacing.layout)
-                        
-                        Spacer()
-                    }
-                    
+                SectionHeader(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
+                    .frame(height: oneLineHeight, alignment: .leading)
+                    .padding(.top, Spacing.layout)
+                
+                
+                if let weatherResponse = homeVM.weatherResponse {
                     VStack(alignment: .leading, spacing: Spacing.content) {
-                        if let weatherResponse = homeVM.weatherResponse {
-                            Text("\(weatherResponse.description)")
-                                .font(.callout)
-                            
-                            HStack {
-                                ForEach(weatherResponse.schedules, id:\.self) {
-                                    Text("\($0)")
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
+                        Text("\(weatherResponse.description)")
+                            .font(.callout)
+                        
+                        HStack {
+                            ForEach(weatherResponse.schedules, id:\.self) {
+                                Text("\($0)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -83,48 +71,51 @@ struct RecommendView: View {
                             .fill(colorScheme == .dark ? Color(.gray) : .white)
                             .defaultShadow()
                     )
+                } else {
+                    SkeletonView()
                 }
+                
+                SectionHeader(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
+                    .frame(height: oneLineHeight)
+                    .padding(.top, Spacing.layout)
             }
             .padding(.horizontal)
             
-            VStack(alignment: .leading) {
-                if homeVM.videoList.isEmpty {
-                    Rectangle()
-                        .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
-                        .frame(width: 130)
-                        .frame(height: oneLineHeight, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.top, Spacing.layout)
-                } else {
-                    Text("추천 영상")
-                        .font(.title2)
-                        .bold()
-                        .padding(.horizontal)
-                        .padding(.top, Spacing.layout)
-
-                }
-                
-                ScrollView(.horizontal, showsIndicators: false) {
-                    VideoView(homeVM: homeVM)
-                }
+            ScrollView(.horizontal, showsIndicators: false) {
+                VideoView(homeVM: homeVM)
             }
         }
     }
+    
 }
 
 #Preview {
     RecommendView(homeVM: HomeViewModel())
 }
 
+private struct SectionHeader: View {
+    let title: String
+    let isLoading: Bool
+    let height: CGFloat
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.title2)
+                .bold()
+                .frame(height: height, alignment: .topLeading)
+                .skeleton(with: isLoading,
+                          size: CGSize(width: 150, height: height),
+                          animation: .none,
+                          shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+            Spacer()
+        }
+    }
+}
+
 private struct SkeletonView: View {
-    let oneLineHeight: CGFloat
     var body: some View {
         VStack(alignment: .leading ) {
-            Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
-                .frame(width: 130)
-                .frame(minHeight: oneLineHeight, alignment: .leading)
-            
             Rectangle()
                 .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
                 .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
