@@ -30,13 +30,16 @@ struct ScheduleSheetView: View {
 
             ScrollView {
                 LazyVStack(spacing: Spacing.layout) {
-                    if planVM.selectedDateScheduleItems.isEmpty {
+                    if planVM.mergedItems.isEmpty {
                         emptyStateView
                     } else {
-                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
-                            let item = planVM.selectedDateScheduleItems[index]
-							ScheduleItemView(schedule: item)
-                        }
+//                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
+//                            let item = planVM.selectedDateScheduleItems[index]
+//							ScheduleItemView(schedule: item)
+//                        }
+                        ForEach(planVM.mergedItems) { item in
+                            ScheduleItemView(schedule: item)
+                        }                        
                     }
                 }
                 .padding()
@@ -52,6 +55,11 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
+        .onAppear {
+            Task {
+                await planVM.onAppear()
+            }
+        }
     }
 
     @ViewBuilder

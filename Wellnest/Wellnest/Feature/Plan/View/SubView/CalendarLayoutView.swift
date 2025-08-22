@@ -17,6 +17,12 @@ struct CalendarLayoutView: View {
                 dateCell(date: date)
             }
         }
+        .onAppear {
+            Task { planVM.preloadCurrentAndNeighbors() }
+        }
+//        .task(id: planVM.displayedMonth) {
+//             planVM.preloadCurrentAndNeighbors()
+//        }
 //        .background(Color.red)
     }
 
@@ -28,7 +34,16 @@ struct CalendarLayoutView: View {
         let isToday = date.isToday
 
         let scheduleItems = planVM.scheduleStore.scheduleItems(for: date)
-        let scheduleCount = scheduleItems.count
+        let iOSItem = planVM.iOSCalendarbyDay[date.startOfDay] ?? []
+        
+        let merged = planVM.dedupeByCanonicalKey(scheduleItems + iOSItem)
+            .sorted { a, b in
+                if a.isAllDay != b.isAllDay { return a.isAllDay && !b.isAllDay }
+                return a.startDate < b.startDate
+            }
+        
+        let dotItem = Array(merged.prefix(5))
+        let scheduleCount = merged.count
 
         VStack(spacing: 6) {
             Text("\(date.dayNumber)")
@@ -60,10 +75,16 @@ struct CalendarLayoutView: View {
 
             if scheduleCount > 0 && isCurrentMonth {
                 HStack(spacing: 2) {
-                    ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
+//                    ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
+//                        Circle()
+//                            .frame(width: 4, height: 4)
+//                            .foregroundStyle(Color.scheduleSolid(color: scheduleItems[index].backgroundColor))
+//                    }
+                    
+                    ForEach(dotItem, id: \.id) { item in
                         Circle()
                             .frame(width: 4, height: 4)
-                            .foregroundStyle(Color.scheduleSolid(color: scheduleItems[index].backgroundColor))
+                            .foregroundStyle(Color.scheduleSolid(color: item.backgroundColor))
                     }
                 }
             } else {
