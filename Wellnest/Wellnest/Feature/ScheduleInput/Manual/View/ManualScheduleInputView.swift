@@ -275,10 +275,24 @@ extension ManualScheduleInputView {
             isAlarmOn: isAlarmOn,
             isCompleted: false
         )
+        
         Task {
             do {
                 let id = try await editor.saveSchedule(input)
                 lastSavedID = id
+                
+                let evnetId = try await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: UUID().uuidString,     // 수정이면 전달
+                    title: title,
+                    location: location,
+                    notes: detail,
+                    startDate: startDate,
+                    endDate: endDate,
+                    isAllDay: isAllDay,
+                    recurrenceRules: nil,
+                    alarms: nil
+                )
+//                newSchedule.eventIdentifier = evnetId
             } catch {
                 print(error.localizedDescription)
             }

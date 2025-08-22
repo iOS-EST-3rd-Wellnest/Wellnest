@@ -10,7 +10,8 @@ import SwiftUI
 /// 설정 리스트
 struct SettingList: View {
     @Environment(\.colorScheme) var darkMode
-    
+    @State private var showSurvey = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -58,11 +59,18 @@ struct SettingList: View {
                         .padding(.leading, Spacing.inline)
                     
                     VStack(spacing: 0) {
-                        NavigationLink {
-                            ModifyingSurveyView()
-                        } label: {
-                            SettingsRow(icon: "ecg.text.page", title: "설문 수정")
-                                .foregroundStyle(darkMode == .dark ? .white : .black)
+                        VStack(spacing: 0) {
+                            Button {
+                                showSurvey = true
+                            } label: {
+                                SettingsRow(icon: "ecg.text.page", title: "설문 수정")
+                                    .foregroundStyle(darkMode == .dark ? .white : .black)
+                            }
+                        }
+                        .fullScreenCover(isPresented: $showSurvey) {
+                            NavigationStack {
+                                ModifyingSurveyView()
+                            }
                         }
                     }
                     .font(.subheadline)

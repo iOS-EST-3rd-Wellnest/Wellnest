@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @Binding var name: String
-    @Binding var profileImage: UIImage?
+    @ObservedObject var userEntity: UserEntity
     
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("\(name)")
+                        Text(userEntity.nickname ?? "홍길동")
                             .foregroundStyle(.indigo)
                             .font(.title)
                             .fontWeight(.bold)
@@ -34,8 +33,9 @@ struct ProfileView: View {
                 }
 
                 Spacer()
-                
-                if let image = profileImage {
+
+                if let data = userEntity.profileImage,
+                let image = UIImage(data: data) {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
@@ -49,35 +49,9 @@ struct ProfileView: View {
             }
         }
         .padding()
-//        HStack {
-//            if let image = profileImage {
-//                Image(uiImage: image)
-//                    .resizable()
-//                    .scaledToFill()
-//                    .frame(width: 40, height: 40)
-//                    .clipShape(Circle())
-//            } else {
-//                Circle()
-//                    .frame(width: 40, height: 40)
-//                    .foregroundStyle(.gray)
-//            }
-//            
-//            //            Circle()
-//            //                .frame(width: 40, height: 40)
-//            //                .foregroundStyle(.indigo)
-//            
-//            Text(name)
-//                .font(.title3)
-//                .fontWeight(.bold)
-//            
-//            Spacer()
-//            
-//            Image(systemName: "pencil.line")
-//                .font(.title2)
-//        }
     }
 }
 
-#Preview {
-    ProfileView(name: .constant("홍길동"), profileImage: .constant(nil))
-}
+//#Preview {
+//    ProfileView(name: , profileImage: .constant(nil))
+//}

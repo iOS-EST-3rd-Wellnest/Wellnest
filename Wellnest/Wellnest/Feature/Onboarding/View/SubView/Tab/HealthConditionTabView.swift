@@ -16,6 +16,8 @@ struct HealthConditionTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
+    var isInSettings: Bool = false
+
     var isButtonDisabled: Bool {
         !viewModel.healthConditions.contains(where: { $0.isSelected })
     }
@@ -27,10 +29,19 @@ struct HealthConditionTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "완료", isDisabled: isButtonDisabled) {
-                saveHealthCondition()
-                withAnimation { userDefaultsManager.hasCompletedOnboarding = true }
-            }
+            OnboardingButton(
+                title: "완료",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveHealthCondition()
+                    if !isInSettings {
+                        withAnimation { userDefaultsManager.hasCompletedOnboarding = true }
+                    }
+                },
+                currentPage: $currentPage,
+                showPrevious: isInSettings,
+                isLastStep: isInSettings
+            )
         }
         .onAppear {
             title = "현재 건강 상태"
