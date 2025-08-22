@@ -13,7 +13,9 @@ struct ScheduleSheetView: View {
 
     @State private var currentDragOffset: CGFloat = 0
     @State private var isDragging: Bool = false
+    @State private var showScheduleDetail: Bool = false
 
+    
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
             Capsule()
@@ -36,6 +38,11 @@ struct ScheduleSheetView: View {
                         ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
                             let item = planVM.selectedDateScheduleItems[index]
 							ScheduleItemView(schedule: item)
+                                .onTapGesture {
+                                    if isSheetExpanded {
+                                        showScheduleDetail = true
+                                    }
+                                }
                         }
                     }
                 }
@@ -52,6 +59,8 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
+        .sheet(isPresented: $showScheduleDetail) {
+        }
     }
 
     @ViewBuilder
