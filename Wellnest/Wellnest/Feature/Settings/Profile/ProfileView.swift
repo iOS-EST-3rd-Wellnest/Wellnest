@@ -43,8 +43,14 @@ struct ProfileView: View {
                         .clipShape(Circle())
                 } else {
                     Circle()
+                        .fill(Color.gray)
                         .frame(width: 80, height: 80)
-                        .foregroundStyle(.gray)
+                        .overlay {
+                            Image(systemName: "person.fill")
+                                .resizable()
+                                .frame(width: 22, height: 22)
+                                .foregroundColor(.white.opacity(0.9))
+                        }
                 }
             }
         }

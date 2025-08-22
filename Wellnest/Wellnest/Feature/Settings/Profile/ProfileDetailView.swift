@@ -53,8 +53,10 @@ struct ProfileDetailView: View {
                             .fill(Color.gray)
                             .frame(width: 150, height: 150)
                             .overlay {
-                                Text("프로필 사진 수정")
-                                    .foregroundStyle(.white)
+                                Image(systemName: "person.fill")
+                                    .resizable()
+                                    .frame(width: 40, height: 40)
+                                    .foregroundColor(.white.opacity(0.9))
                             }
                     }
                 }
