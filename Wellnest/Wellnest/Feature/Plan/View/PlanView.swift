@@ -73,9 +73,6 @@ struct PlanView: View {
                 .zIndex(3)
             }
             .ignoresSafeArea(edges: .bottom)
-            .onAppear {
-                planVM.scheduleStore.loadScheduleData()
-            }
         }
     }
 }
