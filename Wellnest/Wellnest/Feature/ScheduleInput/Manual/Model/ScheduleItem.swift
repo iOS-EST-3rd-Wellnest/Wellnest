@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ScheduleItem: Identifiable, Codable {
+struct ScheduleItem: Identifiable, Codable, Hashable {
     let id: UUID
     let title: String
     let startDate: Date
