@@ -13,6 +13,7 @@ enum SwipeDirection {
 
 struct ScheduleCardView: View {
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
+    @ObservedObject var planVM: PlanViewModel
     private let calManager = CalendarManager.shared
     
     @State private var isDeleting = false
@@ -170,20 +171,33 @@ extension ScheduleCardView {
                 try? await Task.sleep(for: .milliseconds(300))
 
                 // 캘린더 삭제
-                _ = await CalendarManager.shared.deleteEventOrBackfill(
-                    identifier: schedule.eventIdentifier,
-                    title: schedule.title,
-                    location: nil,
-                    isAllDay: schedule.isAllDay,
-                    startDate: schedule.startDate,
-                    endDate: schedule.endDate,
-                    in: nil
-                )
+//                _ = await CalendarManager.shared.deleteEventOrBackfill(
+//                    identifier: schedule.eventIdentifier,
+//                    title: schedule.title,
+//                    location: nil,
+//                    isAllDay: schedule.isAllDay,
+//                    startDate: schedule.startDate,
+//                    endDate: schedule.endDate,
+//                    in: nil
+//                )
+//                if UserDefaultsManager.shared.isCalendarEnabled, let ekId = schedule.eventIdentifier, !ekId.isEmpty {
+//                    
+//                }
+                
+                if let ekId = schedule.eventIdentifier, !ekId.isEmpty {
+                    await calManager.deleteEvent(identifier: ekId)
+                }
 
                 // Core Data에서 일정 삭제
                 await MainActor.run {
                     withAnimation(.easeInOut) {
                         manualScheduleVM.deleteSchedule(item: schedule)
+                    }
+                }
+                
+                await MainActor.run {
+                    withAnimation(.easeInOut) {
+                        planVM.purgeIOSCache(for: schedule.startDate.startOfDay, eventIdentifier: schedule.eventIdentifier)
                     }
                 }
             }

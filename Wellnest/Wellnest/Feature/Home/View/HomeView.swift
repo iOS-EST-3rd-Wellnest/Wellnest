@@ -13,6 +13,7 @@ struct HomeView: View {
 //    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
+    @StateObject private var planVM = PlanViewModel()
     
     @State var name: String = "홍길동"
     
@@ -30,17 +31,21 @@ struct HomeView: View {
     }
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
-    private var isCompleteSchedules: [ScheduleItem] {
-//        let now = Date()
-//        let cal = Calendar.current
+//    private var isCompleteSchedules: [ScheduleItem] {
+////        let now = Date()
+////        let cal = Calendar.current
+////        
+////        return dummyData
+////            .filter { item in
+////                !item.isCompleted && cal.isDate(item.startDate, inSameDayAs: now)
+////            }
+////            .sorted { $0.startDate < $1.startDate }
 //        
-//        return dummyData
-//            .filter { item in
-//                !item.isCompleted && cal.isDate(item.startDate, inSameDayAs: now)
-//            }
-//            .sorted { $0.startDate < $1.startDate }
-        
-        manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
+//        manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
+//    }
+    
+    private var isCompleteSchedules: [ScheduleItem] {
+        planVM.mergedItems.filter { !$0.isCompleted }
     }
 
     var body: some View {
@@ -120,6 +125,7 @@ struct HomeView: View {
                             ForEach(isCompleteSchedules) { schedule in
                                 ScheduleCardView(
                                     manualScheduleVM: manualScheduleVM,
+                                    planVM: planVM,
                                     schedule: schedule,
                                     swipedScheduleId: swipedScheduleId,
                                     swipedDirection: swipedDirection) { id, direction in
@@ -141,6 +147,13 @@ struct HomeView: View {
 
                 }
                 .padding(.bottom, Spacing.layout * 2)
+                .onAppear {
+                    planVM.preloadCurrentAndNeighbors()
+                    Task {
+                        await planVM.refreshHomeTodayWithFallback()
+                    }
+                    planVM.startObservingCalendarForHome()
+                }
             }
             .padding(.horizontal)
     
