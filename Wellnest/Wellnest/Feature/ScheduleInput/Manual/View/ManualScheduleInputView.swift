@@ -8,16 +8,39 @@
 import SwiftUI
 import CoreData
 
+enum EditorMode: Equatable {
+    case create
+    case edit(objectID: NSManagedObjectID)
+}
+
 struct ManualScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
-    @StateObject var vm = ScheduleEditorFactory.makeDefault()
+    @StateObject private var vm: ScheduleEditorViewModel
 
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
+    @State private var showDeleteConfirm = false
+
+    let onSaved: ((NSManagedObjectID) -> Void)?
+    let onDeleted: (() -> Void)?
+
+    init(
+        mode: EditorMode,
+        selectedTab: Binding<TabBarItem>,
+        selectedCreationType: Binding<ScheduleCreationType?>,
+        onSaved: ((NSManagedObjectID) -> Void)? = nil,
+        onDeleted: (() -> Void)? = nil
+    ) {
+        _selectedTab = selectedTab
+        _selectedCreationType = selectedCreationType
+        _vm = StateObject(wrappedValue: ScheduleEditorFactory.make(mode: mode))
+        self.onSaved = onSaved
+        self.onDeleted = onDeleted
+    }
 
     var body: some View {
         NavigationView {
@@ -86,10 +109,11 @@ struct ManualScheduleInputView: View {
                     .padding()
                 }
                 .padding(.bottom, 30)
+                .task { await vm.loadIfNeeded() }
                 .onDisappear {
                     isKeyboardVisible = false
                 }
-                .navigationTitle("새 일정")
+                .navigationTitle(vm.navTitle)
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -117,7 +141,7 @@ struct ManualScheduleInputView: View {
                     .frame(height: 28)
 
                     // 버튼
-                    FilledButton(title: "저장하기", disabled: vm.form.isTextEmpty) {
+                    FilledButton(title: vm.primaryButtonTitle, disabled: vm.form.isTextEmpty) {
                         saveSchedule()
                         selectedTab = .plan
                         selectedCreationType = nil
@@ -191,7 +215,10 @@ struct ManualScheduleInputView: View {
 extension ManualScheduleInputView {
     @MainActor
     func saveSchedule() {
-        Task { try await vm.saveSchedule() }
+        Task {
+            let id = try await vm.saveSchedule()
+            onSaved?(id.first ?? NSManagedObjectID())
+        }
     }
 }
 

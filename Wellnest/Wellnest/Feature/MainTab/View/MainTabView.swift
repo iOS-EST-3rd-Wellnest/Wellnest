@@ -19,7 +19,10 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                 case .plan:
-                    PlanView()
+                    PlanView(
+                        selectedTab: $selectedTab,
+                        selectedCreationType: $selectedCreationType
+                    )
                 case .analysis:
                     AnalyticsView()
                 case .settings:
@@ -56,8 +59,10 @@ struct MainTabView: View {
                 )
             case .createByUser:
                 ManualScheduleInputView(
+                    mode: .create,
                     selectedTab: $selectedTab,
-                    selectedCreationType: $selectedCreationType
+                    selectedCreationType: $selectedCreationType,
+                    onSaved: { id in /* 새로 만든 ID 처리 */ }
                 )
             }
         }

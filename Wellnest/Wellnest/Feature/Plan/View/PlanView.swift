@@ -14,6 +14,9 @@ struct PlanView: View {
     @State private var showDatePicker: Bool = false
     @State private var headerHeight: CGFloat = 0
 
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
+
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -24,7 +27,7 @@ struct PlanView: View {
                         CalendarPagingView(planVM: planVM, screenWidth: geo.size.width)
                     }
 
-                    ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded)
+                    ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
                         .frame(maxHeight: .infinity)
                         .padding(.top)
                 }
@@ -81,5 +84,5 @@ struct PlanView: View {
 }
 
 #Preview {
-    PlanView()
+    PlanView(selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }
