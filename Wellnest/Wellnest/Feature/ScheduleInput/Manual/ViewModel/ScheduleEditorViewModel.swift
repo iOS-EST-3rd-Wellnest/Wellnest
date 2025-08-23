@@ -10,7 +10,7 @@ import SwiftUI
 
 final class ScheduleEditorViewModel: ObservableObject {
     @Published var form = ScheduleFormState()
-    @Published var previewColor: Color = Color("accentButtonColor")
+    @Published var previewColor: Color = .milkyBlue
     @Published var lastSavedID: NSManagedObjectID?
     @Published var isSaving = false
     @Published var isLoading = false

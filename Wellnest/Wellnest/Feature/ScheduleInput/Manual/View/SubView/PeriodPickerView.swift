@@ -28,12 +28,14 @@ struct PeriodPickerView: View {
                         UIApplication.hideKeyboard()
                     }
             }
+            .tint(.wellnestOrange)
             DatePickerView(
                 text: "시작",
                 date: $startDate,
                 isAllDay: $isAllDay,
                 isPresented: $isStartPickerOpen
             )
+            .tint(.wellnestOrange)
             .padding(.top, 5)
             .onChange(of: startDate) { newValue in
                 guard newValue.timeIntervalSince(endDate) >= 0 else { return }
@@ -52,6 +54,7 @@ struct PeriodPickerView: View {
                 isAllDay: $isAllDay,
                 isPresented: $isEndPickerOpen
             )
+            .tint(.wellnestOrange)
             .onChange(of: endDate) { newValue in
                 guard newValue.timeIntervalSince(startDate) <= 0 else { return }
                 startDate = newValue.addingTimeInterval(-3600)

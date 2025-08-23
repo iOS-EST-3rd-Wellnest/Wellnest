@@ -33,15 +33,14 @@ extension Color {
         case "purple": return .purple
         case "pink": return .pink
         case "gray": return .gray
-        case "accentbuttoncolor": return Color("accentButtonColor")
-        case "accentcardbluecolor": return Color("accentCardBlueColor")
-        case "accentcardgreencolor": return Color("accentCardGreenColor")
-        case "accentcardpinkcolor": return Color("accentCardPinkColor")
-        case "accentcardgreencolor": return Color("accentCardGreenColor")
-        case "accentcardyellowcolor": return Color("accentCardYellowColor")
-        case "backgroudcolor": return Color("backgroudColor")
-        case "customsecondarycolor": return Color("CustomSecondaryColor")
-        case "customgraycolor": return Color("CustomGrayColor")
+        case "sweetiePink": return .sweetiePink
+        case "creamyOrange": return .creamyOrange
+        case "pleasantLight": return .pleasantLight
+        case "tenderBreeze": return .tenderBreeze
+        case "fluffyBlue": return .fluffyBlue
+        case "milkyBlue": return .milkyBlue
+        case "babyLilac": return .babyLilac
+        case "oatmeal": return .oatmeal
         default: return .blue
         }
     }
