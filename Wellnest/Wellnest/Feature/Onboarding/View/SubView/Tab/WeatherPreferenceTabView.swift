@@ -15,6 +15,8 @@ struct WeatherPreferenceTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
+    var isInSettings: Bool = false
+
     var isButtonDisabled: Bool {
         !viewModel.weatherPreferences.contains(where: { $0.isSelected })
     }
@@ -26,10 +28,16 @@ struct WeatherPreferenceTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
-                saveWeatherPreference()
-                withAnimation { currentPage += 1 }
-            }
+            OnboardingButton(
+                title: "다음",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveWeatherPreference()
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage,
+                showPrevious: isInSettings
+            )
         }
         .onAppear {
             title = "선호 날씨"

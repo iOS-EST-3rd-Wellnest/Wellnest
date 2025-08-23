@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ScheduleItem: Identifiable, Codable {
+struct ScheduleItem: Identifiable, Codable, Hashable {
     let id: UUID
     let title: String
     let startDate: Date
@@ -20,4 +20,5 @@ struct ScheduleItem: Identifiable, Codable {
     let hasRepeatEndDate: Bool
     let repeatEndDate: Date?
     var isCompleted: Bool
+    let eventIdentifier: String?
 }

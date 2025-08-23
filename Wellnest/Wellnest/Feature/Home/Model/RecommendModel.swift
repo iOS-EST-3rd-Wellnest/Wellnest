@@ -1,5 +1,5 @@
 //
-//  VideoRecommendModel.swift
+//  RecommendModel.swift
 //  Wellnest
 //
 //  Created by JuYong Lee on 8/6/25.
@@ -8,7 +8,20 @@
 import Foundation
 import SwiftUI
 
-struct VideoRecommendModel: Identifiable {
+struct Response: Codable {
+    let content: String
+}
+
+struct RespnseArrayModel: Codable {
+    let contents: [String]
+}
+
+struct WeatherRecommendModel: Codable {
+    let description: String
+    let schedules: [String]
+}
+
+struct VideoRecommendModel: Identifiable, Codable {
     let id: String
     let title: String
     let thumbnail: String

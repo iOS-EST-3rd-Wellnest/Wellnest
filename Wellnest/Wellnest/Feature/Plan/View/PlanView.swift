@@ -15,66 +15,68 @@ struct PlanView: View {
     @State private var headerHeight: CGFloat = 0
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                if isSheetExpanded {
-                    CalendarWeekView(planVM: planVM)
-                } else {
-                    CalendarPagingView(planVM: planVM)
+        GeometryReader { geo in
+            ZStack {
+                VStack(spacing: 0) {
+                    if isSheetExpanded {
+                        CalendarWeekView(planVM: planVM)
+                    } else {
+                        CalendarPagingView(planVM: planVM, screenWidth: geo.size.width)
+                    }
+
+                    ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded)
+                        .frame(maxHeight: .infinity)
+                        .padding(.top)
+                }
+                .padding(.top, headerHeight)
+                .zIndex(0)
+
+                if showDatePicker {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea(.all)
+                        .onTapGesture {
+                            withAnimation(.spring) {
+                                showDatePicker = false
+                            }
+                        }
+                        .zIndex(1)
                 }
 
-                ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded)
-                    .frame(maxHeight: .infinity)
-                    .padding(.top)
-            }
-            .padding(.top, headerHeight)
-            .zIndex(0)
-            
-            if showDatePicker {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea(.all)
-                    .onTapGesture {
-                        withAnimation(.spring) {
-                            showDatePicker = false
+                if showDatePicker {
+                    DatePickerSheetView(
+                        planVM: planVM,
+                        showDatePicker: $showDatePicker,
+                        headerHeight: headerHeight
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(2)
+                }
+
+                VStack(spacing: 0) {
+                    CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
+                        .padding(.vertical, Spacing.content)
+                        .background {
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        headerHeight = geo.size.height
+                                    }
+                                    .onChange(of: geo.size.height) { newValue in
+                                        headerHeight = newValue
+                                    }
+                            }
                         }
-                    }
-                    .zIndex(1)
-            }
 
-            if showDatePicker {
-                DatePickerSheetView(
-                    planVM: planVM,
-                    showDatePicker: $showDatePicker,
-                    headerHeight: headerHeight
-                )
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .zIndex(2)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .zIndex(3)
             }
-
-            VStack(spacing: 0) {
-                CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
-                    .padding(.vertical, Spacing.content)
-                    .background {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    headerHeight = geo.size.height
-                                }
-                                .onChange(of: geo.size.height) { newValue in
-                                    headerHeight = newValue
-                                }
-                        }
-                    }
-
-                Spacer()
+            .ignoresSafeArea(edges: .bottom)
+            .onAppear {
+                planVM.scheduleStore.loadScheduleData()
             }
-            .padding(.horizontal)
-            .zIndex(3)
         }
-        .ignoresSafeArea(edges: .bottom)
-        .onAppear {
-             planVM.scheduleStore.loadScheduleData()
-         }
     }
 }
 

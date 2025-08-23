@@ -52,7 +52,8 @@ final class ManualScheduleViewModel: ObservableObject {
                     repeatRule: e.repeatRule,
                     hasRepeatEndDate: e.hasRepeatEndDate,
                     repeatEndDate: e.repeatEndDate,
-                    isCompleted: e.isCompleted?.boolValue ?? false
+                    isCompleted: e.isCompleted?.boolValue ?? false,
+                    eventIdentifier: nil
                 )
             }
 
@@ -128,6 +129,7 @@ final class ManualScheduleViewModel: ObservableObject {
         return (now, startOfTomorrow)
     }
 }
+
 
 enum ManualScheduleVMFactory {
     static func make() -> ManualScheduleViewModel {

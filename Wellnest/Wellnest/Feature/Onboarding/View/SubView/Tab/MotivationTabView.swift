@@ -14,10 +14,15 @@ struct MotivationTabView: View {
     var body: some View {
         VStack {
             Spacer()
-
-            OnboardingButton(title: "다음", isDisabled: false) {
-                withAnimation { currentPage += 1 }
-            }
+            
+            OnboardingButton(
+                title: "다음",
+                isDisabled: false,
+                action: {
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage
+            )
         }
         .onAppear {
             title = "동기부여 문구"

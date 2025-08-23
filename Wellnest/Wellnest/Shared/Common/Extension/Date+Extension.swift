@@ -16,20 +16,7 @@ extension Date {
     var startOfMonth: Date {
         let calendar = Calendar.current
 
-        guard let date = calendar.date(from: calendar.dateComponents([.year, .month], from: self)
-        ) else {
-            return self
-        }
-        return date
-    }
-
-    var endOfMonth: Date {
-        let calendar = Calendar.current
-        guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth),
-              let endOfMonth = calendar.date(byAdding: .day, value: -1, to: nextMonth) else {
-            return self
-        }
-        return endOfMonth
+        return calendar.date(from: calendar.dateComponents([.year, .month], from: self))!
     }
 
     var dayNumber: Int {

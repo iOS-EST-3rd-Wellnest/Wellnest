@@ -18,17 +18,20 @@ struct SettingsView: View {
     
     @EnvironmentObject var navBus: NavBus
     @State private var path = NavigationPath()  
+    @StateObject private var viewModel = UserInfoViewModel()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    NavigationLink {
-                        ProfileDetailView(name: $name, height: $height, weight: $weight, profileImage: $profileImage)
-                    } label: {
-                        ProfileView(name: $name, profileImage: $profileImage)
+                    if let user = viewModel.userEntity {
+                        NavigationLink {
+                            ProfileDetailView(viewModel: viewModel, userEntity: user)
+                        } label: {
+                            ProfileView(userEntity: user)
+                        }
                     }
-                    
+
                     VStack(spacing: 24) {
 
                         // 섹션 1
@@ -111,6 +114,8 @@ struct SettingsView: View {
                         path.append(SettingsRoute.checkIn)
                         navBus.openSettingsCheckIn = false // 소진
                     }
+
+                    SettingList()
                 }
             }
         }

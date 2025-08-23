@@ -63,10 +63,15 @@ struct WellnessGoalTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
-                saveWellnessGoal()
-                withAnimation { currentPage += 1 }
-            }
+            OnboardingButton(
+                title: "다음",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveWellnessGoal()
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage
+            )
         }
         .onAppear {
             title = "웰니스 목표"

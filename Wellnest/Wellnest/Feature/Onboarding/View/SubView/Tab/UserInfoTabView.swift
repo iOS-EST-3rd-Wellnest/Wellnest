@@ -156,10 +156,15 @@ struct UserInfoTabView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            OnboardingButton(title: "다음", isDisabled: isButtonDisabled) {
-                saveUserInfo()
-                withAnimation { currentPage += 1 }
-            }
+            OnboardingButton(
+                title: "다음",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveUserInfo()
+                    withAnimation { currentPage += 1 }
+                },
+                currentPage: $currentPage
+            )
         }
         .onAppear {
             title = "사용자 정보"
@@ -245,8 +250,9 @@ struct GenderMenuLabel: View {
     }
 }
 
+/// 사용자 정보 CoreData 저장 및 로드
 extension UserInfoTabView {
-    /// CoreData에 저장
+    /// CoreData 저장
     private func saveUserInfo() {
         // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
@@ -275,7 +281,7 @@ extension UserInfoTabView {
         try? CoreDataService.shared.saveContext()
     }
 
-    /// CoreData에서 불러옴
+    /// CoreData 로드
     private func loadUserEntity() {
         if let nicknameValue = userEntity.nickname {
             nickname = nicknameValue

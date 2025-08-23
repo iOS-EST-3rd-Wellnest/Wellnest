@@ -11,18 +11,18 @@ struct CalendarLayoutView: View {
     @ObservedObject var planVM: PlanViewModel
     let calendar = Calendar.current
 
+    let month: Date
     var body: some View {
         CalendarLayout {
-            ForEach(planVM.calendarDates, id: \.self) { date in
+            ForEach(month.filledDatesOfMonth(), id: \.self) { date in
                 dateCell(date: date)
             }
         }
-//        .background(Color.red)
     }
 
     @ViewBuilder
     private func dateCell(date: Date) -> some View {
-        let isCurrentMonth = calendar.isDate(date, equalTo: planVM.displayedMonth, toGranularity: .month)
+        let isCurrentMonth = calendar.isDate(date, equalTo: month, toGranularity: .month)
         let isSameDay = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
         let isSelected = isCurrentMonth && isSameDay
         let isToday = date.isToday
@@ -34,7 +34,6 @@ struct CalendarLayoutView: View {
             Text("\(date.dayNumber)")
                 .font(.system(size: 16))
                 .foregroundStyle(isSelected ? .white : (isCurrentMonth ? date.weekdayColor : .secondary))
-//                .background(Color.white)
                 .background {
                     if isSelected {
                         Circle()
@@ -45,15 +44,15 @@ struct CalendarLayoutView: View {
                             .stroke(Color.blue)
                             .frame(width: 28, height: 28)
                     }
-//                    else {
-//                        Circle()
-//                        .stroke(Color.red)
-//                            .frame(width: 32, height: 32)
-//                    }
                 }
+                .contentShape(Rectangle())
                 .onTapGesture {
                     withAnimation(.spring(response: 0.25)) {
-                        planVM.select(date: date)
+                        if !calendar.isDate(date, equalTo: planVM.visibleMonth, toGranularity: .month) {
+                            planVM.jumpToDate(date)
+                        } else {
+                            planVM.selectDate(date)
+                        }
                     }
 
                 }
@@ -77,5 +76,5 @@ struct CalendarLayoutView: View {
 }
 
 #Preview {
-    CalendarLayoutView(planVM: PlanViewModel())
+    CalendarLayoutView(planVM: PlanViewModel(), month: Date().startOfMonth)
 }

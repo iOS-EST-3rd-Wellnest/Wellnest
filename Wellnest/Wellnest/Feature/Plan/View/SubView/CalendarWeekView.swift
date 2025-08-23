@@ -25,9 +25,7 @@ struct CalendarWeekView: View {
                 .padding(.horizontal)
 
                 VStack(spacing: 0) {
-                    CalendarLayout(fixedCellHeight: planVM.calenderHeight(width: geo.size.width, rows: 1)) {
-
-
+                    CalendarLayout(fixedHeight: planVM.calendarHeight(width: geo.size.width, rows: 1)) {
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
                             let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
 
@@ -39,7 +37,7 @@ struct CalendarWeekView: View {
                         }
                     }
 
-                    CalendarLayout(fixedCellHeight: planVM.calenderHeight(width: geo.size.width, rows: 1)) {
+                    CalendarLayout(fixedHeight: planVM.calendarHeight(width: geo.size.width, rows: 1)) {
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
 
                             let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
@@ -56,7 +54,7 @@ struct CalendarWeekView: View {
                 .allowsHitTesting(false)
             }
         }
-        .frame(height: planVM.calenderHeight(rows: 1) * 2)
+        .frame(height: planVM.calendarHeight(rows: 1) * 2)
     }
 
     @ViewBuilder
@@ -78,10 +76,10 @@ struct CalendarWeekView: View {
                  }
              )
             .frame(maxWidth: .infinity)
-            .frame(height: planVM.calenderHeight(width: width, rows: 1) * 2)
+            .frame(height: planVM.calendarHeight(width: width, rows: 1) * 2)
             .contentShape(Rectangle())
             .onTapGesture {
-                planVM.select(date: date)
+                planVM.selectDate(date)
             }
     }
 }

@@ -6,20 +6,14 @@
 //
 
 import SwiftUI
+import SkeletonUI
 
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
-//    @StateObject private var manualScheduleVM = ManualScheduleViewModel()
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
-    
-    @State var name: String = "홍길동"
-    
-    @State private var swipedScheduleId: UUID? = nil
-    @State private var swipedDirection: SwipeDirection? = nil
-    
-    private let dummyData = DataLoader.loadScheduleItems()
+    @StateObject private var swipe = SwipeCoordinator()
     
     var today: String {
         let df = DateFormatter()
@@ -31,15 +25,6 @@ struct HomeView: View {
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
-//        let now = Date()
-//        let cal = Calendar.current
-//        
-//        return dummyData
-//            .filter { item in
-//                !item.isCompleted && cal.isDate(item.startDate, inSameDayAs: now)
-//            }
-//            .sorted { $0.startDate < $1.startDate }
-        
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
 
@@ -53,13 +38,17 @@ struct HomeView: View {
                         .frame(width: 80, height: 80)
 
                     VStack(alignment: .leading, spacing: Spacing.content) {
-                        Text(name)
+                        Text(homeVM.userInfo?.nickname ?? "")
                             .font(.title3)
                             .bold()
 
-                        Text("#20대 #아침형 #식단관리")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            ForEach(homeVM.hashtagList, id: \.self) {
+                                Text("\($0)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
 
                     Spacer()
@@ -75,37 +64,40 @@ struct HomeView: View {
                 }
 
                 HStack(spacing: Spacing.layout) {
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.gray) : .white)
-                        .frame(minHeight: 180)
-                        .defaultShadow()
-                        .overlay(alignment: .topLeading) {
-                            VStack(alignment: .leading, spacing: Spacing.content) {
-                                Text("목표")
-                                    .font(.title3)
-                                    .bold()
-                                    .padding(.vertical, Spacing.content)
-
-                                Text("1,000kcal 태우기")
-                                    .font(.footnote)
-                                
-                                Text("10,000보 걷기")
-                                    .font(.footnote)
+                    if homeVM.goalList.isEmpty {
+                        SkeletonView()
+                    } else {
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .frame(minHeight: 180)
+                            .defaultShadow()
+                            .overlay(alignment: .topLeading) {
+                                VStack(alignment: .leading, spacing: Spacing.content) {
+                                    Text("목표")
+                                        .font(.title3)
+                                        .bold()
+                                        .padding(.vertical, Spacing.content)
+                                    
+                                    ForEach(homeVM.goalList, id: \.self) {
+                                        Text("\($0)")
+                                            .font(.footnote)
+                                    }
+                                }
+                                .padding()
                             }
-                            .padding()
-                        }
-                    
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.gray) : .white)
-                        .frame(minHeight: 180)
-                        .defaultShadow()
-                        .overlay {
-                            
-                        }
+                        
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .frame(minHeight: 180)
+                            .defaultShadow()
+                            .overlay {
+                                
+                            }
+                    }
                 }
                 
                 HStack {
-                    VStack {
+                    VStack(spacing: 0) {
                         if isCompleteSchedules.isEmpty {
                             Text("일정을 추가 해주세요.")
                                 .padding(.vertical, 40)
@@ -118,23 +110,12 @@ struct HomeView: View {
                                 )
                         } else {
                             ForEach(isCompleteSchedules) { schedule in
-                                ScheduleCardView(
-                                    manualScheduleVM: manualScheduleVM,
-                                    schedule: schedule,
-                                    swipedScheduleId: swipedScheduleId,
-                                    swipedDirection: swipedDirection) { id, direction in
-                                        withAnimation {
-                                            swipedScheduleId = id
-                                            swipedDirection = direction
-                                        }
-                                    }
+                                ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule)
+                                    .environmentObject(swipe)
                                     .padding(.vertical, Spacing.content)
                             }
                         }
                     }
-//                    .onAppear {
-//                        manualScheduleVM.loadTodaySchedules()
-//                    }
                     .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
@@ -147,15 +128,29 @@ struct HomeView: View {
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
         }
-        .onAppear {
-            //homeVM.quoteOfTheDayRequest()
-            //homeVM.weatherRequest()
-            //homeVM.videoRequest()
+        .task {
+            await homeVM.fetchDailySummary()
+            //await homeVM.refreshWeatherContent()
         }
+        .background(Color(.systemBackground))
     }
 }
 
 #Preview {
     HomeView()
         .environmentObject(ManualScheduleVMFactory.make())
+}
+
+private struct SkeletonView: View {
+    var body: some View {
+        HStack {
+            Rectangle()
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+                .frame(minHeight: 180)
+            
+            Rectangle()
+                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+                .frame(minHeight: 180)
+        }
+    }
 }
