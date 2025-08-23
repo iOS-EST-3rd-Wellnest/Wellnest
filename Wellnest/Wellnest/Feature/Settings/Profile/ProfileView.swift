@@ -42,15 +42,10 @@ struct ProfileView: View {
                         .frame(width: 80, height: 80)
                         .clipShape(Circle())
                 } else {
-                    Circle()
-                        .fill(Color.gray)
+                    Image("img_profile")
+                        .resizable()
+                        .scaledToFit()
                         .frame(width: 80, height: 80)
-                        .overlay {
-                            Image(systemName: "person.fill")
-                                .resizable()
-                                .frame(width: 22, height: 22)
-                                .foregroundColor(.white.opacity(0.9))
-                        }
                 }
             }
         }

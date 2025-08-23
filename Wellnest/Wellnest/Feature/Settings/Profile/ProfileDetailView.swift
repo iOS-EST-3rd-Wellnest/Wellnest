@@ -51,15 +51,10 @@ struct ProfileDetailView: View {
                             .frame(width: 150, height: 150)
                             .clipShape(Circle())
                     } else {
-                        Circle()
-                            .fill(Color.gray)
+                        Image("img_profile")
+                            .resizable()
+                            .scaledToFit()
                             .frame(width: 150, height: 150)
-                            .overlay {
-                                Image(systemName: "person.fill")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(.white.opacity(0.9))
-                            }
                     }
                 }
                 .onTapGesture {

@@ -46,7 +46,7 @@ struct WellnessGoalTabView: View {
 
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .black : .gray)
+                                .foregroundColor(goal.isSelected ? .black : .gray) // 블랙이 아니라 label
 
                             Spacer()
                         }
@@ -55,9 +55,9 @@ struct WellnessGoalTabView: View {
                         .background(goal.isSelected ? .customGray : .customSecondary)
                         .cornerRadius(CornerRadius.large)
                     }
-                    .padding(.bottom, Spacing.content)
-                    .defaultShadow()
+//                    .defaultShadow() // TODO: 중첩되어있음 제거하기
                 }
+                .padding(.bottom, Spacing.content)
             }
             .padding(.horizontal, spacing)
         }
