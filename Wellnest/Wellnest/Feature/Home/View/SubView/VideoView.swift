@@ -6,13 +6,18 @@
 //
 
 import SwiftUI
+import SkeletonUI
+import SafariServices
 
 struct VideoView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     @ObservedObject var homeVM: HomeViewModel
     
-    @State private var uiImage: UIImage?
-
-    private let videoListTemp = VideoRecommendModel.videoList
+    @State private var isOnVideo = false
+    @State private var videoId: String?
+    
+    private let placeholderCount = 5
     
     // .callout 두 줄 높이
     private var twoLineHeight: CGFloat {
@@ -22,32 +27,49 @@ struct VideoView: View {
     }
     
     var body: some View {
+        let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
+        let titleWidth = UIScreen.main.bounds.width - (Spacing.layout * 6)
+        let isLoading = homeVM.videoList.isEmpty
+
         HStack(spacing: Spacing.layout * 1.5) {
-            //ForEach(homeVM.videoList) { video in
-            ForEach(videoListTemp) { video in
-                let url = URL(string: "https://www.youtube.com/watch?v=\(video.id)")!
-                let thumbWidth = UIScreen.main.bounds.width - (Spacing.layout * 4)
-                
-                Link(destination: url) {
+            if isLoading {
+                ForEach(0..<placeholderCount, id: \.self) { _ in
+                    VideoCardSkeleton(
+                        thumbWidth: thumbWidth,
+                        titleWidth: titleWidth,
+                        twoLineHeight: twoLineHeight,
+                        isLoading: isLoading
+                    )
+                }
+            } else {
+                ForEach(homeVM.videoList) { video in
                     VStack {
                         VideoImageView(urlString: video.thumbnail, width: thumbWidth)
                         
                         Text(video.title)
                             .multilineTextAlignment(.leading)
                             .font(.callout)
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
                             .lineLimit(2)
-                            .frame(maxWidth: UIScreen.main.bounds.width - (Spacing.layout * 6), minHeight: twoLineHeight, alignment: .topLeading)
+                            .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
                             .padding(.vertical, Spacing.inline)
                     }
+                    .onTapGesture {
+                        videoId = video.id
+                        isOnVideo = true
+                    }
                 }
-                .tint(.black)
             }
         }
         .padding(.horizontal)
+        .allowsHitTesting(!isLoading)
+        .fullScreenCover(isPresented: $isOnVideo) {
+            SafariView(videoId: $videoId)
+        }
     }
 }
 
-struct VideoImageView: View {
+private struct VideoImageView: View {
     let urlString: String
     let width: CGFloat
 
@@ -74,6 +96,51 @@ struct VideoImageView: View {
             image = await ImageLoader.shared.load(urlString)
         }
     }
+}
+
+private struct VideoCardSkeleton: View {
+    let thumbWidth: CGFloat
+    let titleWidth: CGFloat
+    let twoLineHeight: CGFloat
+    let isLoading: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.inline) {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .skeleton(
+                    with: isLoading,
+                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
+                )
+                .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
+            
+            RoundedRectangle(cornerRadius: CornerRadius.medium)
+                .skeleton(
+                    with: isLoading,
+                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
+                )
+                .frame(width: titleWidth, height: twoLineHeight / 2, alignment: .topLeading)
+                .padding(.vertical, Spacing.inline)
+        }
+    }
+}
+
+struct SafariView: UIViewControllerRepresentable {
+    @Binding var videoId: String?
+    
+    private var url: URL {
+        URL(string: "https://www.youtube.com/watch?v=\(videoId ?? "")")!
+    }
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
+        let safariController = SFSafariViewController(url: url)
+        safariController.dismissButtonStyle = .close
+        safariController.preferredControlTintColor = .orange
+        
+        return safariController
+            
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) { }
 }
 
 #Preview {
