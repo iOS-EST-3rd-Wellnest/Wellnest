@@ -43,6 +43,9 @@ struct ScheduleSheetView: View {
                                         showScheduleDetail = true
                                     }
                                 }
+                                .sheet(isPresented: $showScheduleDetail) {
+                                    PlanDetailView(schedule: item)
+                                }
                         }
                     }
                 }
@@ -59,8 +62,6 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
-        .sheet(isPresented: $showScheduleDetail) {
-        }
     }
 
     @ViewBuilder
