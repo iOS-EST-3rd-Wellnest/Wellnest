@@ -283,7 +283,7 @@ struct GenderMenuLabel: View {
             .multilineTextAlignment(.center)
             .background(
                 Capsule()
-                    .fill(selectedGender == gender.value ? .blue : Color.gray.opacity(0.2))
+                    .fill(selectedGender == gender.value ? .wellnestOrange : Color.gray.opacity(0.2))
             )
             .foregroundColor(selectedGender == gender.value ? .white : .black)
     }
