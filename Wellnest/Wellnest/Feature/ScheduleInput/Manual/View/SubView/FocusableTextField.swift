@@ -45,10 +45,13 @@ struct FocusableTextField: UIViewRepresentable {
         uiView.text = text
         
         DispatchQueue.main.async {
-            if isFirstResponder && !uiView.isFirstResponder {
-                uiView.becomeFirstResponder()
-            } else if !isFirstResponder && uiView.isFirstResponder {
-                uiView.resignFirstResponder()
+            if isFirstResponder != context.coordinator.prevIsFirstResponder {
+                if isFirstResponder {
+                    uiView.becomeFirstResponder()
+                } else {
+                    uiView.resignFirstResponder()
+                }
+                context.coordinator.prevIsFirstResponder = isFirstResponder
             }
         }
 
@@ -61,6 +64,7 @@ struct FocusableTextField: UIViewRepresentable {
 
     class Coordinator: NSObject, UITextFieldDelegate {
         let parent: FocusableTextField
+        var prevIsFirstResponder = false
 
         init(_ parent: FocusableTextField) {
             self.parent = parent
@@ -80,7 +84,6 @@ struct FocusableTextField: UIViewRepresentable {
         }
 
         @objc func editingChanged(_ sender: UITextField) {
-            // ✅ 조합 중이면 무시
             guard sender.markedTextRange == nil else { return }
             let normalized = (sender.text ?? "").precomposedStringWithCanonicalMapping
             parent.text = normalized

@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct PeriodPickerView: View {
-    var text: String = ""
-
     @Binding var startDate: Date
     @Binding var endDate: Date
     @Binding var isAllDay: Bool

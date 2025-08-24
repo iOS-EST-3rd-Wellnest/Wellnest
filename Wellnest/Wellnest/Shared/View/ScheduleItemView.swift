@@ -61,5 +61,5 @@ struct ScheduleItemView: View {
 }
 
 #Preview {
-    PlanView()
+    PlanView(selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }

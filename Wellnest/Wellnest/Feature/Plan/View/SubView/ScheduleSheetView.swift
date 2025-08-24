@@ -13,6 +13,13 @@ struct ScheduleSheetView: View {
 
     @State private var currentDragOffset: CGFloat = 0
     @State private var isDragging: Bool = false
+    @State private var showScheduleDetail: Bool = false
+
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
+
+    @State private var editingItem: ScheduleItem?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
@@ -36,6 +43,11 @@ struct ScheduleSheetView: View {
                         ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
                             let item = planVM.selectedDateScheduleItems[index]
 							ScheduleItemView(schedule: item)
+                                .onTapGesture {
+                                    if isSheetExpanded {
+                                        editingItem = item
+                                    }
+                                }
                         }
                     }
                 }
@@ -52,6 +64,16 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
+        .sheet(item: $editingItem) { item in
+            // 수정 (기존 objectID 제공)
+            
+            ManualScheduleInputView(
+                mode: .create,
+                selectedTab: $selectedTab,
+                selectedCreationType: $selectedCreationType,
+                onSaved: { id in /* 새로 만든 ID 처리 */ }
+            )
+        }
     }
 
     @ViewBuilder
@@ -98,5 +120,7 @@ struct ScheduleSheetView: View {
 }
 
 #Preview {
-    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false))
+//    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false))
+
+    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }
