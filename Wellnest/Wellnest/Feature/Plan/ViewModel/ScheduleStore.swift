@@ -34,10 +34,16 @@ final class ScheduleStore: ObservableObject {
         let monthStart = month.startOfMonth
         let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)!
 
-        if monthCache[monthStart] == nil {
-            let fetched = fetchFromCoreData(start: monthStart, end: monthEnd)
-            monthCache[monthStart] = fetched
-            rebuildSchedulesByDate(for: monthStart, end: monthEnd, items: fetched)
+    private func makeSchedulesByDateDictionary() {
+        schedulesByDate.removeAll(keepingCapacity: true)
+
+        for item in scheduleItems {
+            if let repeatRuleString = item.repeatRule,
+               let repeatRule = RepeatRule.from(string: repeatRuleString) {
+                processRepeatingSchedule(item: item, repeatRule: repeatRule)
+            } else {
+                processNormalSchedule(item: item)
+            }
         }
 
         return monthCache[monthStart] ?? []
@@ -56,105 +62,47 @@ final class ScheduleStore: ObservableObject {
           do {
               let entities = try viewContext.fetch(request)
 
-              let items: [ScheduleItem] = entities.compactMap { e -> ScheduleItem? in
-                  guard
-                      let id = e.id,
-                      let title = e.title,
-                      let startDate = e.startDate,
-                      let endDate = e.endDate,
-                      let createdAt = e.createdAt,
-                      let updatedAt = e.updatedAt,
-                      let bg = e.backgroundColor
-                  else { return nil }
-
-                  return ScheduleItem(
-                      id: id,
-                      title: title,
-                      startDate: startDate,
-                      endDate: endDate,
-                      createdAt: createdAt,
-                      updatedAt: updatedAt,
-                      backgroundColor: bg,
-                      isAllDay: e.isAllDay?.boolValue ?? false,
-                      repeatRule: e.repeatRule,
-                      hasRepeatEndDate: e.hasRepeatEndDate,
-                      repeatEndDate: e.repeatEndDate,
-                      isCompleted: e.isCompleted?.boolValue ?? false,
-                      eventIdentifier: e.eventIdentifier
-                  )
-              }
-
-              return items
-          } catch {
-              print(error.localizedDescription)
-              return []
-          }
-      }
-    
-    @MainActor
-    private func rebuildSchedulesByDate(for start: Date, end: Date, items: [ScheduleItem]) {
-        var dict: [Date: [ScheduleItem]] = [:]
-
-        var day = start.startOfDay
-        while day < end {
-            dict[day] = []
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
-        }
-
-        for item in items {
-            let s = item.startDate.startOfDay
-            let e = item.endDate.startOfDay
-
-            var cur = max(s, start.startOfDay)
-            let last = min(e, end.addingTimeInterval(-1).startOfDay)
-
-            while cur <= last {
-                dict[cur, default: []].append(item)
-                guard let next = calendar.date(byAdding: .day, value: 1, to: cur) else { break }
-                cur = next
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
             }
-        }
-
-        for (k, arr) in dict {
-            dict[k] = arr.sorted {
-                if $0.isAllDay != $1.isAllDay { return $0.isAllDay && !$1.isAllDay }
-                return $0.startDate < $1.startDate
-            }
-        }
-
-        for (k, v) in dict {
-            schedulesByDate[k] = v
+            currentDate = nextDate
         }
     }
-}
 
-struct ScheduleDaySlice: Identifiable {
-    let id = UUID()
-    let item: ScheduleItem
-    let date: Date
-    let displayStart: Date?
-    let displayEnd: Date?
-    let isAllDayForThatDate: Bool
-}
+    private func processRepeatingSchedule(item: ScheduleItem, repeatRule: RepeatRule) {
+        let endDate = item.hasRepeatEndDate ? item.repeatEndDate : nil
 
-extension ScheduleStore {
-    func daySlices(for date: Date) -> [ScheduleDaySlice] {
-        let cal = Calendar.current
-        let day = date.startOfDay
-        let nextDay = cal.date(byAdding: .day, value: 1, to: day)!
-        let items = schedulesByDate[day] ?? []
+        let repeatDates = repeatRule.generateDates(
+            from: item.startDate.startOfDay,
+            until: endDate?.startOfDay
+        )
 
-        let slices = items.map { item -> ScheduleDaySlice in
-            if item.isAllDay {
-                return .init(item: item, date: day, displayStart: nil, displayEnd: nil, isAllDayForThatDate: true)
+        for repeatDate in repeatDates {
+            let duration = calendar.dateComponents([.day], from: item.startDate.startOfDay, to: item.endDate.startOfDay).day ?? 0
+
+            for dayOffset in 0...duration {
+                guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: repeatDate) else { continue }
+
+                if let endDate = endDate, targetDate > endDate {
+                    break
+                }
+
+                schedulesByDate[targetDate, default: []].append(item)
             }
-            if item.startDate <= day && item.endDate >= nextDay {
-                return .init(item: item, date: day, displayStart: nil, displayEnd: nil, isAllDayForThatDate: true)
-            }
-            let start = max(item.startDate, day)
-            let end = min(item.endDate, nextDay)
-            return .init(item: item, date: day, displayStart: start, displayEnd: end, isAllDayForThatDate: false)
+        }
+    }
+
+    func fetchSchedules(in month: Date) async -> [ScheduleItem] {
+        let start = month.startOfMonth
+        let end = Calendar.current.date(byAdding: .month, value: 1, to: start)!
+
+        let monthKeys = schedulesByDate.keys.filter { $0 >= start && $0 < end }
+        let items = monthKeys.flatMap { schedulesByDate[$0] ?? [] }
+        let unique = Array(Set(items))
+
+        return unique.sorted { a, b in
+            if a.isAllDay != b.isAllDay { return a.isAllDay && !b.isAllDay }
+            return a.startDate < b.startDate
         }
 
         return slices.sorted { a, b in
