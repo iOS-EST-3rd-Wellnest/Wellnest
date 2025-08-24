@@ -46,6 +46,7 @@ struct WeatherPreferenceTabView: View {
 }
 
 extension WeatherPreferenceTabView {
+    /// CoreData 저장
     private func saveWeatherPreference() {
         let selectedWeathers = viewModel.weatherPreferences.filter { $0.isSelected }
 
@@ -56,7 +57,6 @@ extension WeatherPreferenceTabView {
             userEntity.weatherPreferences = weathers
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }

@@ -12,6 +12,8 @@ struct ProfileDetailView: View {
     @ObservedObject var viewModel: UserInfoViewModel
     @ObservedObject var userEntity: UserEntity
 
+    @Binding var currentPage: Int
+
     enum Field {
         case nickname
         case height
@@ -37,7 +39,7 @@ struct ProfileDetailView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack {
+        ScrollView {
             /// 사용자 프로필 사진
             HStack {
                 Spacer()
@@ -49,13 +51,10 @@ struct ProfileDetailView: View {
                             .frame(width: 150, height: 150)
                             .clipShape(Circle())
                     } else {
-                        Circle()
-                            .fill(Color.gray)
+                        Image("img_profile")
+                            .resizable()
+                            .scaledToFit()
                             .frame(width: 150, height: 150)
-                            .overlay {
-                                Text("프로필 사진 수정")
-                                    .foregroundStyle(.white)
-                            }
                     }
                 }
                 .onTapGesture {
@@ -87,7 +86,7 @@ struct ProfileDetailView: View {
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -193,21 +192,35 @@ struct ProfileDetailView: View {
                     }
                 }
             }
-            .onAppear {
-                loadUserEntity()
-            }
-
-            Spacer()
-
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
             /// 저장 버튼
-            FilledButton(title: "저장") {
-                saveUserInfo()
-                withAnimation { dismiss() }
-            }
-            .padding(.horizontal, OnboardingCardLayout.spacing)
-            .padding(.bottom, Spacing.content)
+            OnboardingButton(
+                title: "저장",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveUserInfo()
+                    withAnimation { dismiss() }
+                },
+                currentPage: $currentPage
+            )
+        }
+        .onAppear {
+            loadUserEntity()
         }
         .navigationTitle("사용자 정보")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
     }
 }
 
@@ -242,7 +255,6 @@ extension ProfileDetailView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 
@@ -289,7 +301,8 @@ private struct Preview: View {
         if let userEntity = userInfoVM.userEntity {
             ProfileDetailView(
                 viewModel: userInfoVM,
-                userEntity: userEntity
+                userEntity: userEntity,
+                currentPage: $currentPage
             )
         } else {
             ProgressView("Loading...")

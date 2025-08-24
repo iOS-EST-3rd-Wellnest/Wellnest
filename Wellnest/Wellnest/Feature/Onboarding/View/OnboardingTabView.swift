@@ -20,20 +20,28 @@ struct OnboardingTabView: View {
             VStack {
                 if let user = viewModel.userEntity {
                     switch currentPage {
+                    /// 동기부여
                     case 0:
                         MotivationTabView(currentPage: $currentPage, title: $title)
+                    /// 앱 소개
                     case 1, 2:
                         IntroductionTabView(currentPage: $currentPage, title: $title)
+                    /// 사용자 정보
                     case 3:
                         UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title)
+                    /// 웰니스 목표
                     case 4:
                         WellnessGoalTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                    /// 선호 활동
                     case 5:
                         ActivityPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                    /// 선호 시간
                     case 6:
                         PreferredTimeSlotTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                    /// 선호 날씨
                     case 7:
                         WeatherPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                    /// 건강 상태
                     case 8:
                         HealthConditionTabView(userEntity: user, viewModel: viewModel, userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title)
                     default:
@@ -69,6 +77,7 @@ struct OnboardingTabView: View {
     }
 }
 
+/// 온보딩 타이틀 설명 레이아웃
 struct OnboardingTitleDescription: View {
     let description: String
 
@@ -82,6 +91,7 @@ struct OnboardingTitleDescription: View {
     }
 }
 
+/// 카드 레이아웃
 struct OnboardingCardLayout {
     static var isIPad: Bool {
         UIDevice.current.userInterfaceIdiom == .pad
@@ -109,22 +119,20 @@ struct OnboardingCardLayout {
     }
 }
 
+/// 카드 토글 로직
 struct ToggleCardHelper {
     static func toggleCard<Item: SelectableItem>(item: Binding<Item>, items: Binding<[Item]>) {
         withAnimation(.easeInOut) {
             if item.wrappedValue.title == "특별히 없음" {
-                // "특별히 없음" 선택 시, 다른 선택 전부 해제
-                if !item.wrappedValue.isSelected { // 현재 선택 안돼있으면
+                if !item.wrappedValue.isSelected {
                     for index in items.indices {
                         items.wrappedValue[index].isSelected = false
                     }
                     item.wrappedValue.isSelected = true
                 } else {
-                    // 다시 누르면 해제
                     item.wrappedValue.isSelected = false
                 }
             } else {
-                // 다른 목표 선택 시, "특별히 없음" 해제
                 if let noneIndex = items.wrappedValue.firstIndex(where: { $0.title == "특별히 없음" }) {
                     items.wrappedValue[noneIndex].isSelected = false
                 }
@@ -134,6 +142,7 @@ struct ToggleCardHelper {
     }
 }
 
+/// 카드 레이아웃
 struct OnboardingCardContent<Item: SelectableItem>: View {
     @Binding var items: [Item]
 
@@ -160,7 +169,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                         VStack(spacing: Spacing.inline) {
                             Text(item.icon)
                                     .font(.system(size: 60))
-                                    .saturation(item.isSelected ? 1 : 0) // 채도 조절
+                                    .saturation(item.isSelected ? 1 : 0)
 
                             Text(item.title)
                                 .fontWeight(.semibold)
@@ -179,6 +188,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
     }
 }
 
+/// 온보딩 버튼 레이아웃
 struct OnboardingButton: View {
     @Environment(\.colorScheme) var colorScheme
 

@@ -41,13 +41,17 @@ struct UserInfoTabView: View {
 
             VStack {
                 /// 닉네임
+                // TODO: 자음, 모음 입력 각각 안되게(정규식 추가)
+                // 키, 몸무게 title에 단위 추가
+                // 닉네임 정규식 안지켰을 때 흔들리거나 빨간색 표시하거나 글씨로 알려주기
+                // 선택되는 입력폼 될 때 마다 표시?
                 UserInfoForm(title: "닉네임", isRequired: true) {
                     TextField(
                         "",
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -181,7 +185,7 @@ struct UserInfoFormTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundColor(.black)
+            .foregroundColor(.black) // label로 바꾸기
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -206,13 +210,13 @@ struct UserInfoForm<Content: View>: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 58)
-        .background(.customSecondary)
+        .background(.customSecondary) // systemgray6
         .cornerRadius(CornerRadius.large)
         .padding(.bottom, Spacing.content)
     }
 }
 
-/// 나이 선택 메뉴
+/// 나이 선택 버튼
 struct AgeMenuLabel: View {
     let selectedAge: String
 
@@ -254,7 +258,7 @@ struct GenderMenuLabel: View {
 extension UserInfoTabView {
     /// CoreData 저장
     private func saveUserInfo() {
-        // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
+        /// 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
             userEntity.id = UUID()
         }
@@ -277,7 +281,6 @@ extension UserInfoTabView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 
@@ -298,7 +301,6 @@ extension UserInfoTabView {
         } else {
             height = nil
         }
-
         if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
             weightText = "\(weightValue)"
