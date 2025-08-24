@@ -13,6 +13,9 @@ struct AppRouter: View {
     var body: some View {
         if userDefaultsManager.hasCompletedOnboarding {
             MainTabView()
+                .task {
+                    await WeatherCenter.shared.preloadIfNeeded()
+                }
         } else {
             OnboardingTabView(userDefaultsManager: userDefaultsManager)
         }

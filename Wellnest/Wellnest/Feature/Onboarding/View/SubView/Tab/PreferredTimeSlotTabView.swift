@@ -46,6 +46,7 @@ struct PreferredTimeSlotTabView: View {
 }
 
 extension PreferredTimeSlotTabView {
+    /// CoreData 저장
     private func savePreferredTimeSlot() {
         let selectedTimeSlots = viewModel.preferredTimeSlots.filter { $0.isSelected }
 
@@ -56,7 +57,6 @@ extension PreferredTimeSlotTabView {
             userEntity.preferredTimeSlot = timeSlots
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }

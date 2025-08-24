@@ -19,14 +19,19 @@ struct ModifyingSurveyView: View {
         VStack {
             if let user = viewModel.userEntity {
                 switch currentPage {
+                /// 윌니스 목표
                 case 0:
                     WellnessGoalTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
+                /// 선호 활동
                 case 1:
                     ActivityPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title, isInSettings: true)
+                /// 선호 시간
                 case 2:
                     PreferredTimeSlotTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title, isInSettings: true)
+                /// 선호 날씨
                 case 3:
                     WeatherPreferenceTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title, isInSettings: true)
+                /// 건강 상태
                 case 4:
                     HealthConditionTabView(userEntity: user, viewModel: viewModel, userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage, title: $title, isInSettings: true)
                 default:
@@ -42,7 +47,7 @@ struct ModifyingSurveyView: View {
                     withAnimation { dismiss() }
                 } label: {
                     Image(systemName: "xmark")
-                        .foregroundColor(.gray) // TODO: 다른 네비게이션 바와 색 맞추기
+                        .foregroundColor(.gray)
                 }
             }
         }
