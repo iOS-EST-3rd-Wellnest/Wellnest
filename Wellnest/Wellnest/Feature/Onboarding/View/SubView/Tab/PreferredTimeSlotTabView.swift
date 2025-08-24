@@ -26,6 +26,7 @@ struct PreferredTimeSlotTabView: View {
             OnboardingTitleDescription(description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
             OnboardingCardContent(items: $viewModel.preferredTimeSlots)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(

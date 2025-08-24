@@ -22,6 +22,7 @@ struct UserInfoTabView: View {
     }
 
     @FocusState private var isFieldFocused: Field?
+    @State private var selectedField: Field?
     @Binding var isNicknameValid: Bool
 
     @State private var nickname: String = ""
@@ -75,11 +76,13 @@ struct UserInfoTabView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
+                // TODO: 연령대, 성별 포커스 다시 하기, 설정뷰도 동일하게 수정
+                UserInfoForm(title: "연령대", isRequired: true, isFocused: selectedField == .ageRange) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
                                 selectedAge = age.value
+                                selectedField = .ageRange
                             } label: {
                                 Text(age.title)
                             }
@@ -87,21 +90,20 @@ struct UserInfoTabView: View {
                     } label: {
                         AgeMenuLabel(selectedAge: selectedAge)
                     }
-                    .focused($isFieldFocused, equals: .ageRange)
                     .padding(.horizontal)
                     .padding(.leading, 20)
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
+                UserInfoForm(title: "성별", isRequired: true, isFocused: selectedField == .gender) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
                                 selectedGender = gender.value
+                                selectedField = .gender
                             } label: {
                                 GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
-                            .focused($isFieldFocused, equals: .gender)
                         }
                     }
                     .padding(.leading, 48)
@@ -227,12 +229,14 @@ struct UserInfoForm<Content: View>: View {
     }
 
     private var borderColor: Color {
-        if isFocused && isNicknameValid {
-            return .secondary.opacity(0.6)
-        } else if isFocused && !isNicknameValid {
-            return .red
+        if isFocused {
+            if title.contains("닉네임") {
+                return isNicknameValid ? .secondary.opacity(0.6) : .red
+            } else {
+                return .secondary.opacity(0.6)
+            }
         } else {
-            return Color(.systemGray6)
+            return .clear
         }
     }
 }

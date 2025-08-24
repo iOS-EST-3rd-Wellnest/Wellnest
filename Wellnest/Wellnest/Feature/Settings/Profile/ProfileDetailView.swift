@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UIKit
 
 struct ProfileDetailView: View {
     @ObservedObject var viewModel: UserInfoViewModel
@@ -16,11 +15,14 @@ struct ProfileDetailView: View {
 
     enum Field {
         case nickname
+        case ageRange
+        case gender
         case height
         case weight
     }
 
     @FocusState private var isFieldFocused: Field?
+    @Binding var isNicknameValid: Bool
 
     @State private var tempImage: UIImage? = nil
     @State private var isImagePickerPresented: Bool = false
@@ -33,7 +35,7 @@ struct ProfileDetailView: View {
     @State private var weightText: String = ""
 
     var isButtonDisabled: Bool {
-        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
+        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
     }
     
     @Environment(\.dismiss) var dismiss
@@ -80,7 +82,7 @@ struct ProfileDetailView: View {
             /// 사용자 정보 입력 폼
             VStack {
                 /// 닉네임
-                UserInfoForm(title: "닉네임", isRequired: true) {
+                UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
                         text: $nickname,
@@ -97,6 +99,7 @@ struct ProfileDetailView: View {
                     .submitLabel(.done)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
+                        isNicknameValid = NicknameValidator.isNicknameValid(nickname)
                     }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -109,7 +112,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true) {
+                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
@@ -126,7 +129,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true) {
+                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
@@ -142,7 +145,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 키
-                UserInfoForm(title: "키") {
+                UserInfoForm(title: "키", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
                         text: $heightText,
@@ -162,7 +165,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 몸무게
-                UserInfoForm(title: "몸무게") {
+                UserInfoForm(title: "몸무게", isFocused: isFieldFocused == .weight) {
                     TextField(
                         "",
                         text: $weightText,
@@ -193,6 +196,7 @@ struct ProfileDetailView: View {
                 }
             }
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             /// 저장 버튼
@@ -217,7 +221,7 @@ struct ProfileDetailView: View {
                     withAnimation { dismiss() }
                 } label: {
                     Image(systemName: "xmark")
-                        .foregroundColor(.gray)
+                        .foregroundColor(.wellnestOrange)
                 }
             }
         }
@@ -296,13 +300,15 @@ private struct Preview: View {
     @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = ""
+    @State private var isNicknameValid = true
 
     var body: some View {
         if let userEntity = userInfoVM.userEntity {
             ProfileDetailView(
                 viewModel: userInfoVM,
                 userEntity: userEntity,
-                currentPage: $currentPage
+                currentPage: $currentPage,
+                isNicknameValid: $isNicknameValid
             )
         } else {
             ProgressView("Loading...")

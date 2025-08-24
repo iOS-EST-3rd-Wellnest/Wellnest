@@ -65,7 +65,7 @@ struct OnboardingTabView: View {
                             withAnimation { currentPage -= 1 }
                         } label: {
                             Image(systemName: "chevron.backward")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.wellnestOrange)
                         }
                     }
                 }
@@ -145,6 +145,8 @@ struct ToggleCardHelper {
 
 /// 카드 레이아웃
 struct OnboardingCardContent<Item: SelectableItem>: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @Binding var items: [Item]
 
     let columns = OnboardingCardLayout.columns
@@ -174,13 +176,12 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
                             Text(item.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? .black : .gray)
+                                .foregroundColor(item.isSelected ? Color.primary : Color.gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
-                        .background(item.isSelected ? .customGray : .customSecondary)
+                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray) : Color(.systemGray3)) : Color(.systemGray6))
                         .cornerRadius(CornerRadius.large)
                     }
-                    .defaultShadow()
                 }
             }
         }
