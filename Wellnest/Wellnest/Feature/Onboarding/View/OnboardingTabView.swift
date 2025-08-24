@@ -15,10 +15,6 @@ struct OnboardingTabView: View {
     @State private var currentPage: Int = 0
     @State private var title: String = ""
 
-//    init(startPage: Int = 0) {
-//        _currentPage = State(initialValue: startPage)
-//    }
-
     var body: some View {
         NavigationView {
             VStack {
@@ -50,47 +46,6 @@ struct OnboardingTabView: View {
                         IntroductionTabView(currentPage: $currentPage, title: $title)
                     }
                 }
-
-                // TabView(selection: $currentPage) {
-                //                MotivationTabView(currentPage: $currentPage)
-                //                    .tag(0)
-                //
-                //                IntroductionTabView(currentPage: $currentPage)
-                //                    .tag(1)
-                //
-                //                IntroductionTabView(currentPage: $currentPage)
-                //                    .tag(2)
-                //
-                //                UserInfoTabView(currentPage: $currentPage)
-                //                    .tag(3)
-                //
-                //                WellnessGoalTabView(currentPage: $currentPage)
-                //                    .tag(4)
-                //
-                //                ActivityPreferenceTabView(currentPage: $currentPage)
-                //                    .tag(5)
-                //
-                //                PreferredTimeSlotTabView(currentPage: $currentPage)
-                //                    .tag(6)
-                //
-                //                WeatherPreferenceTabView(currentPage: $currentPage)
-                //                    .tag(7)
-                //
-                //                HealthConditionTabView(userDefaultsManager: UserDefaultsManager.shared, currentPage: $currentPage)
-                //                    .tag(8)
-                //            }
-                //            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-
-                // Custom Indicator
-                //            if currentPage < totalPages {
-                //                HStack(spacing: 8) {
-                //                    ForEach(0 ..< totalPages, id: \.self) { index in
-                //                        Circle()
-                //                            .fill(index == currentPage ? Color.primary : Color.secondary.opacity(0.3))
-                //                            .frame(width: 8, height: 8)
-                //                    }
-                //                }
-                //            }
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -106,7 +61,11 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+            .onAppear {
+                viewModel.screenContext = .onboarding
+            }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
@@ -205,7 +164,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
                             Text(item.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? .black : .secondary)
+                                .foregroundColor(item.isSelected ? .black : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
                         .background(item.isSelected ? .customGray : .customSecondary)
@@ -221,31 +180,55 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 }
 
 struct OnboardingButton: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let title: String
     let isDisabled: Bool
     let action: () -> Void
+
+    @Binding var currentPage: Int
+
+    var showPrevious: Bool = false
+    var isLastStep: Bool = false
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.white.opacity(0.0),
-                    Color.white.opacity(1.0)
+                    (colorScheme == .dark ? Color.black : Color.white).opacity(0.0),
+                    (colorScheme == .dark ? Color.black : Color.white).opacity(1.0)
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
             .frame(height: 24)
 
-            FilledButton(
-                title: title,
-                disabled: isDisabled,
-                action: action
-            )
-            .padding(.horizontal)
+            HStack {
+                if showPrevious, currentPage > 0 {
+                    FilledButton(
+                        title: "이전",
+                        disabled: false,
+                        action: { withAnimation { currentPage -= 1 } }
+                    )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+
+                FilledButton(
+                    title: title,
+                    disabled: isDisabled,
+                    action: {
+                        action()
+                        if isLastStep {
+                            dismiss()
+                        }
+                    }
+                )
+            }
+            .padding(.horizontal, OnboardingCardLayout.spacing)
             .padding(.bottom, Spacing.content)
-//            .padding(.top, Spacing.inline)
-            .background(.white)
+            .background(colorScheme == .dark ? Color.black : Color.white)
         }
     }
 }

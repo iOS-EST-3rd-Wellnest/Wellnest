@@ -9,7 +9,9 @@ import Foundation
 import SwiftUI
 import EventKit
 
+@MainActor
 final class PlanViewModel: ObservableObject {
+
 //    @Published var selectedDate: Date
     @Published var selectedDate: Date {
         didSet {
@@ -20,12 +22,11 @@ final class PlanViewModel: ObservableObject {
     }
     @Published var displayedMonth: Date {
         didSet {
-            updateDisplayedMonth()
             expandMonthsIfNeeded(from: displayedMonth)
         }
     }
-    @Published var calendarDates: [Date]
-    @Published var months: [Date]
+    @Published var calendarDates: [Date] = []
+    @Published var months: [Date] = []
 
 	@Published var scheduleStore = ScheduleStore()
     
@@ -36,34 +37,46 @@ final class PlanViewModel: ObservableObject {
     private var storeChangeObserver: NSObjectProtocol?
     private var coreDataObserver: NSObjectProtocol?
     private var monthPreloadTask: Task<Void, Never>?
+
+    @Published private(set) var anchorMonth: Date
+    @Published private(set) var visibleMonth: Date
+    @Published private(set) var jumpToken: Int = 0
+
+    struct CachedMonthData {
+        let monthStart: Date
+        let dates: [Date]
+        let schedules: [ScheduleItem]
+    }
+    @Published private(set) var monthDataCache: [Date: CachedMonthData] = [:]
+    private var backgroundLoaders: [Date: Task<CachedMonthData, Never>] = [:]
+
+    private let prefetchRadius = 3
+    private let pageRange = -3...3
+
+
     private let calendar = Calendar.current
 //    private var isCalendarEnabled: Bool { UserDefaultsManager.shared.isCalendarEnabled }
 
     init(selectedDate: Date = Date()) {
-        let calendar = Calendar.current
         let normalized = selectedDate.startOfDay
+        let normalizedMonth = normalized.startOfMonth
 
         self.selectedDate = normalized
-        self.displayedMonth = normalized.startOfMonth
-        self.calendarDates = normalized.filledDatesOfMonth()
-        self.months = (-12...12).compactMap {
-            calendar.date(byAdding: .month, value: $0, to: normalized.startOfMonth)
-        }
+        self.anchorMonth =	normalizedMonth
+        self.visibleMonth = normalizedMonth
+        self.displayedMonth = selectedDate
+
+        prefetchMonthsAroundAnchor()
+        trimCacheAroundMonth(normalizedMonth)
     }
     
     var iOSCalendarbyDay: [Date: [ScheduleItem]] {
         iOSCalendarMonthCache[displayedMonth.startOfMonth] ?? [:]
     }
 
-    var selectedDateScheduleItems: [ScheduleItem] {
-        scheduleStore.scheduleItems(for: selectedDate)
-    }
-
-    func hasSchedule(for date: Date) -> Bool {
-        scheduleStore.hasSchedule(for: date)
-    }
-    
     deinit {
+        for (_, task) in backgroundLoaders { task.cancel() }
+        
         if let obs = storeChangeObserver {
             NotificationCenter.default.removeObserver(obs)
         }
@@ -71,7 +84,121 @@ final class PlanViewModel: ObservableObject {
 }
 
 extension PlanViewModel {
-    func calenderHeight(
+    var selectedDateScheduleItems: [ScheduleItem] {
+        scheduleStore.scheduleItems(for: selectedDate)
+    }
+
+    func hasSchedule(for date: Date) -> Bool {
+        scheduleStore.hasSchedule(for: date)
+    }
+
+         func selectDate(_ date: Date) {
+        selectedDate = date.startOfDay
+    }
+
+    func updateVisibleMonth(_ month: Date) {
+        let startOfMonth = month.startOfMonth
+        visibleMonth = startOfMonth
+        selectedDate = startOfMonth
+    }
+
+    func updateVisibleMonthOnly(_ month: Date) {
+        visibleMonth = month.startOfMonth
+    }
+}
+
+extension PlanViewModel {
+    func generatePageMonths(center: Date? = nil) -> [Date] {
+         let baseMonth = (center ?? visibleMonth).startOfMonth
+         return pageRange.map { offset in
+             addMonths(to: baseMonth, count: offset)
+         }
+     }
+
+    func recenterVisibleMonth(to month: Date) {
+        let startOfMonth = month.startOfMonth
+        visibleMonth = startOfMonth
+        anchorMonth = startOfMonth
+        selectedDate = startOfMonth
+        
+        prefetchMonthsAroundAnchor()
+        trimCacheAroundMonth(anchorMonth)
+    }
+
+    func jumpToDate(_ date: Date) {
+        let startOfMonth = date.startOfMonth
+        visibleMonth = startOfMonth
+        anchorMonth  = startOfMonth
+        selectedDate = date.startOfDay
+
+        prefetchMonthsAroundAnchor()
+        trimCacheAroundMonth(anchorMonth)
+        jumpToken &+= 1
+    }
+
+    func stagePrefetch(direction: Int) {
+        let nextAnchorMonth = addMonths(to: visibleMonth, count: direction)
+        guard nextAnchorMonth != anchorMonth else { return }
+
+        anchorMonth = nextAnchorMonth
+        prefetchMonthsAroundAnchor()
+    }
+}
+
+extension PlanViewModel {
+    private func prefetchMonthsAroundAnchor() {
+        for offset in -prefetchRadius...prefetchRadius {
+            let targetMonth = addMonths(to: anchorMonth, count: offset)
+            ensureMonthDataInCache(targetMonth)
+        }
+    }
+
+    private func ensureMonthDataInCache(_ month: Date) {
+        let monthKey = month.startOfMonth
+        if monthDataCache[monthKey] != nil { return }
+        if backgroundLoaders[monthKey] != nil { return }
+
+        backgroundLoaders[monthKey] = Task(priority: .utility) { [weak self] in
+            guard let self else { return CachedMonthData(monthStart: monthKey, dates: [], schedules: []) }
+
+            let result = await MonthDataLoader.load(month: monthKey, store: self.scheduleStore)
+
+            await MainActor.run {
+                self.monthDataCache[monthKey] = CachedMonthData(monthStart: monthKey,
+                                                 dates: result.dates,
+                                                 schedules: result.schedules)
+                self.backgroundLoaders[monthKey] = nil
+            }
+            return self.monthDataCache[monthKey] ?? CachedMonthData(monthStart: monthKey, dates: [], schedules: [])
+        }
+    }
+
+    private func trimCacheAroundMonth(_ centerMonth: Date) {
+        let monthsToKeep = Set((-prefetchRadius...prefetchRadius).map {
+            addMonths(to: centerMonth, count: $0)
+        })
+
+        let cachedMonthsToRemove = monthDataCache.keys.filter {
+            !monthsToKeep.contains($0)
+        }
+        cachedMonthsToRemove.forEach { monthDataCache.removeValue(forKey: $0) }
+
+        let loadersToCancel = backgroundLoaders.keys.filter {
+            !monthsToKeep.contains($0)
+        }
+        loadersToCancel.forEach { monthKey in
+            backgroundLoaders[monthKey]?.cancel()
+            backgroundLoaders[monthKey] = nil
+        }
+    }
+
+    func addMonths(to date: Date, count: Int) -> Date {
+         calendar.date(byAdding: .month, value: count, to: date.startOfMonth)!.startOfMonth
+     }
+}
+
+extension PlanViewModel {
+    func calendarHeight(
         width: CGFloat = UIScreen.main.bounds.width,
         rows: Int,
         columns: Int = 7,
@@ -89,21 +216,13 @@ extension PlanViewModel {
             if rows == 1 {
                 itemWidth - spacing * 2
             } else {
-				itemWidth * CGFloat(rows) + totalSpacingHeight
+                itemWidth * CGFloat(rows) + totalSpacingHeight
             }
         }()
 
         return itemHeight
     }
-
-    private func updateDisplayedMonth() {
-        calendarDates = displayedMonth.filledDatesOfMonth()
-
-        if !calendar.isDate(selectedDate, equalTo: displayedMonth, toGranularity: .month) {
-             selectedDate = displayedMonth
-         }
-    }
-
+    
     private func expandMonthsIfNeeded(from month: Date) {
         guard let currentIndex = months.firstIndex(of: month) else { return }
 
@@ -437,6 +556,17 @@ extension PlanViewModel {
             }
         }
     }
+}
+
+actor MonthDataLoader {
+    static func load(month: Date, store: ScheduleStore) async -> (dates: [Date], schedules: [ScheduleItem]) {
+        let dates = month.filledDatesOfMonth()
+
+        let schedules = await store.fetchSchedules(in: month)
+        return (dates, schedules)
+    }
+
+    
 }
 
 private extension Array {

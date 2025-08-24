@@ -254,10 +254,9 @@ struct ManualScheduleInputView: View {
 }
 
 extension ManualScheduleInputView {
-
     @MainActor
     func saveSchedule() {
-        Task { await saveSchedule() } // 위의 async 버전을 재사용
+        Task { await saveSchedule() }
     }
 
     @MainActor
@@ -270,44 +269,22 @@ extension ManualScheduleInputView {
             endDate: endDate,
             isAllDay: isAllDay,
             backgroundColorName: selectedColorName,
-            repeatRuleName: selectedRepeatRule?.name,
+            repeatRuleName: isRepeated ? selectedRepeatRule?.name : nil,
             hasRepeatEndDate: hasRepeatEndDate,
-            repeatEndDate: repeatEndDate,
-            alarmRuleName: alarmRule?.name,
+            repeatEndDate: isRepeated ? repeatEndDate : nil,
+            alarmRuleName: isAlarmOn ? alarmRule?.name : nil,
             isAlarmOn: isAlarmOn,
             isCompleted: false,
             eventIdentifier: eventIdentifier
         )
-        
-        Task {
-            do {
-                let id = try await editor.saveSchedule(input)
-                lastSavedID = id
-                
-//                if UserDefaultsManager.shared.isCalendarEnabled {
-                    if let eventId = try? await CalendarManager.shared.addOrUpdateEvent(
-                        existingId: eventIdentifier,     // 수정이면 전달
-                        title: title,
-                        location: location,
-                        notes: detail,
-                        startDate: startDate,
-                        endDate: endDate,
-                        isAllDay: isAllDay,
-                        recurrenceRules: nil,
-                        alarms: nil
-                    ) {
-                        try await editor.attachEventIdentifier(eventId, to: id)
-                    }
-//                }
-//                if let oid = lastSavedID {
-//                    try await editor.attachEventIdentifier(evnetId, to: oid)   // 아래 B에 추가하는 메서드
-//                }
-//                newSchedule.eventIdentifier = evnetId
-            } catch {
-                print(error.localizedDescription)
-            }
-            isSaving = false
+
+        do {
+            let ids = try await editor.saveSchedule(input)
+            lastSavedID = ids.first
+        } catch {
+            print("저장 실패: \(error)")
         }
+        isSaving = false
     }
 }
 

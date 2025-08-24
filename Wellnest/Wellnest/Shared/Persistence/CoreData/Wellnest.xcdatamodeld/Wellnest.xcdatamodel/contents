@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24E248" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="DailySummaryEntity" representedClassName="DailySummaryEntity" syncable="YES" codeGenerationType="class">
         <attribute name="articleRecommendation" optional="YES" attributeType="String"/>
         <attribute name="completeRate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO"/>
@@ -24,9 +24,11 @@
         <attribute name="isAllDay" attributeType="Boolean" usesScalarValueType="NO"/>
         <attribute name="isCompleted" attributeType="Boolean" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="occurrenceIndex" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="repeatEndDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="repeatRule" optional="YES" attributeType="String"/>
         <attribute name="scheduleType" attributeType="String"/>
+        <attribute name="seriesId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -43,6 +45,7 @@
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="nickname" attributeType="String"/>
         <attribute name="preferredTimeSlot" optional="YES" attributeType="String"/>
+        <attribute name="profileImage" optional="YES" attributeType="Binary"/>
         <attribute name="weatherPreferences" optional="YES" attributeType="String"/>
         <attribute name="weight" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO"/>
     </entity>

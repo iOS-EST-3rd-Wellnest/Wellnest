@@ -8,30 +8,23 @@
 import SwiftUI
 import CoreData
 
-enum RepeatFrequency: String, Codable {
-    case daily = "매일"
-    case weekly = "매주"
-    case monthly = "매월"
-    case yearly = "매년"
-}
-
 final class ScheduleStore: ObservableObject {
     @Published var scheduleItems: [ScheduleItem] = []
 
     private let calendar = Calendar.current
     private var schedulesByDate: [Date: [ScheduleItem]] = [:]
 
-//    init() {
-//        loadScheduleData()
-//    }
+    init() {
+        loadScheduleData()
+    }
 
-//    func scheduleItems(for date: Date) -> [ScheduleItem] {
-//        return schedulesByDate[date.startOfDay] ?? []
-//    }
-//
-//    func hasSchedule(for date: Date) -> Bool {
-//        return schedulesByDate[date.startOfDay] != nil
-//    }
+    func scheduleItems(for date: Date) -> [ScheduleItem] {
+        return schedulesByDate[date.startOfDay] ?? []
+    }
+
+    func hasSchedule(for date: Date) -> Bool {
+        return schedulesByDate[date.startOfDay] != nil
+    }
 
     func loadScheduleData() {
         self.scheduleItems = DataLoader.loadScheduleItems()
@@ -42,17 +35,11 @@ final class ScheduleStore: ObservableObject {
         schedulesByDate.removeAll(keepingCapacity: true)
 
         for item in scheduleItems {
-            let startDate = item.startDate.startOfDay
-            let endDate = item.endDate.startOfDay
-
-            var currentDate = startDate
-            while currentDate <= endDate {
-                schedulesByDate[currentDate, default: []].append(item)
-
-                guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
-                    break
-                }
-                currentDate = nextDate
+            if let repeatRuleString = item.repeatRule,
+               let repeatRule = RepeatRule.from(string: repeatRuleString) {
+                processRepeatingSchedule(item: item, repeatRule: repeatRule)
+            } else {
+                processNormalSchedule(item: item)
             }
         }
 
@@ -68,107 +55,56 @@ final class ScheduleStore: ObservableObject {
             }
         }
     }
-    
-//    @Published private(set) var schedulesByDate: [Date: [ScheduleItem]] = [:]
-//
-//        private let calendar = Calendar.current
-        private let container: NSPersistentContainer
-        private let store: CoreDataStore
 
-        init(container: NSPersistentContainer = CoreDataStack.shared.container) {
-            self.container = container
-            self.store = CoreDataStore(container: container)
+    private func processNormalSchedule(item: ScheduleItem) {
+        let startDate = item.startDate.startOfDay
+        let endDate = item.endDate.startOfDay
 
-            // 초기 로드
-            Task { await reloadFromCoreData() }
+        var currentDate = startDate
+        while currentDate <= endDate {
+            schedulesByDate[currentDate, default: []].append(item)
 
-            // Core Data 저장 알림 구독 (Combine 없이)
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(contextDidSave(_:)),
-                name: .NSManagedObjectContextDidSave,
-                object: nil
-            )
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
         }
+    }
 
-        deinit {
-            NotificationCenter.default.removeObserver(self)
-        }
+    private func processRepeatingSchedule(item: ScheduleItem, repeatRule: RepeatRule) {
+        let endDate = item.hasRepeatEndDate ? item.repeatEndDate : nil
 
-        func scheduleItems(for date: Date) -> [ScheduleItem] {
-            schedulesByDate[date.startOfDay] ?? []
-        }
+        let repeatDates = repeatRule.generateDates(
+            from: item.startDate.startOfDay,
+            until: endDate?.startOfDay
+        )
 
-        func hasSchedule(for date: Date) -> Bool {
-            schedulesByDate[date.startOfDay] != nil
-        }
+        for repeatDate in repeatDates {
+            let duration = calendar.dateComponents([.day], from: item.startDate.startOfDay, to: item.endDate.startOfDay).day ?? 0
 
-        /// Core Data로부터 모든 앱 일정을 읽어와 날짜별로 버킷팅
-        @MainActor
-        func reloadFromCoreData() async {
-            let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
+            for dayOffset in 0...duration {
+                guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: repeatDate) else { continue }
 
-            do {
-                // 전체 일정 로드 (필요 시 기간 predicate 적용 가능)
-                let items = try await store.fetchDTOs(
-                    ScheduleEntity.self,
-                    predicate: nil,
-                    sortDescriptors: [sort]
-                ) { e in
-                    ScheduleItem(
-                        id: e.id ?? UUID(),
-                        title: e.title ?? "",
-                        startDate: e.startDate ?? Date(),
-                        endDate: e.endDate ?? Date(),
-                        createdAt: e.createdAt ?? Date(),
-                        updatedAt: e.updatedAt ?? Date(),
-                        backgroundColor: e.backgroundColor ?? "",
-                        isAllDay: e.isAllDay?.boolValue ?? false,
-                        repeatRule: e.repeatRule,
-                        hasRepeatEndDate: e.hasRepeatEndDate,
-                        repeatEndDate: e.repeatEndDate,
-                        isCompleted: e.isCompleted?.boolValue ?? false,
-                        eventIdentifier: e.eventIdentifier
-                    )
+                if let endDate = endDate, targetDate > endDate {
+                    break
                 }
 
-                // 날짜별 버킷 생성
-                var bucket: [Date: [ScheduleItem]] = [:]
-                for item in items {
-                    let start = item.startDate.startOfDay
-                    let end   = item.endDate.startOfDay
-
-                    var cur = start
-                    while cur <= end {
-                        var arr = bucket[cur, default: []]
-                        arr.append(item)
-                        bucket[cur] = arr
-                        guard let next = calendar.date(byAdding: .day, value: 1, to: cur) else { break }
-                        cur = next
-                    }
-                }
-
-                // 정렬 (하루 안에서 종일 먼저 → 시작시간 오름차순)
-                for (day, arr) in bucket {
-                    bucket[day] = arr.sorted { a, b in
-                        if a.isAllDay != b.isAllDay { return a.isAllDay && !b.isAllDay }
-                        return a.startDate < b.startDate
-                    }
-                }
-
-                self.schedulesByDate = bucket
-            } catch {
-                print("📛 ScheduleStore reload 실패:", error.localizedDescription)
+                schedulesByDate[targetDate, default: []].append(item)
             }
         }
+    }
 
-        // MARK: - Noti
-        @objc private func contextDidSave(_ note: Notification) {
-            // 다른 컨텍스트에서 저장되면 viewContext에 merge
-            if let ctx = note.object as? NSManagedObjectContext,
-               ctx != container.viewContext {
-                container.viewContext.mergeChanges(fromContextDidSave: note)
-            }
-            Task { await reloadFromCoreData() }
+    func fetchSchedules(in month: Date) async -> [ScheduleItem] {
+        let start = month.startOfMonth
+        let end = Calendar.current.date(byAdding: .month, value: 1, to: start)!
+
+        let monthKeys = schedulesByDate.keys.filter { $0 >= start && $0 < end }
+        let items = monthKeys.flatMap { schedulesByDate[$0] ?? [] }
+        let unique = Array(Set(items))
+
+        return unique.sorted { a, b in
+            if a.isAllDay != b.isAllDay { return a.isAllDay && !b.isAllDay }
+            return a.startDate < b.startDate
         }
+    }
 }
