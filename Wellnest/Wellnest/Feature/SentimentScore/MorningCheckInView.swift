@@ -9,8 +9,6 @@ import SwiftUI
 
 struct MorningCheckInView: View {
     @State private var mood: Mood? = nil
-    @State private var valence: Double = 0.2
-    @State private var energy: Double = 0.6
     @State private var showNote = false
     @State private var note = ""
 
@@ -20,17 +18,17 @@ struct MorningCheckInView: View {
         VStack(spacing: 16) {
             // 1) 원탭 무드
             HStack(spacing: 12) {
-                ForEach(Mood.allCases, id: \.self) { m in
+                ForEach(Mood.allCases, id: \.self) { mood in
                     Button {
-                        mood = m
+                        self.mood = mood
                     } label: {
-                        Text(emoji(for: m))
+                        Text(mood.emoji)
                             .font(.system(size: 28))
                             .frame(width: 52, height: 52)
-                            .background(mood == m ? Color.accentColor.opacity(0.15) : Color(.systemGray6))
+                            .background(self.mood == mood ? Color.accentColor.opacity(0.15) : Color(.systemGray6))
                             .clipShape(Circle())
                     }
-                    .accessibilityLabel(Text(a11y(for: m)))
+                    .accessibilityLabel(mood.state)
                 }
             }
 
@@ -53,12 +51,9 @@ struct MorningCheckInView: View {
     private func submit() {
         let checkin = MorningCheckIn(
             mood: mood ?? .meh,
-            valence: valence,
-            energy: energy,
             note: note.isEmpty ? nil : note
         )
         onSubmit(checkin)
-        // 가벼운 햅틱 추천
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 

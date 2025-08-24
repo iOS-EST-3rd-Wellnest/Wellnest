@@ -23,6 +23,7 @@ struct CheckInMainView: View {
                     if let note = c.note, !note.isEmpty,
                        let (label, conf) = SentimentService.shared.predict(from: note) {
 
+                        print("\(label), \(conf)")
                         // 신뢰도 임계치 적용(선택): 낮으면 Neutral로 정규화
                         let normalized: String = (conf >= THRESHOLD) ? label : "Neutral"
                         c.mlLabel = normalized
@@ -34,6 +35,7 @@ struct CheckInMainView: View {
                 .padding(.bottom, 8)
 
                 Divider()
+                Spacer()
 
                 // 2) 최근 기록 목록
                 List {

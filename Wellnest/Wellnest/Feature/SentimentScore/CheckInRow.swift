@@ -33,13 +33,6 @@ struct CheckInRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 10) {
-                    Label("Valence \(String(format: "%.2f", item.valence))", systemImage: "face.smiling")
-                    Label("Energy \(String(format: "%.2f", item.energy))", systemImage: "bolt.fill")
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
                 if let note = item.note, !note.isEmpty {
                     Text(note).font(.body).lineLimit(2)
                 }
@@ -56,7 +49,7 @@ struct CheckInRow: View {
             }
             Spacer()
 
-            let score = sentimentalScore(mood: item.mood, valence: item.valence, energy: item.energy)
+            let score = sentimentalScore(mood: item.mood)
             Text(String(format: "%.0f", score * 100) + "%")
                 .font(.headline)
                 .monospacedDigit()

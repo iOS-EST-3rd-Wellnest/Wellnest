@@ -42,15 +42,11 @@ final class CheckInStore: ObservableObject {
     // MorningCheckIn이 Codable이 아니어도 저장 가능하도록 래핑
     struct EncodableCheckIn: Codable {
         let mood: Int
-        let valence: Double
-        let energy: Double
         let note: String?
         let timestamp: Date
 
         init(_ c: MorningCheckIn) {
             mood = c.mood.rawValue
-            valence = c.valence
-            energy = c.energy
             note = c.note
             timestamp = c.timestamp
         }
@@ -58,8 +54,6 @@ final class CheckInStore: ObservableObject {
         var model: MorningCheckIn {
             MorningCheckIn(
                 mood: Mood(rawValue: mood) ?? .meh,
-                valence: valence,
-                energy: energy,
                 note: note,
                 timestamp: timestamp
             )
@@ -68,8 +62,8 @@ final class CheckInStore: ObservableObject {
 }
 
 // MARK: - 점수 계산(원한다면 UI에 노출)
-func sentimentalScore(mood: Mood, valence: Double, energy: Double) -> Double {
+func sentimentalScore(mood: Mood) -> Double {
     // great→awful 순으로 1.0 → 0.0
     let moodBase = [1.0, 0.75, 0.5, 0.25, 0.0][mood.rawValue]
-    return 0.5 * moodBase + 0.3 * ((valence + 1) / 2) + 0.2 * energy
+    return 0.5 * moodBase // + 0.3 * ((valence + 1) / 2) + 0.2 * energy
 }

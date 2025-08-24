@@ -28,6 +28,7 @@ public struct MoodInput {
     public init(emoji: String?, text: String?) { self.emoji = emoji; self.text = text }
 }
 
+
 public struct HealthInputs { public var sleepHours: Double?; public var steps: Double?; public var averageHR: Double?; public var activeCalories: Double? }
 
 fileprivate enum HealthScorer {

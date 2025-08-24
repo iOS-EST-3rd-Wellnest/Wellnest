@@ -20,11 +20,11 @@ final class SentimentalScoreViewModel: ObservableObject {
     private let weatherService = WeatherService()
     var currentWeather: CurrentWeather?
 
-//    private let healthManager = HealthManager()
-//    private let eventService: EventKitService
     private let engine = SentimentalEngine()
 
     // 외부에서 감정 입력을 받아 반영할 수 있게 노출
+    private var store = CheckInStore()
+    
     var currentMood: MoodInput? = nil
 
     // MARK: - Public API
@@ -42,6 +42,8 @@ final class SentimentalScoreViewModel: ObservableObject {
             let prefSet = parsePreferenceSet(savedPrefString)
             print(prefSet)
             preferredWeather = savedPrefString ?? "특별히 없음"
+            var morningCheckIn = store.items.first
+            currentMood = MoodInput(emoji: morningCheckIn?.mood.emoji, text: morningCheckIn?.note)
 
             // 2) 현재 날씨
             Task {
@@ -51,7 +53,8 @@ final class SentimentalScoreViewModel: ObservableObject {
                     let lon = location.coordinate.longitude
 
                     // 현재 날씨
-                    let currentWeatherItem = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
+                    let forecast = await WeatherCenter.shared.waitForForecast()
+                    guard let currentWeatherItem = forecast.first else { return }
                     self.currentWeather = CurrentWeather(temperatureC: Double(currentWeatherItem.temp), condition: currentWeatherItem.status)
                     print(currentWeather)
 
@@ -67,6 +70,9 @@ final class SentimentalScoreViewModel: ObservableObject {
             let today = Calendar.current.startOfDay(for: Date())
             let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
 //            let ydayEMA = fetchSentimentRecord(for: yesterday)?.emaScore
+            // 어제 날짜의 데이터 찾기
+            let ydayEMA = store.items.first { Calendar.current.isDate($0.timestamp, inSameDayAs: yesterday) }?.mood.score ?? morningCheckIn?.mood.score
+
 //            let roll7 = rollingMean(days: 7)
 
             // 5) 선호 세트 → 엔진 입력용 단일 프리퍼런스 선택
@@ -80,7 +86,7 @@ final class SentimentalScoreViewModel: ObservableObject {
                 weather: currentWeather,
                 mood: currentMood,
                 health: hInputs,
-                yesterdayEMA: 50
+                yesterdayEMA: ydayEMA
             )
 
             // 8) 상태 반영

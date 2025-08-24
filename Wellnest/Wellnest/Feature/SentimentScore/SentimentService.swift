@@ -41,7 +41,7 @@ final class SentimentService {
             var probs: [String: Double] = [:]
             for (k, v) in dict {
                 let key = (k as? String) ?? (k as? NSNumber)?.stringValue ?? ""
-                let val = (v as? Double) ?? (v as? NSNumber)?.doubleValue ?? 0.0
+                let val = (v as? Double) ?? v.doubleValue
                 probs[key] = val
             }
             if let p = probs[label] {
