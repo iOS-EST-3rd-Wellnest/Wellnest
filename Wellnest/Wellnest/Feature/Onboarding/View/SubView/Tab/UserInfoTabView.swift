@@ -15,11 +15,14 @@ struct UserInfoTabView: View {
 
     enum Field {
         case nickname
+        case ageRange
+        case gender
         case height
         case weight
     }
 
     @FocusState private var isFieldFocused: Field?
+    @Binding var isNicknameValid: Bool
 
     @State private var nickname: String = ""
     @State private var selectedAge = ""
@@ -32,7 +35,7 @@ struct UserInfoTabView: View {
     let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
-        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
+        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
     }
 
     var body: some View {
@@ -41,11 +44,8 @@ struct UserInfoTabView: View {
 
             VStack {
                 /// 닉네임
-                // TODO: 자음, 모음 입력 각각 안되게(정규식 추가)
-                // 키, 몸무게 title에 단위 추가
-                // 닉네임 정규식 안지켰을 때 흔들리거나 빨간색 표시하거나 글씨로 알려주기
-                // 선택되는 입력폼 될 때 마다 표시?
-                UserInfoForm(title: "닉네임", isRequired: true) {
+                // TODO: 닉네임 정규식 안지켰을 때 흔들리거나 빨간색 표시하거나 글씨로 알려주기
+                UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
                         text: $nickname,
@@ -53,15 +53,16 @@ struct UserInfoTabView: View {
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
-                    .foregroundColor(.black)
+                    .foregroundColor(isNicknameValid ? .black : .red)
                     .padding(.horizontal)
-                    .padding(.leading, 10)
+                    .padding(.leading, 20)
                     .focused($isFieldFocused, equals: .nickname)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .submitLabel(.done)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
+                        isNicknameValid = NicknameValidator.isNicknameValid(nickname)
                     }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -74,7 +75,7 @@ struct UserInfoTabView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true) {
+                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
@@ -86,12 +87,13 @@ struct UserInfoTabView: View {
                     } label: {
                         AgeMenuLabel(selectedAge: selectedAge)
                     }
+                    .focused($isFieldFocused, equals: .ageRange)
                     .padding(.horizontal)
-                    .padding(.leading, 10)
+                    .padding(.leading, 20)
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true) {
+                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
@@ -99,26 +101,27 @@ struct UserInfoTabView: View {
                             } label: {
                                 GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
+                            .focused($isFieldFocused, equals: .gender)
                         }
                     }
-                    .padding(.leading, 36)
+                    .padding(.leading, 48)
 
                     Spacer()
                 }
 
                 /// 키
-                UserInfoForm(title: "키") {
+                UserInfoForm(title: "키(cm)", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("cm 단위로 정수만 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
-                    .padding(.leading, 46)
+                    .padding(.leading, 22)
                     .focused($isFieldFocused, equals: .height)
                     .onChange(of: heightText) { newValue in
                         heightText = newValue.onlyNumbers(maxLength: 3)
@@ -127,18 +130,17 @@ struct UserInfoTabView: View {
                 }
 
                 /// 몸무게
-                UserInfoForm(title: "몸무게") {
+                UserInfoForm(title: "몸무게(kg)", isFocused: isFieldFocused == .weight) {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("kg 단위로 정수만 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
-                    .padding(.leading, 18)
                     .focused($isFieldFocused, equals: .weight)
                     .onChange(of: weightText) { newValue in
                         weightText = newValue.onlyNumbers(maxLength: 3)
@@ -158,6 +160,7 @@ struct UserInfoTabView: View {
                 }
             }
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -185,7 +188,7 @@ struct UserInfoFormTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundColor(.black) // label로 바꾸기
+            .foregroundColor(.primary) // label로 변경
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -195,11 +198,15 @@ struct UserInfoFormTitle: View {
 struct UserInfoForm<Content: View>: View {
     let title: String
     let isRequired: Bool
+    let isFocused: Bool
+    @Binding var isNicknameValid: Bool
     @ViewBuilder let content: Content
 
-    init(title: String, isRequired: Bool = false, @ViewBuilder content: () -> Content) {
+    init(title: String, isRequired: Bool = false, isFocused: Bool = false, isNicknameValid: Binding<Bool> = .constant(true), @ViewBuilder content: () -> Content) {
         self.title = title
         self.isRequired = isRequired
+        self.isFocused = isFocused
+        self._isNicknameValid = isNicknameValid
         self.content = content()
     }
 
@@ -210,13 +217,37 @@ struct UserInfoForm<Content: View>: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 58)
-        .background(.customSecondary) // systemgray6
+        .background(Color(.systemGray6))
         .cornerRadius(CornerRadius.large)
+        .overlay{
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .strokeBorder(borderColor, lineWidth: 0.5)
+        }
         .padding(.bottom, Spacing.content)
+    }
+
+    private var borderColor: Color {
+        if isFocused && isNicknameValid {
+            return .secondary.opacity(0.6)
+        } else if isFocused && !isNicknameValid {
+            return .red
+        } else {
+            return Color(.systemGray6)
+        }
     }
 }
 
-/// 나이 선택 버튼
+/// 닉네임 유효성 검사
+struct NicknameValidator {
+    static func isNicknameValid(_ text: String) -> Bool {
+        let pattern = "^[가-힣a-zA-Z0-9]*$"
+        let regex = try! NSRegularExpression(pattern: pattern)
+        let range = NSRange(location: 0, length: text.utf16.count)
+        return regex.firstMatch(in: text, options: [], range: range) != nil
+    }
+}
+
+/// 나이 선택 버튼 레이아웃
 struct AgeMenuLabel: View {
     let selectedAge: String
 
@@ -236,7 +267,7 @@ struct AgeMenuLabel: View {
     }
 }
 
-/// 성별 선택 버튼
+/// 성별 선택 버튼 레이아웃
 struct GenderMenuLabel: View {
     let selectedGender: String
     let gender: UserInfo
@@ -318,13 +349,15 @@ private struct Preview: View {
     @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = "사용자 정보"
+    @State private var isNicknameValid = true
 
     var body: some View {
         if let userEntity = userInfoVM.userEntity {
             UserInfoTabView(
                 userEntity: userEntity,
                 currentPage: $currentPage,
-                title: $title
+                title: $title,
+                isNicknameValid: $isNicknameValid
             )
         } else {
             ProgressView("Loading...")

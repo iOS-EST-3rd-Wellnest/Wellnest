@@ -14,6 +14,7 @@ struct OnboardingTabView: View {
 
     @State private var currentPage: Int = 0
     @State private var title: String = ""
+    @State private var isNicknameValid: Bool = true
 
     var body: some View {
         NavigationView {
@@ -28,7 +29,7 @@ struct OnboardingTabView: View {
                         IntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 사용자 정보
                     case 3:
-                        UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title)
+                        UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title, isNicknameValid: $isNicknameValid)
                     /// 웰니스 목표
                     case 4:
                         WellnessGoalTabView(userEntity: user, viewModel: viewModel, currentPage: $currentPage, title: $title)
@@ -246,3 +247,4 @@ struct OnboardingButton: View {
 #Preview {
     OnboardingTabView(userDefaultsManager: UserDefaultsManager.shared)
 }
+
