@@ -6,19 +6,23 @@
 //
 
 import SwiftUI
-import UIKit
 
 struct ProfileDetailView: View {
     @ObservedObject var viewModel: UserInfoViewModel
     @ObservedObject var userEntity: UserEntity
 
+    @Binding var currentPage: Int
+
     enum Field {
         case nickname
+        case ageRange
+        case gender
         case height
         case weight
     }
 
     @FocusState private var isFieldFocused: Field?
+    @Binding var isNicknameValid: Bool
 
     @State private var tempImage: UIImage? = nil
     @State private var isImagePickerPresented: Bool = false
@@ -31,13 +35,13 @@ struct ProfileDetailView: View {
     @State private var weightText: String = ""
 
     var isButtonDisabled: Bool {
-        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
+        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
     }
     
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack {
+        ScrollView {
             /// 사용자 프로필 사진
             HStack {
                 Spacer()
@@ -49,13 +53,10 @@ struct ProfileDetailView: View {
                             .frame(width: 150, height: 150)
                             .clipShape(Circle())
                     } else {
-                        Circle()
-                            .fill(Color.gray)
+                        Image("img_profile")
+                            .resizable()
+                            .scaledToFit()
                             .frame(width: 150, height: 150)
-                            .overlay {
-                                Text("프로필 사진 수정")
-                                    .foregroundStyle(.white)
-                            }
                     }
                 }
                 .onTapGesture {
@@ -80,14 +81,24 @@ struct ProfileDetailView: View {
 
             /// 사용자 정보 입력 폼
             VStack {
+                HStack {
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                        .font(.caption2)
+                        .foregroundColor(.red)
+                        .padding(.leading, 4)
+                        .opacity(isNicknameValid ? 0 : 1)
+
+                    Spacer()
+                }
+
                 /// 닉네임
-                UserInfoForm(title: "닉네임", isRequired: true) {
+                UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -98,6 +109,7 @@ struct ProfileDetailView: View {
                     .submitLabel(.done)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
+                        isNicknameValid = NicknameValidator.isNicknameValid(nickname)
                     }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -110,7 +122,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true) {
+                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
@@ -127,7 +139,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true) {
+                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
@@ -143,7 +155,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 키
-                UserInfoForm(title: "키") {
+                UserInfoForm(title: "키", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
                         text: $heightText,
@@ -163,7 +175,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 몸무게
-                UserInfoForm(title: "몸무게") {
+                UserInfoForm(title: "몸무게", isFocused: isFieldFocused == .weight) {
                     TextField(
                         "",
                         text: $weightText,
@@ -193,21 +205,36 @@ struct ProfileDetailView: View {
                     }
                 }
             }
-            .onAppear {
-                loadUserEntity()
-            }
-
-            Spacer()
-
+        }
+        .background(Color(.systemBackground))
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
             /// 저장 버튼
-            FilledButton(title: "저장") {
-                saveUserInfo()
-                withAnimation { dismiss() }
-            }
-            .padding(.horizontal, OnboardingCardLayout.spacing)
-            .padding(.bottom, Spacing.content)
+            OnboardingButton(
+                title: "저장",
+                isDisabled: isButtonDisabled,
+                action: {
+                    saveUserInfo()
+                    withAnimation { dismiss() }
+                },
+                currentPage: $currentPage
+            )
+        }
+        .onAppear {
+            loadUserEntity()
         }
         .navigationTitle("사용자 정보")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.wellnestOrange)
+                }
+            }
+        }
     }
 }
 
@@ -242,7 +269,6 @@ extension ProfileDetailView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 
@@ -284,12 +310,15 @@ private struct Preview: View {
     @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = ""
+    @State private var isNicknameValid = true
 
     var body: some View {
         if let userEntity = userInfoVM.userEntity {
             ProfileDetailView(
                 viewModel: userInfoVM,
-                userEntity: userEntity
+                userEntity: userEntity,
+                currentPage: $currentPage,
+                isNicknameValid: $isNicknameValid
             )
         } else {
             ProgressView("Loading...")

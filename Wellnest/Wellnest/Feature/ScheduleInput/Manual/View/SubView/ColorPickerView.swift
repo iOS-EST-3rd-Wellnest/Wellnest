@@ -15,14 +15,14 @@ struct ColorPickerView: View {
     @State private var showColorPicker = false
 
     private let colorNames: [String] = [
-        "sweetiePink",
-        "CreamyOrange",
-        "PleasantLight",
-        "tenderBreeze",
-        "FluffyBlue",
-        "MilkyBlue",
-        "babyLilac",
-        "Oatmeal"
+        "wellnestPink",
+        "wellnestPeach",
+        "wellnestGray",
+        "wellnestGreen",
+        "wellnestBlue",
+        "wellnestPurple",
+        "wellnestYellow",
+        "wellnestBrown"
     ]
 
     var body: some View {

@@ -27,6 +27,7 @@ struct HealthConditionTabView: View {
             OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
             OnboardingCardContent(items: $viewModel.healthConditions)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -50,6 +51,7 @@ struct HealthConditionTabView: View {
 }
 
 extension HealthConditionTabView {
+    /// CoreData 저장
     private func saveHealthCondition() {
         let selectedConditions = viewModel.healthConditions.filter { $0.isSelected }
 
@@ -60,7 +62,6 @@ extension HealthConditionTabView {
             userEntity.healthConditions = conditions
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }
