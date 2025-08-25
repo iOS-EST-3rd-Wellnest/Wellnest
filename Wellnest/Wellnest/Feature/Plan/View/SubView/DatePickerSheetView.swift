@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct DatePickerSheetView: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @ObservedObject var planVM: PlanViewModel
 
     @Binding var showDatePicker: Bool
@@ -24,7 +26,6 @@ struct DatePickerSheetView: View {
                     Color.clear
                         .frame(height: geo.safeAreaInsets.top + headerHeight + Spacing.layout * 2 + Spacing.content)
 
-
                     DatePicker(
                         "",
                         selection: $planVM.selectedDate,
@@ -38,11 +39,10 @@ struct DatePickerSheetView: View {
                         planVM.jumpToDate(newDate)
                     }
                 }
-                .background(Color.white)
+                .background(colorScheme == .light ? Color(.systemBackground) : Color(.systemGray6))
                 .clipShape(
                     RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)
                 )
-                .defaultShadow()
                 .offset(y: dragOffset)
                 .gesture(dragGesture)
             }

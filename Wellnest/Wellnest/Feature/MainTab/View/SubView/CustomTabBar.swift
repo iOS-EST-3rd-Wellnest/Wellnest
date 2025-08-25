@@ -23,13 +23,11 @@ struct CustomTabBar: View {
             }
             .padding(.vertical, Spacing.content)
             .padding(.horizontal)
-            //            .background(.ultraThinMaterial)
             .background {
                 GeometryReader { geo in
                     ZStack {
                         Capsule()
-                            .fill(.ultraThinMaterial)
-                        
+                            .fill(.white)
                         Circle()
                             .frame(width: 80, height: 80)
                             .position(x: geo.size.width / 2, y: 0)
@@ -44,23 +42,21 @@ struct CustomTabBar: View {
             .padding(.horizontal)
             
             Button {
-                
                 showScheduleMenu.toggle()
-                
             } label: {
                 Image(systemName: "plus")
                     .resizable()
                     .fontWeight(.semibold)
                     .frame(width: 40, height: 40)
-                //                    .font(.system(size: 40, weight: .bold))
                     .padding(12)
                     .background {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(.wellnestOrange)
                     }
                     .foregroundStyle(.white)
-                    .defaultShadow()
+
             }
+            .defaultShadow()
             .offset(y: -(20 + Spacing.content))
         }
     }
@@ -80,7 +76,7 @@ struct CustomTabBar: View {
                 Text(tab.title)
                     .font(.caption2)
             }
-            .foregroundStyle(selectedTab == tab ? Color.accentColor : .black)
+            .foregroundStyle(selectedTab == tab ? .wellnestOrange : .black)
         }
         .frame(maxWidth: .infinity)
     }

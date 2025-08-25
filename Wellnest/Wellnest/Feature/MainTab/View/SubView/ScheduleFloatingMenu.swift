@@ -24,12 +24,19 @@ struct ScheduleFloatingMenu: View {
                     Button {
                         selectedType = .createByAI
                     } label: {
-                        Label("AI 일정 생성", systemImage: "sparkles")
-                            .padding(Spacing.content)
-                            .background(.thinMaterial)
-                            .clipShape(Capsule())
-                            .defaultShadow()
-                    }
+                        Label {
+                            Text("AI 일정 생성")
+                                .foregroundStyle(Color(.label))
+
+                        } icon: {
+                            Image(systemName: "sparkles")
+                                .foregroundStyle(.wellnestOrange)
+                        }
+                        .font(.body)
+                        .padding(Spacing.content)
+                        .background(.white)
+                        .clipShape(Capsule())
+                        .defaultShadow()                    }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 
@@ -37,11 +44,18 @@ struct ScheduleFloatingMenu: View {
                     Button {
                         selectedType = .createByUser
                     } label: {
-                        Label("직접 일정 생성", systemImage: "pencil")
-                            .padding(Spacing.content)
-                            .background(.thinMaterial)
-                            .clipShape(Capsule())
-                            .defaultShadow()
+                        Label {
+                            Text("직접 일정 생성")
+                                .foregroundStyle(Color(.label))
+                        } icon: {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(.wellnestOrange)
+                        }
+                        .font(.body)
+                        .padding(Spacing.content)
+                        .background(.white)
+                        .clipShape(Capsule())
+                        .defaultShadow()
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }

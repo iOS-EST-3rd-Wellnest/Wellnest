@@ -37,11 +37,11 @@ struct CalendarLayoutView: View {
                 .background {
                     if isSelected {
                         Circle()
-                            .fill(Color.blue)
+                            .fill(.wellnestOrange)
                             .frame(width: 28, height: 28)
                     } else if isToday {
                         Circle()
-                            .stroke(Color.blue)
+                            .stroke(.wellnestOrange)
                             .frame(width: 28, height: 28)
                     }
                 }

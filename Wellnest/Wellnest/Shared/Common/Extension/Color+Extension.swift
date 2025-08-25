@@ -8,7 +8,6 @@
 import SwiftUI
 
 extension Color {
-
     static func scheduleBackground(color: String) -> Color {
         switch color.lowercased() {
         case "red": return .red.opacity(0.3)

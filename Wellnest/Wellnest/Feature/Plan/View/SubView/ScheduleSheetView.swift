@@ -48,9 +48,10 @@ struct ScheduleSheetView: View {
         }
         .padding(.top, Spacing.layout)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.white)
+        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
+//        .roundedBorder(cornerRadius: 32, color: .secondary.opacity(0.8), lineWidth: 0.5)
         .gesture(dragGesture)
     }
 
