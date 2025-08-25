@@ -92,9 +92,6 @@ struct AIScheduleResultView: View {
                 Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
             }
         }
-        .onAppear {
-            print("📱 AIScheduleResultView 나타남 - healthPlan: \(viewModel.healthPlan?.title ?? "없음")")
-        }
     }
 
     private var saveButtonsSection: some View {
