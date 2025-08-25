@@ -37,7 +37,7 @@ final class ScheduleStore: ObservableObject {
         if monthCache[monthStart] == nil {
             let fetched = fetchFromCoreData(start: monthStart, end: monthEnd)
             monthCache[monthStart] = fetched
-            rebuildSchedulesByDate(for: monthStart, end: monthEnd, items: fetched)
+            rebuildSchedulesByDate(for: monthStart, rangeEnd: monthEnd, items: fetched)
         }
 
         return monthCache[monthStart] ?? []
@@ -92,74 +92,43 @@ final class ScheduleStore: ObservableObject {
       }
     
     @MainActor
-    private func rebuildSchedulesByDate(for start: Date, end: Date, items: [ScheduleItem]) {
-        var dict: [Date: [ScheduleItem]] = [:]
+    private func rebuildSchedulesByDate(for rangeStart: Date,
+                                        rangeEnd: Date,
+                                        items: [ScheduleItem]) {
+        var schedulesByDay: [Date: [ScheduleItem]] = [:]
 
-        var day = start.startOfDay
-        while day < end {
-            dict[day] = []
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
+        var currentDay = rangeStart.startOfDay
+        while currentDay < rangeEnd {
+            schedulesByDay[currentDay] = []
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDay) else { break }
+            currentDay = nextDay
         }
 
         for item in items {
-            let s = item.startDate.startOfDay
-            let e = item.endDate.startOfDay
+            let itemStartDay = item.startDate.startOfDay
+            let itemEndDay = item.endDate.startOfDay
 
-            var cur = max(s, start.startOfDay)
-            let last = min(e, end.addingTimeInterval(-1).startOfDay)
+            var activeDay = max(itemStartDay, rangeStart.startOfDay)
+            let lastDay = min(itemEndDay, rangeEnd.addingTimeInterval(-1).startOfDay)
 
-            while cur <= last {
-                dict[cur, default: []].append(item)
-                guard let next = calendar.date(byAdding: .day, value: 1, to: cur) else { break }
-                cur = next
+            while activeDay <= lastDay {
+                schedulesByDay[activeDay, default: []].append(item)
+                guard let nextDay = calendar.date(byAdding: .day, value: 1, to: activeDay) else { break }
+                activeDay = nextDay
             }
         }
 
-        for (k, arr) in dict {
-            dict[k] = arr.sorted {
-                if $0.isAllDay != $1.isAllDay { return $0.isAllDay && !$1.isAllDay }
+        for (day, daySchedules) in schedulesByDay {
+            schedulesByDay[day] = daySchedules.sorted {
+                if $0.isAllDay != $1.isAllDay {
+                    return $0.isAllDay && !$1.isAllDay
+                }
                 return $0.startDate < $1.startDate
             }
         }
 
-        for (k, v) in dict {
-            schedulesByDate[k] = v
-        }
-    }
-}
-
-extension ScheduleStore {
-    func daySlices(for date: Date) -> [ScheduleDaySlice] {
-        let cal = Calendar.current
-        let day = date.startOfDay
-        let nextDay = cal.date(byAdding: .day, value: 1, to: day)!
-        let items = schedulesByDate[day] ?? []
-
-        let slices = items.map { item -> ScheduleDaySlice in
-            if item.isAllDay {
-                return .init(item: item, date: day, displayStart: nil, displayEnd: nil, isAllDayForThatDate: true)
-            }
-            if item.startDate <= day && item.endDate >= nextDay {
-                return .init(item: item, date: day, displayStart: nil, displayEnd: nil, isAllDayForThatDate: true)
-            }
-            let start = max(item.startDate, day)
-            let end = min(item.endDate, nextDay)
-            return .init(item: item, date: day, displayStart: start, displayEnd: end, isAllDayForThatDate: false)
-        }
-
-        return slices.sorted { a, b in
-            if a.isAllDayForThatDate != b.isAllDayForThatDate { return a.isAllDayForThatDate }
-            switch (a.displayStart, b.displayStart) {
-            case let (sa?, sb?):
-                return sa < sb
-            case (nil, _?):
-                return true
-            case (_?, nil):
-                return false
-            default:
-                return false
-            }
+        for (day, schedules) in schedulesByDay {
+            schedulesByDate[day] = schedules
         }
     }
 }
