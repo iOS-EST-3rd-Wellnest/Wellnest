@@ -13,7 +13,7 @@ struct AIInsightCardView: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.gray) : .white)
+            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
             .frame(minHeight: 80)
             .defaultShadow()
             .overlay(alignment: .leading) {
@@ -22,7 +22,7 @@ struct AIInsightCardView: View {
                         .font(.title2)
                         .foregroundColor(.yellow)
                         .frame(width: 30)
-                    
+
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text("AI 인사이트")
                             .font(.footnote)
