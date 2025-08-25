@@ -33,14 +33,14 @@ extension Color {
         case "purple": return .purple
         case "pink": return .pink
         case "gray": return .gray
-        case "sweetiePink": return .sweetiePink
-        case "CreamyOrange": return .creamyOrange
-        case "PleasantLight": return .pleasantLight
-        case "tenderBreeze": return .tenderBreeze
-        case "TluffyBlue": return .fluffyBlue
-        case "MilkyBlue": return .milkyBlue
-        case "babyLilac": return .babyLilac
-        case "Oatmeal": return .oatmeal
+        case "sweetiepink": return .sweetiePink
+        case "creamyorange": return .creamyOrange
+        case "pleasantlight": return .pleasantLight
+        case "tenderbreeze": return .tenderBreeze
+        case "fluffyblue": return .fluffyBlue
+        case "milkyblue": return .milkyBlue
+        case "babylilac": return .babyLilac
+        case "oatmeal": return .oatmeal
         default: return .blue
         }
     }
