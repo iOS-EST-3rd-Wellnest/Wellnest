@@ -7,13 +7,13 @@
 
 import SwiftUI
 
+enum Mode { case none, date }
+
 struct EndDateSelectorView: View {
-    enum Mode { case none, date }
-
-    @State private var mode: Mode = .none
-    @State private var showCalendar: Bool = false
-
+    @Binding var mode: Mode
     @Binding var endDate: Date
+
+    @State private var showCalendar: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
@@ -79,7 +79,8 @@ struct EndDateSelectorView: View {
     }
 
     // "2025.8.17" 형식 포맷터 (0 패딩 없이)
-    private func formatted(_ date: Date) -> String {
+    private func formatted(_ date: Date?) -> String {
+        guard let date else { return "" }
         let cal = Calendar(identifier: .gregorian)
         let c = cal.dateComponents([.year, .month, .day], from: date)
         let y = c.year ?? 0
