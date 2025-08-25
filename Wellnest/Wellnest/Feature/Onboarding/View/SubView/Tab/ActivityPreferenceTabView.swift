@@ -47,6 +47,7 @@ struct ActivityPreferenceTabView: View {
 }
 
 extension ActivityPreferenceTabView {
+    /// CoreData 저장
     private func saveActivityPreference() {
         let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }
 
@@ -57,7 +58,6 @@ extension ActivityPreferenceTabView {
             userEntity.activityPreferences = activities
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }

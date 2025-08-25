@@ -112,11 +112,8 @@ struct HomeView: View {
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
                             .frame(minHeight: 180)
-                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.large)
-                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
-                            }
+                            .roundedBorder(cornerRadius: CornerRadius.large)
+                            .defaultShadow()
                             .overlay(alignment: .topLeading) {
                                 VStack(alignment: .leading, spacing: Spacing.content) {
                                     Text("목표")
@@ -135,11 +132,8 @@ struct HomeView: View {
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
                             .frame(minHeight: 180)
-                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.large)
-                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
-                            }
+                            .roundedBorder(cornerRadius: CornerRadius.large)
+                            .defaultShadow()
                     }
                 }
                 
@@ -149,11 +143,8 @@ struct HomeView: View {
                             RoundedRectangle(cornerRadius: CornerRadius.large)
                                 .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
                                 .frame(height: 100)
-                                .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                                        .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
-                                }
+                                .roundedBorder(cornerRadius: CornerRadius.large)
+                                .defaultShadow()
                                 .overlay {
                                     Text("일정을 추가 해주세요.")
                                         .frame(maxWidth: .infinity)

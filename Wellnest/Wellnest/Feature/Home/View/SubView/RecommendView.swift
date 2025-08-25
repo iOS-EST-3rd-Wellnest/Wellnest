@@ -38,11 +38,8 @@ struct RecommendView: View {
                         .background(
                             RoundedRectangle(cornerRadius: CornerRadius.large)
                                 .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-                                .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
-                                .overlay{
-                                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                                        .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
-                                }
+                                .roundedBorder(cornerRadius: CornerRadius.large)
+                                .defaultShadow()
                         )
                 } else {
                     ContentSkeletonView()
@@ -71,11 +68,8 @@ struct RecommendView: View {
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
                             .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
-                            .overlay{
-                                RoundedRectangle(cornerRadius: CornerRadius.large)
-                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
-                            }
+                            .roundedBorder(cornerRadius: CornerRadius.large)
+                            .defaultShadow()
                     )
                 } else {
                     ContentSkeletonView()

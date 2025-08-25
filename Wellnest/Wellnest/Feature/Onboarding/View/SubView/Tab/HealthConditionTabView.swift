@@ -50,6 +50,7 @@ struct HealthConditionTabView: View {
 }
 
 extension HealthConditionTabView {
+    /// CoreData 저장
     private func saveHealthCondition() {
         let selectedConditions = viewModel.healthConditions.filter { $0.isSelected }
 
@@ -60,7 +61,6 @@ extension HealthConditionTabView {
             userEntity.healthConditions = conditions
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }
