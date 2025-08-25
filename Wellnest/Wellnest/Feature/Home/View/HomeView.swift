@@ -14,13 +14,6 @@ private struct SizePreferenceKey: PreferenceKey {
     }
 }
 
-struct ScrollPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .zero
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value += nextValue()
-    }
-}
-
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
@@ -48,22 +41,10 @@ struct HomeView: View {
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
     
-    private var scrollOffsetView: some View {
-        GeometryReader { proxy in
-            let offsetY = proxy.frame(in: .global).origin.y
-            Color.clear
-                .preference(key: ScrollPreferenceKey.self, value: offsetY)
-                .onAppear {
-                    self.offsetY = offsetY
-                }
-        }
-        .frame(height: 0)
-    }
-    
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: Spacing.layout) {
-                scrollOffsetView
+                SafeAreaBlurView(offsetY: $offsetY, space: .named("homeScroll"))
                 
                 HStack(spacing: Spacing.layout) {
                     VStack(alignment: .leading, spacing: Spacing.content) {
@@ -134,6 +115,34 @@ struct HomeView: View {
                             .frame(minHeight: 180)
                             .roundedBorder(cornerRadius: CornerRadius.large)
                             .defaultShadow()
+//                            .overlay {
+//                                Circle()
+//                                    .stroke(Color.gray.opacity(0.3), lineWidth: 18)
+//                                    .frame(width: 120, height: 120)
+//                                
+//                                Circle()
+//                                    .trim(from: 0, to: 0.3)
+//                                    .stroke(
+//                                        LinearGradient(
+//                                            colors: [.wellnestOrange],
+//                                            startPoint: .topTrailing,
+//                                            endPoint: .bottomLeading
+//                                        ),
+//                                        style: StrokeStyle(lineWidth: 18, lineCap: .round)
+//                                    )
+//                                    .frame(width: 120, height: 120)
+//                                    .rotationEffect(.degrees(-90))
+//                                
+//                                VStack(spacing: Spacing.inline) {
+//                                    Text("30%")
+//                                        .font(.title)
+//                                        .fontWeight(.bold)
+//                                    
+//                                    Text("남은 일정 3개")
+//                                        .font(.caption)
+//                                        .foregroundStyle(.secondary)
+//                                }
+//                            }
                     }
                 }
                 
@@ -172,25 +181,8 @@ struct HomeView: View {
                 .padding(.bottom, 100)
         }
         .background(Color(.systemBackground))
-        .onPreferenceChange(ScrollPreferenceKey.self) { value in
-            self.offsetY = value
-        }
-        .overlay(alignment: .top) {
-            GeometryReader { proxy in
-                Group{
-                    if offsetY >= proxy.safeAreaInsets.top {
-                        Rectangle()
-                            .fill(Color(.systemBackground))
-                    } else {
-                        Rectangle()
-                            .fill(.ultraThinMaterial)
-                    }
-                }
-                .frame(height: proxy.safeAreaInsets.top)
-                .ignoresSafeArea(edges: .top)
-            }
-            .allowsHitTesting(false)
-        }
+        .coordinateSpace(name: "homeScroll")
+        .safeAreaBlur(offsetY: $offsetY)
         .task {
             await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()
