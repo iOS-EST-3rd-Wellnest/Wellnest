@@ -10,6 +10,9 @@ import HealthKit
 
 struct HealthKitInterworkView: View {
     @Environment(\.scenePhase) var scenePhase
+    @Environment(\.dismiss) private var dismiss
+    
+    @EnvironmentObject private var ui: AppUIState
     
     @StateObject private var userDefault = UserDefaultsManager.shared
     
@@ -41,7 +44,7 @@ struct HealthKitInterworkView: View {
             VStack(alignment: .leading, spacing: 40) {
                 HStack {
                     Image(systemName: "shoeprints.fill")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color(.wellnestOrange))
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -56,7 +59,7 @@ struct HealthKitInterworkView: View {
                 
                 HStack {
                     Image(systemName: "iphone")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color(.wellnestOrange))
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -71,7 +74,7 @@ struct HealthKitInterworkView: View {
                 
                 HStack {
                     Image(systemName: "chart.xyaxis.line")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color(.wellnestOrange))
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -100,7 +103,7 @@ struct HealthKitInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"),backgroundColor: userDefault.isHealthKitEnabled ? .gray : .blue) {
+            FilledButton(title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"),backgroundColor: userDefault.isHealthKitEnabled ? .gray : Color(.wellnestOrange)) {
                 Task {
                     await connectHealthKit()
                 }
@@ -114,7 +117,7 @@ struct HealthKitInterworkView: View {
         .padding()
         .navigationTitle("건강 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
-        .padding(.bottom, 100)
+        .padding(.bottom, 50)
         .onAppear {
             Task {
                 let snap = await manager.finalAuthSnapshot()
@@ -127,12 +130,9 @@ struct HealthKitInterworkView: View {
                     startObserversIfNeeded()
                 }
             }
-            //            if userDefault.isHealthKitEnabled {
-            //                Task { try await fetchHealthData() }
-            ////                Task { await fetchHealthDataSafely() }
-            //                startObserversIfNeeded()
-            //            }
+            ui.isTabBarHidden = true
         }
+        .onDisappear { ui.isTabBarHidden = false }
         .onReceive(NotificationCenter.default.publisher(for: .healthDataDidUpdate)) { _ in
             Task { await fetchHealthDataSafely() }
         }
@@ -157,6 +157,17 @@ struct HealthKitInterworkView: View {
             }
             Button("닫기", role: .cancel) { }
         } message: { Text(alertMessage) }
+            .navigationBarBackButtonHidden()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation { dismiss() }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
     }
 }
 
