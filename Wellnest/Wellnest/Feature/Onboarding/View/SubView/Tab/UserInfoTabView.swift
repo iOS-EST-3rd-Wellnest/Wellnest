@@ -44,8 +44,17 @@ struct UserInfoTabView: View {
             OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
 
             VStack {
+                HStack {
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                        .font(.caption2)
+                        .foregroundColor(.red)
+                        .padding(.leading, 4)
+                        .opacity(isNicknameValid ? 0 : 1)
+
+                    Spacer()
+                }
+
                 /// 닉네임
-                // TODO: 닉네임 정규식 안지켰을 때 흔들리거나 빨간색 표시하거나 글씨로 알려주기
                 UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
