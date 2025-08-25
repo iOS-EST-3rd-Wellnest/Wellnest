@@ -48,7 +48,6 @@ struct FlowResult {
             let size = subview.sizeThatFits(.unspecified)
 
             if x + size.width > maxWidth && x > 0 {
-                // 새로운 줄 시작
                 x = 0
                 y += lineHeight + spacing
                 lineHeight = 0
@@ -67,7 +66,21 @@ struct PreferencesSelectionSection: View {
     @Binding var selectedPreferences: Set<String>
     let onPreferenceToggle: (String) -> Void
 
-    private let preferenceOptions = ["유산소", "요가", "명상", "야구", "축구", "달리기", "등산", "패러글라이딩", "독서"]
+    @StateObject private var userInfoViewModel = UserInfoViewModel()
+
+    private var splitPreferences: [String] {
+        var result: [String] = []
+
+        for preference in userInfoViewModel.activityPreferences {
+            let splitTitles = preference.title.components(separatedBy: "/")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+
+            result.append(contentsOf: splitTitles)
+        }
+
+        return Array(Set(result)).sorted()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -76,7 +89,7 @@ struct PreferencesSelectionSection: View {
                 .fontWeight(.semibold)
 
             FlowLayout(spacing: 10) {
-                ForEach(preferenceOptions, id: \.self) { preference in
+                ForEach(splitPreferences, id: \.self) { preference in
                     PreferenceChip(
                         title: preference,
                         isSelected: selectedPreferences.contains(preference)
@@ -91,7 +104,7 @@ struct PreferencesSelectionSection: View {
 
 #Preview {
     PreferencesSelectionSection(
-        selectedPreferences: .constant(Set(["유산소", "요가"])),
+        selectedPreferences: .constant(Set(["산책", "요가"])),
         onPreferenceToggle: { _ in }
     )
     .padding()

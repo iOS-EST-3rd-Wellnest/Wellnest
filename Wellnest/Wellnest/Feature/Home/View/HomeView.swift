@@ -52,11 +52,17 @@ struct HomeView: View {
                             .font(.title2)
                             .bold()
                         
-                        HStack {
-                            ForEach(homeVM.hashtagList, id: \.self) {
-                                Text("\($0)")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                        if homeVM.hashtagList.isEmpty {
+                            SkeletonView(shape: .rect(cornerRadius: CornerRadius.medium))
+                                .frame(width: 200
+                                       , height: imgHeight / 2.5)
+                        } else {
+                            HStack {
+                                ForEach(homeVM.hashtagList, id: \.self) {
+                                    Text("\($0)")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }

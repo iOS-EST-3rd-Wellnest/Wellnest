@@ -37,8 +37,6 @@ extension AIScheduleResultView {
             newSchedule.scheduleType = "ai_generated"
             newSchedule.createdAt = Date()
             newSchedule.updatedAt = Date()
-
-            print("📝 AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(newSchedule.startDate ?? Date()) - 종료: \(newSchedule.endDate ?? Date())")
         }
 
         do {

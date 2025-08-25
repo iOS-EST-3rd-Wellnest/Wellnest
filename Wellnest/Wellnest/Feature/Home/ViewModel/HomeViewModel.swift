@@ -208,8 +208,6 @@ final class HomeViewModel: ObservableObject {
             guard let userInfo else { return [] }
             let hashtagAISevice = AIServiceProxy()
             let hashtagResponse = try await hashtagAISevice.request(prompt: prompt.hashtagPrompt(entity: userInfo))
-            print("hashtag response:", hashtagResponse)
-            
             let decodeHashtag = await hashtagAISevice.extractJSONFromResponse(hashtagResponse.content)
             let hashtagModel: RespnseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
 
@@ -227,8 +225,6 @@ final class HomeViewModel: ObservableObject {
             guard let userInfo else { return [] }
             let goalAISevice = AIServiceProxy()
             let goalResponse = try await goalAISevice.request(prompt: prompt.goalPrompt(entity: userInfo))
-            print("goal response:", goalResponse)
-            
             let decodeGoal = await goalAISevice.extractJSONFromResponse(goalResponse.content)
             let goalModel: RespnseArrayModel? = decodeJSON(from: decodeGoal ?? "")
             
@@ -246,8 +242,7 @@ final class HomeViewModel: ObservableObject {
             guard let userInfo else { return "" }
             let quoteOfTheDayAISevice = AIServiceProxy()
             let quoteOfTheDayResponse = try await quoteOfTheDayAISevice.request(prompt: prompt.quoteOfTheDayPrompt(entity: userInfo))
-			print(quoteOfTheDayResponse)
-            
+
             return quoteOfTheDayResponse.content
         } catch {
             print("오늘의 한마디 요청 실패:", error.localizedDescription)
@@ -265,8 +260,6 @@ final class HomeViewModel: ObservableObject {
             
             let weatherAISevice = AIServiceProxy()
             let weatherResponse = try await weatherAISevice.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
-            print(weatherResponse)
-            
             let decodeWeather = await weatherAISevice.extractJSONFromResponse(weatherResponse.content)
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             
@@ -284,9 +277,9 @@ final class HomeViewModel: ObservableObject {
             guard let userInfo else { return [] }
             
             let aiSevice = AIServiceProxy()
-            let response = try await aiSevice.request(prompt: prompt.videoPrompt(entity: userInfo))
-            
-            guard let items = try await fetchVideoList(keywords: response.content) else { return [] }
+            let videoResponse = try await aiSevice.request(prompt: prompt.videoPrompt(entity: userInfo))
+
+            guard let items = try await fetchVideoList(keywords: videoResponse.content) else { return [] }
             
             let models = items.map {
                 VideoRecommendModel(

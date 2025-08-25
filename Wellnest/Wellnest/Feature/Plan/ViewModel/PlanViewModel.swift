@@ -54,10 +54,6 @@ extension PlanViewModel {
         scheduleStore.scheduleItems(for: selectedDate)
     }
 
-    var selectedDateSlices: [ScheduleDaySlice] {
-        scheduleStore.daySlices(for: selectedDate)
-    }
-
     func hasSchedule(for date: Date) -> Bool {
         scheduleStore.hasSchedule(for: date)
     }

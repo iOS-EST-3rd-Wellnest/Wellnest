@@ -19,10 +19,10 @@ struct PreferenceChip: View {
                 .foregroundColor(isSelected ? .white : .primary)
                 .padding(.horizontal, Spacing.layout)
                 .padding(.vertical, Spacing.content)
-                .background(isSelected ? Color.blue : Color(.systemGray6))
+                .background(isSelected ? Color.wellnestOrange : Color(.systemGray6))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(isSelected ? Color.wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .cornerRadius(CornerRadius.large)
         }

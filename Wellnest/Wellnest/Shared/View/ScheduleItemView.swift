@@ -10,18 +10,39 @@ import SwiftUI
 struct ScheduleItemView: View {
     let schedule: ScheduleItem
 
+    var contextDate: Date? = nil
+
     var body: some View {
+        let display: ScheduleDayDisplay? = {
+            if let contextDate {
+                return schedule.display(on: contextDate)
+            } else {
+                return nil
+            }
+        }()
+
         VStack(alignment: .leading, spacing: Spacing.content) {
             HStack {
                 Image(systemName: "clock.fill")
 
-                if schedule.isAllDay {
-                     Text("하루 종일")
-                         .font(.footnote)
-                 } else {
-                     Text("\(schedule.startDate.formattedTime) ~ \(schedule.endDate.formattedTime)")
-                         .font(.footnote)
-                 }
+                if let displaySchedule = display {
+                    if displaySchedule.isAllDayForThatDate {
+                        Text("하루 종일")
+                            .font(.footnote)
+                    } else if let startTime = displaySchedule.displayStart,
+                              let endTime = displaySchedule.displayEnd {
+                        Text("\(startTime.formattedTime) ~ \(endTime.formattedTime)")
+                            .font(.footnote)
+                    }
+                } else {
+                    if schedule.isAllDay {
+                        Text("하루 종일")
+                            .font(.footnote)
+                    } else {
+                        Text("\(schedule.startDate.formattedTime) ~ \(schedule.endDate.formattedTime)")
+                            .font(.footnote)
+                    }
+                }
 
                 Spacer()
 
