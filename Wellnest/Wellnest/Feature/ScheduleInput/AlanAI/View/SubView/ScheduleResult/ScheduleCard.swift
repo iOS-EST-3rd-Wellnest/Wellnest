@@ -30,6 +30,8 @@ struct ScheduleCard: View {
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
+
+                Spacer()
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -45,8 +47,9 @@ struct ScheduleCard: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(.systemGray6))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
     }
@@ -63,7 +66,7 @@ struct ScheduleCard: View {
                 notes: "벤치프레스, 덤벨 플라이 위주로 진행"
             )
         )
-        
+
         ScheduleCard(
             schedule: AIScheduleItem(
                 day: nil,

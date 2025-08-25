@@ -17,20 +17,20 @@ struct PlanTypeCard: View {
             VStack(spacing: Spacing.content) {
                 Image(systemName: planType.icon)
                     .font(.title2)
-                    .foregroundColor(isSelected ? .white : .blue)
+                    .foregroundColor(isSelected ? .white : .wellnestOrange)
 
                 Text(planType.displayName)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(isSelected ? .white : .primary)
+                    .foregroundColor(isSelected ? .white : .wellnestOrange)
             }
             .frame(height: 80)
             .frame(maxWidth: .infinity)
-            .background(isSelected ? Color.blue : Color(.systemGray6))
+            .background(isSelected ? Color.wellnestOrange : Color(.systemGray6))
             .cornerRadius(CornerRadius.large)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.large)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.wellnestOrange : Color.clear, lineWidth: 2)
             )
         }
     }

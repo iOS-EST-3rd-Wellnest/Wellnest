@@ -19,10 +19,10 @@ struct WeekdayChip: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(isSelected ? .white : .primary)
                 .frame(width: 32, height: 32)
-                .background(isSelected ? Color.blue : Color(.systemGray6))
+                .background(isSelected ? Color.wellnestOrange : Color(.systemGray6))
                 .overlay(
                     Circle()
-                        .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(isSelected ? Color.wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .clipShape(Circle())
         }
