@@ -66,6 +66,7 @@ struct ProfileDetailView: View {
                 Spacer()
             }
             .padding()
+            .padding(.bottom, Spacing.content)
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .sheet(isPresented: $isImagePickerPresented) {
@@ -87,6 +88,7 @@ struct ProfileDetailView: View {
                         .foregroundColor(.red)
                         .padding(.leading, 4)
                         .opacity(isNicknameValid ? 0 : 1)
+                        .animation(.easeInOut, value: isNicknameValid)
 
                     Spacer()
                 }

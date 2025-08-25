@@ -50,6 +50,7 @@ struct UserInfoTabView: View {
                         .foregroundColor(.red)
                         .padding(.leading, 4)
                         .opacity(isNicknameValid ? 0 : 1)
+                        .animation(.easeInOut, value: isNicknameValid)
 
                     Spacer()
                 }
@@ -236,21 +237,10 @@ struct UserInfoForm<Content: View>: View {
         .cornerRadius(CornerRadius.large)
         .overlay{
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .strokeBorder(borderColor, lineWidth: 0.5)
+                .strokeBorder(isNicknameValid ? .clear : .red, lineWidth: 0.5)
+                .animation(.easeInOut, value: isNicknameValid)
         }
         .padding(.bottom, Spacing.content)
-    }
-
-    private var borderColor: Color {
-        if isFocused {
-            if title.contains("닉네임") {
-                return isNicknameValid ? .secondary.opacity(0.6) : .red
-            } else {
-                return .secondary.opacity(0.6)
-            }
-        } else {
-            return .clear
-        }
     }
 }
 
