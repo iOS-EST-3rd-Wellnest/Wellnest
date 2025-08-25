@@ -86,6 +86,8 @@ struct ManualScheduleInputView: View {
 
     @State private var didInit = false
     @State private var isSaving = false
+    
+    @State private var eventIdentifier: String?
 
 
     var body: some View {
@@ -272,7 +274,8 @@ extension ManualScheduleInputView {
             repeatEndDate: isRepeated ? repeatEndDate : nil,
             alarmRuleName: isAlarmOn ? alarmRule?.name : nil,
             isAlarmOn: isAlarmOn,
-            isCompleted: false
+            isCompleted: false,
+            eventIdentifier: eventIdentifier
         )
 
         do {

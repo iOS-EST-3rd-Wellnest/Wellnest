@@ -79,6 +79,16 @@ final class ManualScheduleInputViewModel {
 
         return createdIDs
     }
+    
+    /// CoreData에 저장된 일정에 Event Kit의 Identifier를 붙임
+    /// Event Kit 일정과 CoreData일정이 서로 연결
+    @MainActor
+    func attachEventIdentifier(_ ekId: String, to objectID: NSManagedObjectID) async throws {
+        guard let obj = try? viewContext.existingObject(with: objectID) as? ScheduleEntity else { return }
+        obj.eventIdentifier = ekId
+        obj.updatedAt = Date()
+        try viewContext.save()
+    }
 }
 
 enum ScheduleEditorFactory {

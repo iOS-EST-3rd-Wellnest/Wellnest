@@ -13,21 +13,27 @@ struct HomeView: View {
     
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @StateObject private var homeVM = HomeViewModel()
+    @StateObject private var planVM = PlanViewModel()
     @StateObject private var swipe = SwipeCoordinator()
     
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
         df.dateFormat = "M월 d일"
-
+        
         return df.string(from: Date.now)
+    }
+    
+    /// 캘린더 연동 시 코어데이터 일정 + 캘린더 일정중 미완료 일정 필터링
+    private var isCompleteSchedulesEvent: [ScheduleItem] {
+        planVM.mergedItems.filter { !$0.isCompleted }
     }
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
-
+    
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: Spacing.layout) {
@@ -36,12 +42,12 @@ struct HomeView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
-
+                    
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text(homeVM.userInfo?.nickname ?? "")
                             .font(.title3)
                             .bold()
-
+                        
                         HStack {
                             ForEach(homeVM.hashtagList, id: \.self) {
                                 Text("\($0)")
@@ -50,11 +56,11 @@ struct HomeView: View {
                             }
                         }
                     }
-
+                    
                     Spacer()
                 }
                 .padding(.bottom, Spacing.layout)
-
+                
                 HStack {
                     Text(today)
                         .font(.title2)
@@ -62,7 +68,7 @@ struct HomeView: View {
                     
                     Spacer()
                 }
-
+                
                 HStack(spacing: Spacing.layout) {
                     if homeVM.goalList.isEmpty {
                         SkeletonView()
@@ -98,7 +104,7 @@ struct HomeView: View {
                 
                 HStack {
                     VStack(spacing: 0) {
-                        if isCompleteSchedules.isEmpty {
+                        if isCompleteSchedulesEvent.isEmpty {
                             Text("일정을 추가 해주세요.")
                                 .padding(.vertical, 40)
                                 .frame(maxWidth: .infinity)
@@ -109,8 +115,8 @@ struct HomeView: View {
                                         .defaultShadow()
                                 )
                         } else {
-                            ForEach(isCompleteSchedules) { schedule in
-                                ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule)
+                            ForEach(isCompleteSchedulesEvent) { schedule in
+                                ScheduleCardView(manualScheduleVM: manualScheduleVM, planVM: planVM, schedule: schedule)
                                     .environmentObject(swipe)
                                     .padding(.vertical, Spacing.content)
                             }
@@ -119,12 +125,19 @@ struct HomeView: View {
                     .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
-
+                    
                 }
                 .padding(.bottom, Spacing.layout * 2)
+                .onAppear {
+                    planVM.preloadCurrentAndNeighbors()
+                    Task {
+                        await planVM.refreshHomeTodayWithFallback()
+                    }
+                    planVM.startObservingCalendarForHome()
+                }
             }
             .padding(.horizontal)
-    
+            
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
         }

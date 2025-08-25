@@ -9,15 +9,17 @@ import SwiftUI
 
 struct AppRouter: View {
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
+    @StateObject private var ui = AppUIState()
 
     var body: some View {
-        if userDefaultsManager.hasCompletedOnboarding {
+//        if userDefaultsManager.hasCompletedOnboarding {
             MainTabView()
                 .task {
                     await WeatherCenter.shared.preloadIfNeeded()
                 }
-        } else {
-            OnboardingTabView(userDefaultsManager: userDefaultsManager)
-        }
+                .environmentObject(ui)
+//        } else {
+//            OnboardingTabView(userDefaultsManager: userDefaultsManager)
+//        }
     }
 }

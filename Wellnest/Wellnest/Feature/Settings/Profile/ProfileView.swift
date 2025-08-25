@@ -16,18 +16,18 @@ struct ProfileView: View {
                 VStack(alignment: .leading) {
                     HStack {
                         Text(userEntity.nickname ?? "홍길동")
-                            .foregroundStyle(.indigo)
+                            .foregroundStyle(Color(.wellnestOrange))
                             .font(.title)
                             .fontWeight(.bold)
                         
                         Text("님")
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(Color(.label))
                             .font(.title)
                             .fontWeight(.semibold)
                     }
                     
                     Text("오늘도 건강하세요!")
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color(.label))
                         .font(.title)
                         .fontWeight(.semibold)
                 }

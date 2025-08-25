@@ -12,6 +12,9 @@ struct CalendarInterworkView: View {
     @StateObject private var userDefault = UserDefaultsManager.shared
     
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
+    
+    @EnvironmentObject private var ui: AppUIState
     
     @State private var showSettingAlert: Bool = false
     @State private var isAuthorizing: Bool = false
@@ -24,7 +27,7 @@ struct CalendarInterworkView: View {
             VStack(alignment: .leading, spacing: 40) {
                 HStack {
                     Image(systemName: "calendar")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color(.wellnestOrange))
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -39,7 +42,7 @@ struct CalendarInterworkView: View {
                 
                 HStack {
                     Image(systemName: "checkmark.circle")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color(.wellnestOrange))
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -55,7 +58,7 @@ struct CalendarInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: isAuthorizing ? "연동중..." : (userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"), backgroundColor: userDefault.isCalendarEnabled ? .gray : .blue) {
+            FilledButton(title: isAuthorizing ? "연동중..." : (userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"), backgroundColor: userDefault.isCalendarEnabled ? .gray : Color(.wellnestOrange)) {
                 Task {
                     await linkCalendar()
                 }
@@ -65,7 +68,7 @@ struct CalendarInterworkView: View {
         .padding()
         .navigationTitle("캘린더 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
-        .padding(.bottom, 100)
+        .padding(.bottom, 50)
         .task {
             await refreshCalendarLinkState()
         }
@@ -74,9 +77,26 @@ struct CalendarInterworkView: View {
                 Task { await refreshCalendarLinkState() }
             }
         }
+        .onAppear {
+            ui.isTabBarHidden = true
+        }
+        .onDisappear {
+            ui.isTabBarHidden = false
+        }
         .alert("설정에서 캘린더 권한이 필요합니다.", isPresented: $showSettingAlert) {
             Button("설정으로 가기") { goToSetting() }
             Button("취소", role: .cancel) {}
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.gray)
+                }
+            }
         }
     }
 }

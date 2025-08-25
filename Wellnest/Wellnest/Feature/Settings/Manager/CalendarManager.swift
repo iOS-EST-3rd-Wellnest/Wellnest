@@ -51,12 +51,6 @@ final class CalendarManager {
         store.calendars(for: .event)
     }
     
-    /// iOS 캘린더에 등록된 일정들을 가져옴
-    func fetchEvents(startDate: Date, endDate: Date, calendars: [EKCalendar]? = nil) -> [EKEvent] {
-        let predicate = store.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
-        return store.events(matching: predicate)
-    }
-    
     /// 이벤트 생성 또는 업데이트 후 `eventIdentifier` 반환
     /// - Parameters:
     ///   - existingId: 기존 이벤트 식별자
@@ -144,6 +138,19 @@ final class CalendarManager {
         }
         
         try store.remove(ev, span: span.ekSpan, commit: commit)
+    }
+    
+    @MainActor
+    func deleteEvent(identifier: String) async {
+        do {
+            try await ensureAccess()
+            let store = EKEventStore()
+            if let ev = store.event(withIdentifier: identifier) {
+                try store.remove(ev, span: .thisEvent, commit: true)
+            }
+        } catch {
+            print("캘린더 이벤트 삭제 실패:", error)
+        }
     }
     
     func backfillEventIdentifier(
@@ -284,7 +291,124 @@ final class CalendarManager {
             )
         }
     
+    // MARK: - 캘린더 앱 일정을 가져오기
+    func fetchEvent(for day: Date, store: EKEventStore, calendars: [EKCalendar]? = nil) -> [EKEvent] {
+//        let cal = Calendar.current
+//        let start = cal.startOfDay(for: day)
+//        let end = cal.date(byAdding: .day, value: 1, to: start)!
+//        let predicate = store.predicateForEvents(withStart: start, end: end, calendars: calendars)
+//        
+//        return store.events(matching: predicate).sorted { $0.startDate < $1.startDate }
+        let cal = Calendar.current
+            let dayStart = cal.startOfDay(for: day)
+            let nextDayStart = cal.date(byAdding: .day, value: 1, to: dayStart)!
+
+            let windowStart = cal.date(byAdding: .day, value: -1, to: dayStart)!
+            let windowEnd = cal.date(byAdding: .day, value:  2, to: dayStart)! // nextDay + 1d
+
+            let pred = store.predicateForEvents(withStart: windowStart, end: windowEnd, calendars: calendars)
+            let events = store.events(matching: pred)
+
+            let filtered = events.filter { ev in
+                let evStart = ev.startDate
+                let evEnd = ev.endDate
+                return evStart ?? Date() < nextDayStart && evEnd ?? Date() > dayStart
+            }
+
+            return filtered.sorted { $0.startDate < $1.startDate }
+    }
+    
+    func mapToScheduleItem(_ ev: EKEvent) -> ScheduleItem {
+        let colorKey = pickColorKeyForEvent(
+                eventIdentifier: ev.eventIdentifier,
+                title: ev.title,
+                start: ev.startDate
+            )
+            return ScheduleItem(
+                id: UUID(),
+                title: ev.title ?? "(제목 없음)",
+                startDate: ev.startDate,
+                endDate: ev.endDate,
+                createdAt: ev.creationDate ?? Date(),
+                updatedAt: ev.lastModifiedDate ?? ev.creationDate ?? Date(),
+                backgroundColor: colorKey,
+                isAllDay: ev.isAllDay,
+                repeatRule: recurrenceString(from: ev.recurrenceRules?.first),
+                hasRepeatEndDate: ev.recurrenceRules?.first?.recurrenceEnd != nil,
+                repeatEndDate: ev.recurrenceRules?.first?.recurrenceEnd?.endDate,
+                isCompleted: false,
+                eventIdentifier: ev.eventIdentifier
+            )
+        }
+    
+    private func recurrenceString(from rule: EKRecurrenceRule?) -> String? {
+            guard let r = rule else { return nil }
+            switch r.frequency {
+            case .daily:   return "매일"
+            case .weekly:  return "매주"
+            case .monthly: return "매월"
+            case .yearly:  return "매년"
+            @unknown default: return nil
+            }
+        }
+    
+    @MainActor
+    func createEventAndReturnIdentifier(
+        title: String,
+        location: String? = nil,
+        isAllDay: Bool,
+        startDate: Date,
+        endDate: Date,
+        in calendar: EKCalendar? = nil
+    ) async throws -> String {
+        try await ensureAccess()
+        let store = EKEventStore()
+        let ev = EKEvent(eventStore: store)
+        ev.title = title
+        ev.location = location
+        ev.isAllDay = isAllDay
+        ev.startDate = startDate
+        ev.endDate = endDate
+        ev.calendar = calendar ?? store.defaultCalendarForNewEvents
+        try store.save(ev, span: .thisEvent, commit: true)
+        return ev.eventIdentifier
+    }
+    
+    /// 캘린더 일정을 가져올때 랜덤배경 색 적용
+    private func pickColorKeyForEvent(eventIdentifier: String?, title: String?, start: Date) -> String {
+        let keys = AppPalette.scheduleColorKeys
+        guard !keys.isEmpty else { return "" }
+
+        // 우선순위: EK id → (제목|시작분)
+        if let ek = eventIdentifier, !ek.isEmpty {
+            return keys[ek.stableHashIndex(modulo: keys.count)]
+        }
+        let basis = "\(title ?? "")|\(Int(start.timeIntervalSince1970 / 60))"
+        return keys[basis.stableHashIndex(modulo: keys.count)]
+    }
+    
     // MARK: 편의 에러 -
     private static let errDenied   = NSError(domain: "Calendar", code: 1, userInfo: [NSLocalizedDescriptionKey: "캘린더 접근 권한이 거부되었습니다."])
     private static let errSettings = NSError(domain: "Calendar", code: 2, userInfo: [NSLocalizedDescriptionKey: "설정 앱에서 캘린더 접근을 허용해주세요."])
+}
+
+enum AppPalette {
+   static let scheduleColorKeys: [String] = [
+        "accentCardBlueColor",
+        "accentCardGreenColor",
+        "accentCardPinkColor",
+        "accentCardYellowColor",
+    ]
+}
+
+extension String {
+    /// 실행 간에도 동일하게 나오는 간단한 고정 해시(djb2)
+    func stableHashIndex(modulo: Int) -> Int {
+        guard modulo > 0 else { return 0 }
+        var hash: UInt64 = 5381
+        for b in self.utf8 {
+            hash = ((hash << 5) &+ hash) &+ UInt64(b) // hash * 33 + b
+        }
+        return Int(hash % UInt64(modulo))
+    }
 }

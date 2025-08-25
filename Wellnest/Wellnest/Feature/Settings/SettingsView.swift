@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel = UserInfoViewModel()
+    @EnvironmentObject private var ui: AppUIState
 
     @State private var isProfileDetailPresented = false
     @State private var currentPage: Int = 0
@@ -39,6 +40,10 @@ struct SettingsView: View {
             }
         }
     }
+}
+
+final class AppUIState: ObservableObject {
+    @Published var isTabBarHidden: Bool = false
 }
 
 #Preview {
