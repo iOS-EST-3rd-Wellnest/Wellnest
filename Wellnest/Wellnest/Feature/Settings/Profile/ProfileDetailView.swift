@@ -81,6 +81,16 @@ struct ProfileDetailView: View {
 
             /// 사용자 정보 입력 폼
             VStack {
+                HStack {
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                        .font(.caption2)
+                        .foregroundColor(.red)
+                        .padding(.leading, 4)
+                        .opacity(isNicknameValid ? 0 : 1)
+
+                    Spacer()
+                }
+
                 /// 닉네임
                 UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
