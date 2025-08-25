@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SkeletonUI
 import SafariServices
 
 struct VideoView: View {
@@ -33,8 +32,8 @@ struct VideoView: View {
 
         HStack(spacing: Spacing.layout * 1.5) {
             if isLoading {
-                ForEach(0..<placeholderCount, id: \.self) { _ in
-                    VideoCardSkeleton(
+                ForEach(0 ..< placeholderCount, id: \.self) { _ in
+                    VideoCardSkeletonView(
                         thumbWidth: thumbWidth,
                         titleWidth: titleWidth,
                         twoLineHeight: twoLineHeight,
@@ -91,14 +90,13 @@ private struct VideoImageView: View {
         .frame(width: width)
         .clipped()
         .cornerRadius(CornerRadius.large)
-        .defaultShadow()
         .task(id: urlString) {
             image = await ImageLoader.shared.load(urlString)
         }
     }
 }
 
-private struct VideoCardSkeleton: View {
+private struct VideoCardSkeletonView: View {
     let thumbWidth: CGFloat
     let titleWidth: CGFloat
     let twoLineHeight: CGFloat
@@ -106,25 +104,17 @@ private struct VideoCardSkeleton: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.inline) {
-            RoundedRectangle(cornerRadius: CornerRadius.large)
-                .skeleton(
-                    with: isLoading,
-                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
-                )
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
                 .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
             
-            RoundedRectangle(cornerRadius: CornerRadius.medium)
-                .skeleton(
-                    with: isLoading,
-                    shape: .rounded(.radius(CornerRadius.medium, style: .circular))
-                )
-                .frame(width: titleWidth, height: twoLineHeight / 2, alignment: .topLeading)
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
+                .frame(width: titleWidth, height: twoLineHeight - 10, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
         }
     }
 }
 
-struct SafariView: UIViewControllerRepresentable {
+private struct SafariView: UIViewControllerRepresentable {
     @Binding var videoId: String?
     
     private var url: URL {
@@ -137,7 +127,6 @@ struct SafariView: UIViewControllerRepresentable {
         safariController.preferredControlTintColor = .orange
         
         return safariController
-            
     }
 
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) { }

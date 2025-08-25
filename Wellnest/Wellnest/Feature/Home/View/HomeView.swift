@@ -6,7 +6,20 @@
 //
 
 import SwiftUI
-import SkeletonUI
+
+private struct SizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .zero
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+struct ScrollPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .zero
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
 
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -15,33 +28,49 @@ struct HomeView: View {
     @StateObject private var homeVM = HomeViewModel()
     @StateObject private var swipe = SwipeCoordinator()
     
+    @State private var profileVstackHeight: CGFloat = .zero
+    @State private var offsetY: CGFloat = .zero
+    
     var today: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
         df.dateFormat = "M월 d일"
-
+        
         return df.string(from: Date.now)
+    }
+    
+    private var imgHeight: CGFloat {
+        return max(50, profileVstackHeight)
     }
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
-
+    
+    private var scrollOffsetView: some View {
+        GeometryReader { proxy in
+            let offsetY = proxy.frame(in: .global).origin.y
+            Color.clear
+                .preference(key: ScrollPreferenceKey.self, value: offsetY)
+                .onAppear {
+                    self.offsetY = offsetY
+                }
+        }
+        .frame(height: 0)
+    }
+    
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: Spacing.layout) {
+                scrollOffsetView
+                
                 HStack(spacing: Spacing.layout) {
-                    Image("img_profile")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 80, height: 80)
-
                     VStack(alignment: .leading, spacing: Spacing.content) {
                         Text(homeVM.userInfo?.nickname ?? "")
-                            .font(.title3)
+                            .font(.title2)
                             .bold()
-
+                        
                         HStack {
                             ForEach(homeVM.hashtagList, id: \.self) {
                                 Text("\($0)")
@@ -50,33 +79,50 @@ struct HomeView: View {
                             }
                         }
                     }
-
+                    .background(
+                        GeometryReader { profileGeometry in
+                            Color.clear
+                                .preference(key: SizePreferenceKey.self, value: profileGeometry.size.height)
+                        }
+                    )
+                    
                     Spacer()
+                    
+                    Image("img_profile")
+                        .resizable()
+                        .aspectRatio(1, contentMode: .fit)
+                        .frame(width: imgHeight, height: imgHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
                 }
                 .padding(.bottom, Spacing.layout)
-
+                .onPreferenceChange(SizePreferenceKey.self) { profileVstackHeight = $0 }
+                
                 HStack {
                     Text(today)
-                        .font(.title2)
-                        .bold()
+                        .font(.title3)
+                        .fontWeight(.semibold)
                     
                     Spacer()
                 }
-
+                
                 HStack(spacing: Spacing.layout) {
                     if homeVM.goalList.isEmpty {
-                        SkeletonView()
+                        GoalSkeletonView()
                     } else {
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
                             .frame(minHeight: 180)
-                            .defaultShadow()
+                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.large)
+                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
+                            }
                             .overlay(alignment: .topLeading) {
                                 VStack(alignment: .leading, spacing: Spacing.content) {
                                     Text("목표")
-                                        .font(.title3)
-                                        .bold()
-                                        .padding(.vertical, Spacing.content)
+                                        .font(.body)
+                                        .fontWeight(.semibold)
+                                        .padding(.vertical, Spacing.inline)
                                     
                                     ForEach(homeVM.goalList, id: \.self) {
                                         Text("\($0)")
@@ -87,11 +133,12 @@ struct HomeView: View {
                             }
                         
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .fill(colorScheme == .dark ? Color(.gray) : .white)
+                            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
                             .frame(minHeight: 180)
-                            .defaultShadow()
+                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
                             .overlay {
-                                
+                                RoundedRectangle(cornerRadius: CornerRadius.large)
+                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
                             }
                     }
                 }
@@ -99,15 +146,19 @@ struct HomeView: View {
                 HStack {
                     VStack(spacing: 0) {
                         if isCompleteSchedules.isEmpty {
-                            Text("일정을 추가 해주세요.")
-                                .padding(.vertical, 40)
-                                .frame(maxWidth: .infinity)
-                                .background(
+                            RoundedRectangle(cornerRadius: CornerRadius.large)
+                                .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                                .frame(height: 100)
+                                .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
+                                .overlay {
                                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                                        .fill(colorScheme == .dark ? Color(.gray) : .white)
-                                        .frame(height: 100)
-                                        .defaultShadow()
-                                )
+                                        .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
+                                }
+                                .overlay {
+                                    Text("일정을 추가 해주세요.")
+                                        .frame(maxWidth: .infinity)
+                                    
+                                }
                         } else {
                             ForEach(isCompleteSchedules) { schedule in
                                 ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule)
@@ -119,20 +170,40 @@ struct HomeView: View {
                     .task {
                         manualScheduleVM.loadTodaySchedules()
                     }
-
+                    
                 }
                 .padding(.bottom, Spacing.layout * 2)
             }
+            .padding(.top, Spacing.content)
             .padding(.horizontal)
-    
+            
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
+        }
+        .background(Color(.systemBackground))
+        .onPreferenceChange(ScrollPreferenceKey.self) { value in
+            self.offsetY = value
+        }
+        .overlay(alignment: .top) {
+            GeometryReader { proxy in
+                Group{
+                    if offsetY >= proxy.safeAreaInsets.top {
+                        Rectangle()
+                            .fill(Color(.systemBackground))
+                    } else {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                    }
+                }
+                .frame(height: proxy.safeAreaInsets.top)
+                .ignoresSafeArea(edges: .top)
+            }
+            .allowsHitTesting(false)
         }
         .task {
             await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()
         }
-        .background(Color(.systemBackground))
     }
 }
 
@@ -141,15 +212,13 @@ struct HomeView: View {
         .environmentObject(ManualScheduleVMFactory.make())
 }
 
-private struct SkeletonView: View {
+private struct GoalSkeletonView: View {
     var body: some View {
         HStack {
-            Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
                 .frame(minHeight: 180)
             
-            Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
                 .frame(minHeight: 180)
         }
     }

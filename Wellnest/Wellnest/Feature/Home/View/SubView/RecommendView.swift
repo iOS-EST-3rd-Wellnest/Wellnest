@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SkeletonUI
 
 struct RecommendView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -27,7 +26,7 @@ struct RecommendView: View {
     var body: some View {
         VStack {
             Group {
-                SectionHeader(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
+                SectionHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
                     .frame(height: oneLineHeight, alignment: .leading)
                 
                 if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
@@ -38,17 +37,20 @@ struct RecommendView: View {
                         .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: CornerRadius.large)
-                                .fill(colorScheme == .dark ? Color(.gray) : .white)
-                                .defaultShadow()
+                                .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                                .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
+                                .overlay{
+                                    RoundedRectangle(cornerRadius: CornerRadius.large)
+                                        .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
+                                }
                         )
                 } else {
-                    SkeletonView()
+                    ContentSkeletonView()
                 }
                 
-                SectionHeader(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
+                SectionHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
                     .frame(height: oneLineHeight, alignment: .leading)
                     .padding(.top, Spacing.layout)
-                
                 
                 if let weatherResponse = homeVM.weatherResponse {
                     VStack(alignment: .leading, spacing: Spacing.content) {
@@ -68,14 +70,18 @@ struct RecommendView: View {
                     .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .fill(colorScheme == .dark ? Color(.gray) : .white)
-                            .defaultShadow()
+                            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                            .shadow(color: colorScheme == .dark ? .clear : Color(.systemGray).opacity(0.2), radius: 6 , x: 4, y: 4)
+                            .overlay{
+                                RoundedRectangle(cornerRadius: CornerRadius.large)
+                                    .stroke(Color(.systemGray).opacity(0.6), lineWidth: 0.2)
+                            }
                     )
                 } else {
-                    SkeletonView()
+                    ContentSkeletonView()
                 }
                 
-                SectionHeader(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
+                SectionHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
                     .frame(height: oneLineHeight)
                     .padding(.top, Spacing.layout)
             }
@@ -86,39 +92,40 @@ struct RecommendView: View {
             }
         }
     }
-    
 }
 
 #Preview {
     RecommendView(homeVM: HomeViewModel())
 }
 
-private struct SectionHeader: View {
+private struct SectionHeaderView: View {
     let title: String
     let isLoading: Bool
     let height: CGFloat
     
     var body: some View {
         HStack {
-            Text(title)
-                .font(.title2)
-                .bold()
-                .frame(height: height, alignment: .topLeading)
-                .skeleton(with: isLoading,
-                          size: CGSize(width: 150, height: height),
-                          animation: .none,
-                          shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
+            
+            if isLoading {
+                SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
+                    .frame(width: 150, height: height, alignment: .topLeading)
+            } else {
+                Text(title)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .frame(height: height, alignment: .topLeading)
+            }
+            
             Spacer()
         }
     }
 }
 
-private struct SkeletonView: View {
+private struct ContentSkeletonView: View {
     var body: some View {
         VStack(alignment: .leading ) {
-            Rectangle()
-                .skeleton(with: true, shape: .rounded(.radius(CornerRadius.medium, style: .circular)))
-                .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+            SkeletonView(shape: .rect(cornerRadius: CornerRadius.large))
+                .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
         }
     }
 }
