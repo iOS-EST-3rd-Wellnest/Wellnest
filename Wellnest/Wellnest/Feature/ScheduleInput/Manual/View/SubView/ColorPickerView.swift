@@ -16,13 +16,13 @@ struct ColorPickerView: View {
 
     private let colorNames: [String] = [
         "sweetiePink",
-        "creamyOrange",
-        "pleasantLight",
+        "CreamyOrange",
+        "PleasantLight",
         "tenderBreeze",
-        "fluffyBlue",
-        "milkyBlue",
+        "FluffyBlue",
+        "MilkyBlue",
         "babyLilac",
-        "oatmeal"
+        "Oatmeal"
     ]
 
     var body: some View {
