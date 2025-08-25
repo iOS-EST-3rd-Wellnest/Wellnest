@@ -129,15 +129,6 @@ final class ScheduleStore: ObservableObject {
     }
 }
 
-struct ScheduleDaySlice: Identifiable {
-    let id = UUID()
-    let item: ScheduleItem
-    let date: Date
-    let displayStart: Date?
-    let displayEnd: Date?
-    let isAllDayForThatDate: Bool
-}
-
 extension ScheduleStore {
     func daySlices(for date: Date) -> [ScheduleDaySlice] {
         let cal = Calendar.current
@@ -160,10 +151,14 @@ extension ScheduleStore {
         return slices.sorted { a, b in
             if a.isAllDayForThatDate != b.isAllDayForThatDate { return a.isAllDayForThatDate }
             switch (a.displayStart, b.displayStart) {
-            case let (sa?, sb?): return sa < sb
-            case (nil, _?): return true
-            case (_?, nil): return false
-            default: return false
+            case let (sa?, sb?):
+                return sa < sb
+            case (nil, _?):
+                return true
+            case (_?, nil):
+                return false
+            default:
+                return false
             }
         }
     }
