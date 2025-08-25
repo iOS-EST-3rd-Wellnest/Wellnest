@@ -7,8 +7,35 @@
 
 import SwiftUI
 
+struct RoundedBorderModifier: ViewModifier {
+    var cornerRadius: CGFloat
+    var color: Color = .secondary.opacity(0.2)
+    var lineWidth: CGFloat = 0.5
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(color, lineWidth: lineWidth)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+}
+
 extension View {
     func defaultShadow() -> some View {
-        self.shadow(radius: 6, x: 2, y: 2)
+        self.shadow(color: .secondary.opacity(0.2), radius: 8, x: 6, y: 6)
+    }
+
+    func roundedBorder(
+        cornerRadius: CGFloat,
+        color: Color = .secondary.opacity(0.6),
+        lineWidth: CGFloat = 0.2
+    ) -> some View {
+        self.modifier(RoundedBorderModifier(
+            cornerRadius: cornerRadius,
+            color: color,
+            lineWidth: lineWidth
+        ))
     }
 }
