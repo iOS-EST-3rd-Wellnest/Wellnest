@@ -17,7 +17,7 @@ struct SleepStatChartCardView: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.gray) : .white)
+            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
             .frame(minHeight: 320)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
@@ -92,7 +92,7 @@ struct SleepStatChartCardView: View {
                                     .foregroundColor(.green)
                             }
                         }
-                        
+
                         Spacer()
                     }
 

@@ -27,6 +27,7 @@ struct HealthConditionTabView: View {
             OnboardingTitleDescription(description: "현재 건강 상태에 해당하는 특별한 이슈가 있나요?")
             OnboardingCardContent(items: $viewModel.healthConditions)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(

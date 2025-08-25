@@ -254,11 +254,11 @@ struct ManualScheduleInputView: View {
 extension ManualScheduleInputView {
     @MainActor
     func saveSchedule() {
-        Task { await saveSchedule() }
+        Task { await saveScheduleAsync() }
     }
 
     @MainActor
-    func saveSchedule() async {
+    func saveScheduleAsync() async {
         let input = ScheduleInput(
             title: title,
             location: location,

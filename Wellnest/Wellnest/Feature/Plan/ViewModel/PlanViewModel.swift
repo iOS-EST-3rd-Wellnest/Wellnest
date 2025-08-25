@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import CoreData
 
 @MainActor
 final class PlanViewModel: ObservableObject {
@@ -15,12 +16,11 @@ final class PlanViewModel: ObservableObject {
     @Published private(set) var visibleMonth: Date
     @Published private(set) var jumpToken: Int = 0
 
-    @Published var scheduleStore = ScheduleStore()
+    @Published var scheduleStore: ScheduleStore
 
     struct CachedMonthData {
         let monthStart: Date
         let dates: [Date]
-        let schedules: [ScheduleItem]
     }
     @Published private(set) var monthDataCache: [Date: CachedMonthData] = [:]
     private var backgroundLoaders: [Date: Task<CachedMonthData, Never>] = [:]
@@ -30,9 +30,11 @@ final class PlanViewModel: ObservableObject {
 
     private let calendar = Calendar.current
 
-    init(selectedDate: Date = Date()) {
+    init(selectedDate: Date = Date(), context: NSManagedObjectContext = CoreDataStack.shared.container.viewContext) {
         let normalized = selectedDate.startOfDay
         let normalizedMonth = normalized.startOfMonth
+
+        self.scheduleStore = ScheduleStore(context: context)
 
         self.selectedDate = normalized
         self.anchorMonth =	normalizedMonth
@@ -50,6 +52,10 @@ final class PlanViewModel: ObservableObject {
 extension PlanViewModel {
     var selectedDateScheduleItems: [ScheduleItem] {
         scheduleStore.scheduleItems(for: selectedDate)
+    }
+
+    var selectedDateSlices: [ScheduleDaySlice] {
+        scheduleStore.daySlices(for: selectedDate)
     }
 
     func hasSchedule(for date: Date) -> Bool {
@@ -123,17 +129,16 @@ extension PlanViewModel {
         if backgroundLoaders[monthKey] != nil { return }
 
         backgroundLoaders[monthKey] = Task(priority: .utility) { [weak self] in
-            guard let self else { return CachedMonthData(monthStart: monthKey, dates: [], schedules: []) }
+            guard let self else { return CachedMonthData(monthStart: monthKey, dates: []) }
 
             let result = await MonthDataLoader.load(month: monthKey, store: self.scheduleStore)
 
             await MainActor.run {
-                self.monthDataCache[monthKey] = CachedMonthData(monthStart: monthKey,
-                                                 dates: result.dates,
-                                                 schedules: result.schedules)
+                self.monthDataCache[monthKey] = CachedMonthData(monthStart: monthKey, dates: result)
                 self.backgroundLoaders[monthKey] = nil
             }
-            return self.monthDataCache[monthKey] ?? CachedMonthData(monthStart: monthKey, dates: [], schedules: [])
+
+            return self.monthDataCache[monthKey] ?? CachedMonthData(monthStart: monthKey, dates: [])
         }
     }
 
@@ -189,12 +194,9 @@ extension PlanViewModel {
 }
 
 actor MonthDataLoader {
-    static func load(month: Date, store: ScheduleStore) async -> (dates: [Date], schedules: [ScheduleItem]) {
+    static func load(month: Date, store: ScheduleStore) async -> [Date] {
         let dates = month.filledDatesOfMonth()
-
-        let schedules = await store.fetchSchedules(in: month)
-
-        return (dates, schedules)
+        _ = await store.fetchSchedules(in: month)
+        return dates
     }
 }
-

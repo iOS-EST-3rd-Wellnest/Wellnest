@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct WellnessGoalTabView: View {
+    @Environment(\.colorScheme) var colorScheme
+
     var userEntity: UserEntity
 
     @ObservedObject var viewModel: UserInfoViewModel
@@ -46,21 +48,21 @@ struct WellnessGoalTabView: View {
 
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .black : .gray) // 블랙이 아니라 label
+                                .foregroundColor(goal.isSelected ? .primary : .gray)
 
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)
-                        .background(goal.isSelected ? .customGray : .customSecondary)
+                        .background(goal.isSelected ? (colorScheme == .dark ? Color(.systemGray) : Color(.systemGray3)) : Color(.systemGray6))
                         .cornerRadius(CornerRadius.large)
                     }
-//                    .defaultShadow() // TODO: 중첩되어있음 제거하기
                 }
                 .padding(.bottom, Spacing.content)
             }
             .padding(.horizontal, spacing)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(

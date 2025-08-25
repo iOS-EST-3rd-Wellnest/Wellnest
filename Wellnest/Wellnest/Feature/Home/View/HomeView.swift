@@ -174,7 +174,6 @@ struct HomeView: View {
                 }
                 .padding(.bottom, Spacing.layout * 2)
             }
-            .padding(.top, Spacing.content)
             .padding(.horizontal)
             
             RecommendView(homeVM: homeVM)
