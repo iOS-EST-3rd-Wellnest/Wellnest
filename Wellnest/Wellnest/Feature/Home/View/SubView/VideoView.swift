@@ -81,9 +81,7 @@ private struct VideoImageView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Rectangle()
-                    .fill(Color.clear)
-                    .overlay(ProgressView())
+                SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
             }
         }
         .aspectRatio(16/9, contentMode: .fill)
@@ -92,24 +90,6 @@ private struct VideoImageView: View {
         .cornerRadius(CornerRadius.large)
         .task(id: urlString) {
             image = await ImageLoader.shared.load(urlString)
-        }
-    }
-}
-
-private struct VideoCardSkeletonView: View {
-    let thumbWidth: CGFloat
-    let titleWidth: CGFloat
-    let twoLineHeight: CGFloat
-    let isLoading: Bool
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.inline) {
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
-            
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
-                .frame(width: titleWidth, height: twoLineHeight - 10, alignment: .topLeading)
-                .padding(.vertical, Spacing.inline)
         }
     }
 }

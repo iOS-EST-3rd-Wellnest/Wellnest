@@ -91,35 +91,3 @@ struct RecommendView: View {
 #Preview {
     RecommendView(homeVM: HomeViewModel())
 }
-
-private struct SectionHeaderView: View {
-    let title: String
-    let isLoading: Bool
-    let height: CGFloat
-    
-    var body: some View {
-        HStack {
-            
-            if isLoading {
-                SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
-                    .frame(width: 150, height: height, alignment: .topLeading)
-            } else {
-                Text(title)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .frame(height: height, alignment: .topLeading)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-private struct ContentSkeletonView: View {
-    var body: some View {
-        VStack(alignment: .leading ) {
-            SkeletonView(shape: .rect(cornerRadius: CornerRadius.large))
-                .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
-        }
-    }
-}

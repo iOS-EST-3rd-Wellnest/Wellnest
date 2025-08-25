@@ -193,15 +193,3 @@ struct HomeView: View {
     HomeView()
         .environmentObject(ManualScheduleVMFactory.make())
 }
-
-private struct GoalSkeletonView: View {
-    var body: some View {
-        HStack {
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(minHeight: 180)
-            
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(minHeight: 180)
-        }
-    }
-}
