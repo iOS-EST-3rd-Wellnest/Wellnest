@@ -10,12 +10,9 @@ import Combine
 
 extension AlanAIService {
     func generateHealthPlan(_ request: PlanRequest, userProfile: UserProfile = .default) {
-        print("generateHealthPlan 시작")
         healthPlan = nil
 
         guard !clientID.isEmpty else {
-            print("Client ID가 없어 테스트 데이터를 생성합니다.")
-
             let calendar = Calendar.current
             let today = Date()
             let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
@@ -33,7 +30,7 @@ extension AlanAIService {
                 schedules: [
                     AIScheduleItem(
                         day: request.planType == .routine ? "월요일" : nil,
-                        date: request.planType != .routine ? todayString : nil, // 오늘 날짜
+                        date: request.planType != .routine ? todayString : nil,
                         time: "09:00-10:00",
                         activity: "테스트 운동 - \(request.preferences.first ?? "기본 운동")",
                         notes: "테스트용 운동입니다. 실제 API 연결 후 개인맞춤 운동이 생성됩니다."
@@ -48,72 +45,57 @@ extension AlanAIService {
                 ]
             )
 
-            print("테스트 데이터 생성: \(testPlan.title)")
-
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.isLoading = false
                 self.healthPlan = testPlan
-                print("테스트 데이터 설정 완료 - healthPlan: \(self.healthPlan?.title ?? "nil")")
+                print("플랜 생성 성공")
             }
             return
         }
 
         let prompt = AlanPromptBuilder.buildPrompt(from: request, userProfile: userProfile)
-        print("생성된 프롬프트 길이: \(prompt.count)")
 
         let healthPlanExtractor: (String) -> String? = { [weak self] response in
-            print("JSON 추출 시작, 응답 길이: \(response.count)")
-
             if let data = response.data(using: .utf8),
                let outerJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let content = outerJson["content"] as? String {
-                print("content 필드 발견, content 내부에서 JSON 추출 시도")
 
                 if let json = self?.extractJSONFromCodeBlock(content),
                    json.contains("plan_type") {
-                    print("content의 CodeBlock에서 JSON 추출 성공")
                     return json
                 }
 
                 if let json = self?.extractJSONByBraces(content),
                    json.contains("plan_type") {
-                    print("content의 Braces에서 JSON 추출 성공")
                     return json
                 }
-
-                print("Content 내부에서 plan_type을 포함한 JSON을 찾을 수 없음")
             }
 
             if let json = self?.extractJSONByBraces(response),
                json.contains("plan_type") && json.contains("schedules") {
-                print("전체 응답 Braces 방식으로 JSON 추출 성공")
                 return json
             }
 
             if let json = self?.extractJSONFromCodeBlock(response),
                json.contains("plan_type") {
-                print("전체 응답 CodeBlock 방식으로 JSON 추출 성공")
-                return json
-            }
-            if let json = self?.extractJSONByKeyword(response, keyword: "plan_type") {
-                print("Keyword 방식으로 JSON 추출 성공")
                 return json
             }
 
-            print("모든 JSON 추출 방식 실패")
-            print("응답 내용 일부: \(String(response.prefix(200)))")
+            if let json = self?.extractJSONByKeyword(response, keyword: "plan_type") {
+                return json
+            }
+
             return nil
         }
 
         self.request(prompt: prompt, responseType: HealthPlanResponse.self, jsonExtractor: healthPlanExtractor) { [weak self] result in
-            print("AI 응답 처리 시작")
             DispatchQueue.main.async {
                 switch result {
                 case .success(let healthPlan):
-                    print("헬스플랜 생성 성공: \(healthPlan.title)")
+                    print("플랜 생성 성공")
                     self?.healthPlan = healthPlan
                 case .failure(let error):
-                    print("헬스플랜 생성 실패: \(error.localizedDescription)")
+                    print("플랜 생성 실패")
                     self?.errorMessage = error.localizedDescription
                 }
             }

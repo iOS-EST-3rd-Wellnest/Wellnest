@@ -62,7 +62,7 @@ struct AIScheduleResultView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.wellnestOrange)
                     }
                 }
             }
@@ -91,9 +91,6 @@ struct AIScheduleResultView: View {
             } message: {
                 Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
             }
-        }
-        .onAppear {
-            print("📱 AIScheduleResultView 나타남 - healthPlan: \(viewModel.healthPlan?.title ?? "없음")")
         }
     }
 

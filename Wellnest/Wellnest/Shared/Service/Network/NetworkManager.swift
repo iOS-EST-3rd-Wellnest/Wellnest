@@ -273,7 +273,6 @@ final class NetworkManager {
         }
 
         if let parameters = parameters {
-            print("Parameters: \(parameters)")
             components.queryItems = parameters.compactMap { key, value in
                 guard let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
                     print("파라미터 인코딩 실패: \(key)=\(value)")
@@ -291,8 +290,6 @@ final class NetworkManager {
             print("   - query: \(components.query ?? "nil")")
             return nil
         }
-
-        print("최종 URL: \(finalURL.absoluteString)")
 
         var request = URLRequest(url: finalURL)
         request.httpMethod = method.rawValue
@@ -320,9 +317,6 @@ final class NetworkManager {
      * - Throws: NetworkError 또는 기타 네트워크 관련 에러
      */
     private func executeRequest(_ request: URLRequest) async throws -> Data {
-        print("Request URL: \(request.url?.absoluteString ?? "nil")")
-        print("Request Method: \(request.httpMethod ?? "nil")")
-
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
