@@ -13,7 +13,7 @@ struct MeditationStatCardView: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.gray) : .white)
+            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
             .frame(minHeight: 80)
             .defaultShadow()
             .overlay {
@@ -32,7 +32,7 @@ struct MeditationStatCardView: View {
                             Text("주 \(meditationData.weeklyCount)회")
                                 .font(.title3)
                                 .fontWeight(.semibold)
-                            
+
                             Text("성공")
                                 .font(.title3)
                                 .fontWeight(.semibold)
