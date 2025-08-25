@@ -39,10 +39,13 @@ final class AIScheduleViewModel: ObservableObject {
     @Published var isSaving: Bool = false
     @Published var saveSuccess: Bool = false
     @Published var saveError: String = ""
-    
+
     // AI 생성 일정을 담아놓는 배열
     @Published var generatedPlans: [GeneratedPlanItem] = []
-    
+
+    // UserInfoViewModel 추가
+    let userInfoViewModel: UserInfoViewModel
+
     // MARK: - AI 생성 일정 구조
     struct GeneratedPlanItem {
         enum Kind {
@@ -50,7 +53,7 @@ final class AIScheduleViewModel: ObservableObject {
             case multiple
             case routine(weekdays: [Int])
         }
-        
+
         let title: String
         let location: String?
         let memo: String?
@@ -94,8 +97,9 @@ final class AIScheduleViewModel: ObservableObject {
         }
     }
 
-    init(userProfile: UserProfile = .default) {
+    init(userProfile: UserProfile = .default, userInfoViewModel: UserInfoViewModel? = nil) {
         self.userProfile = userProfile
+        self.userInfoViewModel = userInfoViewModel ?? UserInfoViewModel()
         setupBindings()
     }
 
