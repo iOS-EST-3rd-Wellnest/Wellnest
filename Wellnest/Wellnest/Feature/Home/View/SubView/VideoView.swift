@@ -124,7 +124,8 @@ private struct SafariView: UIViewControllerRepresentable {
     func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
         let safariController = SFSafariViewController(url: url)
         safariController.dismissButtonStyle = .close
-        safariController.preferredControlTintColor = .orange
+        safariController.preferredBarTintColor = .systemBackground
+        safariController.preferredControlTintColor = .wellnestOrange
         
         return safariController
     }
