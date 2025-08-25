@@ -12,42 +12,25 @@ struct AnalyticsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel = AnalyticsViewModel()
     @State private var showDivider = false
-
+    @State private var offsetY: CGFloat = .zero
+    
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
+        ScrollView {
+            VStack {
+                SafeAreaBlurView(offsetY: $offsetY, space: .named("analyticsViewScroll"))
+                
                 customNavigationHeader
-
-                GeometryReader { geometry in
-                    ScrollView {
-                        VStack {
-                            Color.clear
-                                .frame(height: 1)
-                                .background(
-                                    GeometryReader { scrollGeometry in
-                                        Color.clear
-                                            .preference(key: ScrollOffsetPreferenceKey.self,
-                                                      value: scrollGeometry.frame(in: .named("scroll")).minY)
-                                    }
-                                )
-                                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-                                    showDivider = offset < 0
-                                }
-
-                            if horizontalSizeClass == .regular {
-                                iPadLayout
-                            } else {
-                                iPhoneLayout
-                            }
-                        }
-                    }
-                    .coordinateSpace(name: "scroll")
+                
+                if horizontalSizeClass == .regular {
+                    iPadLayout
+                } else {
+                    iPhoneLayout
                 }
             }
-            .navigationBarHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
         .background(Color(.systemBackground))
+        .coordinateSpace(name: "analyticsViewScroll")
+        .safeAreaBlur(offsetY: $offsetY)
     }
 
     private var customNavigationHeader: some View {
@@ -60,7 +43,7 @@ struct AnalyticsView: View {
                 Spacer()
             }
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.bottom, 12)
 
             if showDivider {
                 Divider()
@@ -103,13 +86,6 @@ struct AnalyticsView: View {
         }
         .padding(.horizontal, 32)
         .padding(.top, 20)
-    }
-}
-
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
