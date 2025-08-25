@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ScheduleCard: View {
+    @Environment(\.colorScheme) private var colorScheme
     let schedule: AIScheduleItem
 
     var body: some View {
@@ -18,12 +19,12 @@ struct ScheduleCard: View {
                         Text(day)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color(.wellnestOrange))
                     } else if let date = schedule.date {
                         Text(date)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color(.wellnestOrange))
                     }
 
                     Text(schedule.time)
@@ -49,9 +50,9 @@ struct ScheduleCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
+        .roundedBorder(cornerRadius: 12)
+        .defaultShadow()
     }
 }
 
