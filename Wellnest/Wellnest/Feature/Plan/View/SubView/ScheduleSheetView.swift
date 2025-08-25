@@ -30,12 +30,11 @@ struct ScheduleSheetView: View {
 
             ScrollView {
                 LazyVStack(spacing: Spacing.layout) {
-                    if planVM.selectedDateScheduleItems.isEmpty {
+                    if planVM.selectedDateSlices.isEmpty {
                         emptyStateView
                     } else {
-                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
-                            let item = planVM.selectedDateScheduleItems[index]
-							ScheduleItemView(schedule: item)
+                        ForEach(planVM.selectedDateSlices) { slice in
+                            ScheduleDaySliceView(slice: slice)
                         }
                     }
                 }
