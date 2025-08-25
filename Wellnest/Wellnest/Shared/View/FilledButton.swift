@@ -17,7 +17,7 @@ struct FilledButton: View {
     init(title: String,
          disabled: Bool = false,
          foregroundColor: Color = .white,
-         backgroundColor: Color = .blue,
+         backgroundColor: Color = .wellnestOrange,
          action: @escaping () -> Void) {
         self.title = title
         self.disabled = disabled // @Binding 초기화는 언더바로

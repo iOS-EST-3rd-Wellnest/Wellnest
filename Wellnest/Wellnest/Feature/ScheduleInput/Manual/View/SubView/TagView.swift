@@ -16,11 +16,11 @@ struct TagView<Model: TagModel>: View {
             .font(.system(size: 14, weight: .medium))
             .padding(.horizontal, Spacing.layout)
             .padding(.vertical, Spacing.content)
-            .background(isSelected ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
-            .foregroundColor(isSelected ? .blue : .primary)
+            .background(isSelected ? Color.wellnestOrange.opacity(0.2) : Color.gray.opacity(0.1))
+            .foregroundColor(isSelected ? .wellnestOrange : .primary)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.large)
-                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                    .stroke(isSelected ? .wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
             )
             .cornerRadius(16)
     }

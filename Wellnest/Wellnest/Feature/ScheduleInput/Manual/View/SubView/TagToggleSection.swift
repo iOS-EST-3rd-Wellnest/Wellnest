@@ -43,6 +43,7 @@ struct TagToggleSection<Model: TagModel & Equatable, Detail: View>: View {
                     .font(.headline)
                     .fontWeight(.semibold)
             }
+            .tint(.wellnestOrange)
 
             if isOn {
                 HStack {

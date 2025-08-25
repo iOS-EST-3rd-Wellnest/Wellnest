@@ -70,6 +70,7 @@ struct EndDateSelectorView: View {
                         selection: $endDate,
                         displayedComponents: [.date]
                     )
+                    .tint(.wellnestOrange)
                     .datePickerStyle(.graphical)
                     .labelsHidden()
                     .transition(.dropFromButton)

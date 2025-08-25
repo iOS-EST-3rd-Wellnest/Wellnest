@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct DatePickerView: View {
+    @Environment(\.colorScheme) private var colorScheme
     var text: String = ""
     
     @Binding var date: Date
@@ -56,15 +57,15 @@ struct DatePickerView: View {
                     }
                 } label: {
                     Text(formattedDateOnly(date))
-                        .foregroundColor(selectedDate ? .blue : .black)
+                        .foregroundColor(selectedDate ? .wellnestOrange : (colorScheme == .dark ? .white : .black))
                 }
                 .padding(.horizontal, Spacing.layout)
                 .padding(.vertical, Spacing.content)
-                .foregroundColor(selectedDate ? .blue : .primary)
-                .background(selectedDate ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                .foregroundColor(selectedDate ? .wellnestOrange : .primary)
+                .background(selectedDate ? Color.wellnestOrange.opacity(0.2) : Color.gray.opacity(0.1))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .stroke(selectedDate ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(selectedDate ? .wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .cornerRadius(16)
 
@@ -93,15 +94,15 @@ struct DatePickerView: View {
                         }
                     } label: {
                         Text(formattedTimeOnly(date))
-                            .foregroundColor( selectedTime ? .blue : .black)
+                            .foregroundColor( selectedTime ? .wellnestOrange : (colorScheme == .dark ? .white : .black))
                     }
                     .padding(.horizontal, Spacing.layout)
                     .padding(.vertical, Spacing.content)
-                    .foregroundColor(selectedTime ? .blue : .primary)
-                    .background(selectedTime ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                    .foregroundColor(selectedTime ? .wellnestOrange : .primary)
+                    .background(selectedTime ? Color .wellnestOrange.opacity(0.2) : Color.gray.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .stroke(selectedTime ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                            .stroke(selectedTime ? .wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
                     )
                     .cornerRadius(16)
                 }
@@ -118,7 +119,6 @@ struct DatePickerView: View {
                 .labelsHidden()
                 .environment(\.locale, Locale(identifier: "ko_KR"))
                 .frame(minHeight: 350)
-                .background(Color.white)
                 .transition(.dropFromButton)
                 .zIndex(1)
             } else if selectedTime {
