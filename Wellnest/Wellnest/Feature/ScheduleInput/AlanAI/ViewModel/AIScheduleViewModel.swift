@@ -206,7 +206,7 @@ final class AIScheduleViewModel: ObservableObject {
                 await MainActor.run {
                     isSaving = false
                     saveSuccess = true
-                    print("저장 성공!")
+                    print("저장 성공")
                 }
             } catch {
                 await MainActor.run {
@@ -325,13 +325,13 @@ final class AIScheduleViewModel: ObservableObject {
         case content
         case empty
     }
-    
+
     // MARK: - AI 생성 일정 캘린더 연동
     private func saveSchedulesToCalendarAndCoreData(plan: HealthPlanResponse) async throws {
-        print("📆 EventKit 권한 확인")
+        print("EventKit 권한 확인")
         try await CalendarManager.shared.ensureAccess()
 
-        print("💿 Core Data + 📆 Calendar 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
+        print("Core Data + Calendar 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (idx, scheduleItem) in plan.schedules.enumerated() {
             let dates = AIScheduleDateTimeHelper.parseDatesForCoreData(
@@ -385,10 +385,10 @@ final class AIScheduleViewModel: ObservableObject {
             entity.updatedAt = Date()
             entity.eventIdentifier = eventId // EventKit 식별자 저장
 
-            print("📝 저장 \(idx+1): \(entity.title ?? "제목없음") | \(startDate) ~ \(endDate) | id=\(eventId)")
+            print("저장 \(idx+1): \(entity.title ?? "제목없음") | \(startDate) ~ \(endDate) | id=\(eventId)")
         }
 
         try CoreDataService.shared.saveContext()
-        print("💾 Core Data 저장 완료 + 📆 캘린더 생성 완료")
+        print("Core Data 저장 완료 + 캘린더 생성 완료")
     }
 }
