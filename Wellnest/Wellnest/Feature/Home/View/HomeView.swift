@@ -41,6 +41,12 @@ struct HomeView: View {
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
     }
     
+    private var footnoteLineHeight: CGFloat {
+        let base = UIFont.preferredFont(forTextStyle: .footnote)
+        let scaled = UIFontMetrics(forTextStyle: .footnote).scaledFont(for: base)
+        return ceil(scaled.lineHeight)
+    }
+    
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: Spacing.layout) {
@@ -54,8 +60,7 @@ struct HomeView: View {
                         
                         if homeVM.hashtagList.isEmpty {
                             SkeletonView(shape: .rect(cornerRadius: CornerRadius.medium))
-                                .frame(width: 200
-                                       , height: imgHeight / 2.5)
+                                .frame(width: 200, height: footnoteLineHeight)
                         } else {
                             HStack {
                                 ForEach(homeVM.hashtagList, id: \.self) {
@@ -72,6 +77,13 @@ struct HomeView: View {
                                 .preference(key: SizePreferenceKey.self, value: profileGeometry.size.height)
                         }
                     )
+                    .onPreferenceChange(SizePreferenceKey.self) { newValue in
+                        guard abs(newValue - profileVstackHeight) > 0.5 else { return }
+                        DispatchQueue.main.async {
+                            
+                            profileVstackHeight = newValue
+                        }
+                    }
                     
                     Spacer()
                     
@@ -82,7 +94,6 @@ struct HomeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
                 }
                 .padding(.bottom, Spacing.layout)
-                .onPreferenceChange(SizePreferenceKey.self) { profileVstackHeight = $0 }
                 
                 HStack {
                     Text(today)
