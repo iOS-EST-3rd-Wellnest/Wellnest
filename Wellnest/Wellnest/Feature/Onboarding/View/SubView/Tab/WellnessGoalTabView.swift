@@ -54,7 +54,7 @@ struct WellnessGoalTabView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)
-                        .background(goal.isSelected ? (colorScheme == .dark ? Color(.systemGray) : Color(.systemGray3)) : Color(.systemGray6))
+                        .background(goal.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))
                         .cornerRadius(CornerRadius.large)
                     }
                 }

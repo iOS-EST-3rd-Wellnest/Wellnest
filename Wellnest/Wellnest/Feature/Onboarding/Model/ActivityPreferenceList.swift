@@ -18,6 +18,7 @@ struct ActivityPreference: SelectableItem {
         let isFemale = (gender == "여성")
 
         return [
+            // TODO: 준일님과 얘기해 타이틀 형식 변경
             ActivityPreference(icon: isFemale ? "🚶🏽‍♀️" : "🚶🏽‍♂️", title: "걷기/산책"),
             ActivityPreference(icon: isFemale ? "🏃🏽‍♀️" : "🏃🏽‍♂️", title: "달리기"),
             ActivityPreference(icon: "⚽️", title: "축구/풋살"),

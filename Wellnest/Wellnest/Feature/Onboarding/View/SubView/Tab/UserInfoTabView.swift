@@ -207,10 +207,14 @@ struct UserInfoFormTitle: View {
 
 /// 입력폼 레이아웃
 struct UserInfoForm<Content: View>: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let title: String
     let isRequired: Bool
     let isFocused: Bool
+
     @Binding var isNicknameValid: Bool
+
     @ViewBuilder let content: Content
 
     init(title: String, isRequired: Bool = false, isFocused: Bool = false, isNicknameValid: Binding<Bool> = .constant(true), @ViewBuilder content: () -> Content) {
@@ -228,7 +232,7 @@ struct UserInfoForm<Content: View>: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 58)
-        .background(Color(.systemGray6))
+        .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
         .cornerRadius(CornerRadius.large)
         .overlay{
             RoundedRectangle(cornerRadius: CornerRadius.large)

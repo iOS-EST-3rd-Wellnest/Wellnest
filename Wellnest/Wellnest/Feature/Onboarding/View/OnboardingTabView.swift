@@ -179,7 +179,8 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                                 .foregroundColor(item.isSelected ? Color.primary : Color.gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
-                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray) : Color(.systemGray3)) : Color(.systemGray6))
+                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))
+
                         .cornerRadius(CornerRadius.large)
                     }
                 }
