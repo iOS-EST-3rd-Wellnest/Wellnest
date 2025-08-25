@@ -64,7 +64,11 @@ struct ManualScheduleInputView: View {
     @State private var selectedRepeatRule: RepeatRule? = nil
 
     // 반복 종료일 여부
-    @State private var hasRepeatEndDate: Bool = true
+    var hasRepeatEndDate: Bool {
+        return mode == .date
+    }
+
+    @State private var mode: Mode = .none
 
     // 반복 종료 일 (default value: 오늘로부터 7일 뒤의 날짜)
     @State private var repeatEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
@@ -152,7 +156,7 @@ struct ManualScheduleInputView: View {
                             showDetail: selectedRepeatRule != nil,
                             onTagTap: { _ in isKeyboardVisible = false }
                         ) {
-                            EndDateSelectorView(endDate: $repeatEndDate)
+                            EndDateSelectorView(mode: $mode, endDate: $repeatEndDate)
                         }
                         .padding(.bottom, 5)
                         .onChange(of: isRepeated) { newValue in
@@ -269,7 +273,7 @@ extension ManualScheduleInputView {
             backgroundColorName: selectedColorName,
             repeatRuleName: isRepeated ? selectedRepeatRule?.name : nil,
             hasRepeatEndDate: hasRepeatEndDate,
-            repeatEndDate: isRepeated ? repeatEndDate : nil,
+            repeatEndDate: hasRepeatEndDate ? repeatEndDate : nil,
             alarmRuleName: isAlarmOn ? alarmRule?.name : nil,
             isAlarmOn: isAlarmOn,
             isCompleted: false
