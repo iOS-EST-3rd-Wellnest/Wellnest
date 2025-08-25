@@ -47,7 +47,7 @@ struct ModifyingSurveyView: View {
                     withAnimation { dismiss() }
                 } label: {
                     Image(systemName: "xmark")
-                        .foregroundColor(.gray)
+                        .foregroundColor(.wellnestOrange)
                 }
             }
         }

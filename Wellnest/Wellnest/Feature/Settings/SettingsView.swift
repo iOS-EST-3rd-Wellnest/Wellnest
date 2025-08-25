@@ -12,6 +12,7 @@ struct SettingsView: View {
 
     @State private var isProfileDetailPresented = false
     @State private var currentPage: Int = 0
+    @State private var isNicknameValid = true
 
     @Environment(\.dismiss) var dismiss
 
@@ -32,7 +33,7 @@ struct SettingsView: View {
             .fullScreenCover(isPresented: $isProfileDetailPresented) {
                 if let user = viewModel.userEntity {
                     NavigationView {
-                        ProfileDetailView(viewModel: viewModel, userEntity: user, currentPage: $currentPage)
+                        ProfileDetailView(viewModel: viewModel, userEntity: user, currentPage: $currentPage, isNicknameValid: $isNicknameValid)
                     }
                 }
             }

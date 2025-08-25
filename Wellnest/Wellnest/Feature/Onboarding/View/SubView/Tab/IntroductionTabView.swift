@@ -24,6 +24,7 @@ struct IntroductionTabView: View {
                 currentPage: $currentPage
             )
         }
+        .background(Color(.systemBackground))
         .onAppear {
             title = "앱 소개"
         }
