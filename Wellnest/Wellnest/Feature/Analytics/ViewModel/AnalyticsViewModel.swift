@@ -548,7 +548,25 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func getUserName() -> String {
-        return UserDefaults.standard.string(forKey: "userName") ?? "사용자"
+        let coreDataService = CoreDataService.shared
+
+        do {
+            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
+            userRequest.fetchLimit = 1
+
+            let users = try coreDataService.context.fetch(userRequest)
+
+            if let user = users.first,
+               let nickname = user.value(forKey: "nickname") as? String,
+               !nickname.isEmpty {
+                return nickname
+            }
+        } catch {
+            print("Failed to fetch user nickname from CoreData: \(error)")
+        }
+
+        // CoreData에서 닉네임을 가져올 수 없는 경우 기본값 반환
+        return "사용자"
     }
 
     // MARK: - 새로고침
