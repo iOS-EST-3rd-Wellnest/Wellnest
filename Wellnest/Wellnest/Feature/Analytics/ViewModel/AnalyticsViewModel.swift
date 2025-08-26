@@ -20,7 +20,6 @@ class AnalyticsViewModel: ObservableObject {
     private let coreDataStore = CoreDataStore()
 
     init() {
-        // 초기값은 로딩 상태로 설정
         self.healthData = HealthData(
             userName: "사용자",
             planCompletion: PlanCompletionData(completedItems: 0, totalItems: 0),
@@ -56,13 +55,10 @@ class AnalyticsViewModel: ObservableObject {
             meditation: MeditationData(weeklyCount: 0, changeCount: 0)
         )
 
-        // 실제 데이터 로드 시작
         Task {
             await loadHealthData()
         }
     }
-
-    // MARK: - 데이터 로드
 
     private func loadHealthData() async {
         isLoading = true
@@ -70,10 +66,8 @@ class AnalyticsViewModel: ObservableObject {
 
         print("건강 데이터 로드 시작")
 
-        // 사용자 이름 먼저 설정
         let userName = getUserName()
 
-        // 모든 데이터를 병렬로 로드
         async let planData = loadPlanCompletionData()
         async let exerciseData = loadExerciseData()
         async let sleepData = loadSleepData()
@@ -90,7 +84,6 @@ class AnalyticsViewModel: ObservableObject {
         print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
         print("- 수면 품질: \(sleep.sleepQuality)%")
 
-        // AI 인사이트 생성
         let aiInsight = generateAIInsight(
             planCompletion: plan,
             exercise: exercise,
@@ -99,7 +92,6 @@ class AnalyticsViewModel: ObservableObject {
             hasRealData: self.hasRealData
         )
 
-        // 데이터 업데이트
         self.healthData = HealthData(
             userName: userName,
             planCompletion: plan,
@@ -112,8 +104,6 @@ class AnalyticsViewModel: ObservableObject {
         print("건강 데이터 로드 완료 - UI 업데이트됨")
         isLoading = false
     }
-
-    // MARK: - 플랜 완료도 데이터 로드
 
     private func loadPlanCompletionData() async -> PlanCompletionData {
         let coreDataService = CoreDataService.shared
@@ -134,7 +124,6 @@ class AnalyticsViewModel: ObservableObject {
             let sampleActivities = try coreDataService.context.fetch(explorationRequest)
             print("ScheduleEntity 샘플 개수: \(sampleActivities.count)")
 
-            // 일정이 없으면 0/0으로 반환
             if sampleActivities.isEmpty {
                 print("일정이 없음. 0/0 반환")
                 return PlanCompletionData(completedItems: 0, totalItems: 0)
@@ -189,7 +178,6 @@ class AnalyticsViewModel: ObservableObject {
                 print("전체 일정 개수: \(todayActivities.count)")
             }
 
-            // 일정이 없으면 0/0 반환
             if todayActivities.isEmpty {
                 print("오늘 일정이 없음. 0/0 반환")
                 return PlanCompletionData(completedItems: 0, totalItems: 0)
@@ -227,8 +215,6 @@ class AnalyticsViewModel: ObservableObject {
             return PlanCompletionData(completedItems: 0, totalItems: 0)
         }
     }
-
-    // MARK: - 운동 데이터 로드
 
     private func loadExerciseData() async -> ExerciseData {
         print("운동 데이터 로드 시작")
@@ -314,8 +300,6 @@ class AnalyticsViewModel: ObservableObject {
         )
     }
 
-    // MARK: - 수면 데이터 로드
-
     private func loadSleepData() async -> SleepData {
         print("수면 데이터 로드 시작")
 
@@ -390,8 +374,6 @@ class AnalyticsViewModel: ObservableObject {
         )
     }
 
-    // MARK: - 명상 데이터 로드
-
     private func loadMeditationData() async -> MeditationData {
         print("명상 데이터 로드 시작")
 
@@ -455,8 +437,6 @@ class AnalyticsViewModel: ObservableObject {
             return MeditationData(weeklyCount: 0, changeCount: 0)
         }
     }
-
-    // MARK: - AI 인사이트 생성
 
     private func generateAIInsight(
         planCompletion: PlanCompletionData,
@@ -548,8 +528,6 @@ class AnalyticsViewModel: ObservableObject {
 
         return AIInsightData(message: selectedInsight)
     }
-
-    // MARK: - 헬퍼 함수들
 
     private func formatSteps(_ steps: Int) -> String {
         if steps >= 10000 {
@@ -828,15 +806,12 @@ class AnalyticsViewModel: ObservableObject {
         return "사용자"
     }
 
-    // MARK: - 새로고침
-
     func refreshData() async {
         print("수동 새로고침 시작")
         await loadHealthData()
     }
 }
 
-// MARK: - ScheduledActivity 확장
 @objc(ScheduledActivity)
 public class ScheduledActivity: NSManagedObject {
     @NSManaged public var date: Date?
