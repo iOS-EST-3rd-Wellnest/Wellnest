@@ -50,6 +50,18 @@ final class ScheduleEditorViewModel: ObservableObject {
         }
     }
 
+    var canUpdateAll: Bool {
+        switch mode {
+        case .create:
+            return false
+        case .edit:
+            if form.isRepeated {
+                return true
+            }
+            return false
+        }
+    }
+
     var canDelete: Bool {
         switch mode {
         case .create:
@@ -109,7 +121,7 @@ final class ScheduleEditorViewModel: ObservableObject {
             repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
             alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
             isAlarmOn: form.isAlarmOn,
-            isCompleted: false
+            isCompleted: false,
         )
 
         switch mode {
@@ -122,6 +134,33 @@ final class ScheduleEditorViewModel: ObservableObject {
             lastSavedID = updated
             return [updated]
         }
+    }
+
+    @MainActor
+    func updateAll() async throws  {
+        let input = ScheduleInput(
+            title: form.title,
+            location: form.location,
+            detail: form.detail,
+            startDate: form.startDate,
+            endDate: form.endDate,
+            isAllDay: form.isAllDay,
+            backgroundColorName: form.selectedColorName,
+            repeatRuleName: form.isRepeated ? form.selectedRepeatRule?.name : nil,
+            hasRepeatEndDate: form.hasRepeatEndDate,
+            repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
+            alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
+            isAlarmOn: form.isAlarmOn,
+            isCompleted: false,
+        )
+
+        switch mode {
+        case let .edit(id):
+            let entity = try await repository.fetch(by: id)
+            let updated = try await repository.update(seriesId: entity.seriesId ?? UUID(), with: input)
+        default: break
+        }
+
     }
 }
 

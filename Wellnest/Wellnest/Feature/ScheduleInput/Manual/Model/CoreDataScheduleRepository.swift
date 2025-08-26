@@ -14,6 +14,7 @@ protocol ScheduleRepository {
 //    func fetch(by id: NSManagedObjectID) async throws -> ScheduleSnapshot
 //    func update(id: NSManagedObjectID, with input: ScheduleInput) async throws -> NSManagedObjectID
     func fetch(by id: UUID) async throws -> ScheduleSnapshot
+    func update(seriesId: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID]
     func update(id: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID
     func delete(id: NSManagedObjectID) async throws
 }
@@ -98,6 +99,7 @@ class CoreDataScheduleRepository: ScheduleRepository {
         guard let entity = try viewContext.fetch(request).first else {
             throw NSError(domain: "Repository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Not found"])
         }
+        print(entity)
         return ScheduleSnapshot(
             id: entity.objectID,
             title: entity.title ?? "",
@@ -111,15 +113,43 @@ class CoreDataScheduleRepository: ScheduleRepository {
             repeatEndDate: entity.hasRepeatEndDate ? entity.repeatEndDate : nil,
             alarmRuleName: entity.alarm,
             isAlarmOn: entity.alarm != nil,
-            isCompleted: entity.isCompleted?.boolValue ?? false
+            isCompleted: entity.isCompleted?.boolValue ?? false,
+            seriesId: entity.seriesId
         )
     }
 
 
+    func update(seriesId uuid: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID] {
+        try await viewContext.perform { [self] in
+            let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+            request.predicate = NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+
+            let entity = try self.viewContext.fetch(request)
+            var ids: [NSManagedObjectID] = []
+            entity.map {
+                $0.title = input.title
+                $0.location = input.location
+                $0.detail = input.detail
+                $0.startDate = input.startDate
+                $0.endDate = input.endDate
+                $0.isAllDay = NSNumber(value: input.isAllDay)
+                $0.isCompleted = NSNumber(value: input.isCompleted)
+                $0.backgroundColor = input.backgroundColorName
+                $0.repeatRule = input.repeatRuleName
+                $0.hasRepeatEndDate = input.hasRepeatEndDate
+                $0.repeatEndDate = input.repeatEndDate
+                $0.alarm = input.alarmRuleName
+                $0.updatedAt = Date()
+                ids.append($0.objectID)
+            }
+            try viewContext.save()
+            return ids
+        }
+    }
     func update(id uuid: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID {
         try await viewContext.perform { [self] in
             let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "uuid == %@", uuid as CVarArg)
+            request.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
             request.fetchLimit = 1
 
             guard let entity = try self.viewContext.fetch(request).first else {
@@ -171,4 +201,5 @@ struct ScheduleSnapshot {
     let alarmRuleName: String?
     let isAlarmOn: Bool
     let isCompleted: Bool
+    let seriesId: UUID?
 }
