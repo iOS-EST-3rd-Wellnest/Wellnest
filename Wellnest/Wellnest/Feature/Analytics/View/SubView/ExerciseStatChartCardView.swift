@@ -89,7 +89,7 @@ struct ExerciseStatChartCardView: View {
                         Spacer()
                     }
 
-                    VStack(alignment: .leading, spacing: Spacing.layout) {
+                    VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
                         Text(getChartTitle())
                             .font(.caption)
                             .foregroundColor(.secondary)
