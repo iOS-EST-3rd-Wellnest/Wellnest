@@ -14,48 +14,24 @@ struct ScheduleFloatingMenu: View {
     @State private var showAI = false
     @State private var showManual = false
     @State private var revealTask: Task<Void, Never>?
-    
+
+    private let circleSize: CGFloat = 44
+
     var body: some View {
         VStack(spacing: Spacing.layout) {
             Spacer()
             
             if showScheduleMenu {
                 if showAI {
-                    Button {
-                        selectedType = .createByAI
-                    } label: {
-                        Label {
-                            Text("AI 일정 생성")
-                                .foregroundStyle(Color(.label))
-
-                        } icon: {
-                            Image(systemName: "sparkles")
-                                .foregroundStyle(.wellnestOrange)
-                        }
-                        .font(.body)
-                        .padding(Spacing.content)
-                        .background(.white)
-                        .clipShape(Capsule())
-                        .defaultShadow()                    }
+                    Button { selectedType = .createByAI } label: {
+                        menuRow(title: "AI 일정 생성", systemName: "sparkles")
+                    }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 
                 if showManual {
-                    Button {
-                        selectedType = .createByUser
-                    } label: {
-                        Label {
-                            Text("직접 일정 생성")
-                                .foregroundStyle(Color(.label))
-                        } icon: {
-                            Image(systemName: "pencil")
-                                .foregroundStyle(.wellnestOrange)
-                        }
-                        .font(.body)
-                        .padding(Spacing.content)
-                        .background(.white)
-                        .clipShape(Capsule())
-                        .defaultShadow()
+                    Button { selectedType = .createByUser } label: {
+                        menuRow(title: "직접 일정 생성", systemName: "pencil")
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -77,7 +53,36 @@ struct ScheduleFloatingMenu: View {
             stopAnimateMenu()
         }
     }
-    
+
+    @ViewBuilder
+    private func menuRow(title: String, systemName: String) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                Circle()
+                    .fill(.wellnestOrange)
+                    .frame(width: circleSize, height: circleSize)
+                    .overlay(
+                        Image(systemName: systemName)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                    )
+                    .defaultShadow(color: .wellnestOrange.opacity(0.4))
+                    .position(x: geo.size.width / 2, y: circleSize / 2)
+
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(Color(.label))
+                    .frame(height: circleSize, alignment: .center)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, geo.size.width / 2 + circleSize / 2 + Spacing.content)
+            }
+            .frame(height: circleSize)
+            .contentShape(Rectangle())
+        }
+        .frame(height: circleSize)
+        .padding(.horizontal, Spacing.content)
+    }
+
     private func startAnimateMenu() {
         stopAnimateMenu()
         
@@ -98,10 +103,6 @@ struct ScheduleFloatingMenu: View {
         showManual = false
     }
 }
-
-//#Preview {
-//    ScheduleFloatingMenu(selectedType: .constant(nil), showScheduleMenu: .constant(true))
-//}
 
 #Preview {
     MainTabView()

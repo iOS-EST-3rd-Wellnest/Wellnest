@@ -23,8 +23,13 @@ struct RoundedBorderModifier: ViewModifier {
 }
 
 extension View {
-    func defaultShadow() -> some View {
-        self.shadow(color: .black.opacity(0.1), radius: 8, x: 6, y: 6)
+    func defaultShadow(
+        color: Color = .black.opacity(0.1),
+        radius: CGFloat = 8,
+        x: CGFloat = 4,
+        y: CGFloat = 4
+    ) -> some View {
+        self.shadow(color: color, radius: radius, x: x, y: y)
     }
 
     func roundedBorder(

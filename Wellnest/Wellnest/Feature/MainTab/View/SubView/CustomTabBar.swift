@@ -8,11 +8,31 @@
 import SwiftUI
 
 struct CustomTabBar: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @Binding var selectedTab: TabBarItem
     @Binding var showScheduleMenu: Bool
     
     var body: some View {
         ZStack {
+            Button {
+                showScheduleMenu.toggle()
+            } label: {
+                Image(systemName: "plus")
+                    .resizable()
+                    .fontWeight(.semibold)
+                    .frame(width: 32, height: 32)
+                    .padding(12)
+                    .background {
+                        Circle()
+                            .fill(.wellnestOrange)
+                    }
+                    .foregroundStyle(.white)
+
+            }
+            .defaultShadow(color: .wellnestOrange.opacity(0.4))
+            .offset(y: -(20 + Spacing.content))
+
             HStack {
                 tabButton(tab: .home)
                 tabButton(tab: .plan)
@@ -28,36 +48,20 @@ struct CustomTabBar: View {
                     ZStack {
                         Capsule()
                             .fill(.white)
+
                         Circle()
-                            .frame(width: 80, height: 80)
+                            .frame(width: 70, height: 70)
                             .position(x: geo.size.width / 2, y: 0)
                             .blendMode(.destinationOut)
+
                     }
                     .compositingGroup()
-                    .defaultShadow()
+                    .allowsHitTesting(false)
                 }
             }
             .clipShape(Capsule())
-            .defaultShadow()
+            .defaultShadow(color: .secondary.opacity(0.5), radius: 4 , x: 2, y: 2)
             .padding(.horizontal)
-            
-            Button {
-                showScheduleMenu.toggle()
-            } label: {
-                Image(systemName: "plus")
-                    .resizable()
-                    .fontWeight(.semibold)
-                    .frame(width: 40, height: 40)
-                    .padding(12)
-                    .background {
-                        Circle()
-                            .fill(.wellnestOrange)
-                    }
-                    .foregroundStyle(.white)
-
-            }
-            .defaultShadow()
-            .offset(y: -(20 + Spacing.content))
         }
     }
     

@@ -5,13 +5,20 @@
 //  Created by 박동언 on 8/1/25.
 //
 
+//
+//  MainTabView.swift
+//  Wellnest
+//
+//  Created by 박동언 on 8/1/25.
+//
+
 import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-    
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
@@ -27,19 +34,41 @@ struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
+
             VStack {
                 if showScheduleMenu {
                     ScheduleFloatingMenu(selectedType: $selectedCreationType, showScheduleMenu: $showScheduleMenu)
                         .padding(.bottom, Spacing.layout * 2)
                 }
-                
+
                 CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
+                    .background {
+                        GeometryReader { geometry in
+                            Rectangle()
+                                .fill(.ultraThinMaterial)
+                                .frame(height: 60 + geometry.safeAreaInsets.bottom)
+                                .mask {
+                                    LinearGradient(
+                                        gradient: Gradient(stops: [
+                                            .init(color: .clear, location: 0.0),
+                                            .init(color: .black.opacity(0.5), location: 0.3),
+                                            .init(color: .black, location: 0.5),
+                                            .init(color: .black, location: 0.7),
+                                            .init(color: .black, location: 1.0)
+                                        ]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                }
+                                .ignoresSafeArea(edges: .bottom)
+                        }
+                    }
             }
             .zIndex(1)
-            
+
             if showScheduleMenu {
-                Color.black.opacity(0.3)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
                     .ignoresSafeArea(.all)
                     .zIndex(0)
                     .onTapGesture {
@@ -63,16 +92,14 @@ struct MainTabView: View {
         }
         .onChange(of: selectedCreationType) { _ in
             showScheduleMenu = false
-            
         }
         .onChange(of: selectedTab) { _ in
             showScheduleMenu = false
         }
-        .padding(.bottom, 24)
-        .ignoresSafeArea(edges: .bottom)
+        .padding(.bottom, 0)
+//        .ignoresSafeArea(edges: .bottom)
 //        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
-    
 }
 
 #Preview {
