@@ -31,7 +31,13 @@ class AnalyticsViewModel: ObservableObject {
                 averageCalories: 0,
                 caloriesChange: 0,
                 weeklySteps: Array(repeating: 0, count: 7),
-                monthlySteps: Array(repeating: 0, count: 8)
+                monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0,
+                weeklyStepsChange: 0,
+                monthlyStepsChange: 0,
+                dailyCaloriesChange: 0,
+                weeklyCaloriesChange: 0,
+                monthlyCaloriesChange: 0
             ),
             sleep: SleepData(
                 averageHours: 0,
@@ -39,7 +45,13 @@ class AnalyticsViewModel: ObservableObject {
                 sleepQuality: 0,
                 qualityChange: 0,
                 weeklySleepHours: Array(repeating: 0, count: 7),
-                monthlySleepHours: Array(repeating: 0, count: 8)
+                monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0,
+                weeklySleepTimeChange: 0,
+                monthlySleepTimeChange: 0,
+                dailyQualityChange: 0,
+                weeklyQualityChange: 0,
+                monthlyQualityChange: 0
             ),
             meditation: MeditationData(weeklyCount: 0, changeCount: 0)
         )
@@ -225,7 +237,9 @@ class AnalyticsViewModel: ObservableObject {
             print("HealthKit을 사용할 수 없음")
             return ExerciseData(
                 averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8)
+                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
+                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
             )
         }
 
@@ -237,7 +251,9 @@ class AnalyticsViewModel: ObservableObject {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
             return ExerciseData(
                 averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8)
+                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
+                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
             )
         }
 
@@ -288,7 +304,13 @@ class AnalyticsViewModel: ObservableObject {
             averageCalories: todayCalories,
             caloriesChange: caloriesChange,
             weeklySteps: weeklySteps,
-            monthlySteps: monthlySteps
+            monthlySteps: monthlySteps,
+            dailyStepsChange: calculateDailyStepsChange(from: yearlyData, current: todaySteps),
+            weeklyStepsChange: calculateWeeklyStepsChange(from: yearlyData),
+            monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
+            dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
+            weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
+            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
         )
     }
 
@@ -301,7 +323,9 @@ class AnalyticsViewModel: ObservableObject {
             print("HealthKit을 사용할 수 없음")
             return SleepData(
                 averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8)
+                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
+                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
             )
         }
 
@@ -310,7 +334,9 @@ class AnalyticsViewModel: ObservableObject {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
             return SleepData(
                 averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8)
+                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
+                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
             )
         }
 
@@ -354,7 +380,13 @@ class AnalyticsViewModel: ObservableObject {
             sleepQuality: sleepQuality,
             qualityChange: qualityChange,
             weeklySleepHours: weeklySleep,
-            monthlySleepHours: monthlySleep
+            monthlySleepHours: monthlySleep,
+            dailySleepTimeChange: calculateDailySleepTimeChange(from: yearlyData, current: hours),
+            weeklySleepTimeChange: calculateWeeklySleepTimeChange(from: yearlyData),
+            monthlySleepTimeChange: calculateMonthlySleepTimeChange(from: yearlyData),
+            dailyQualityChange: calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality),
+            weeklyQualityChange: calculateWeeklySleepQualityChange(from: yearlyData),
+            monthlyQualityChange: calculateMonthlySleepQualityChange(from: yearlyData)
         )
     }
 
@@ -612,6 +644,139 @@ class AnalyticsViewModel: ObservableObject {
         let previousQuality = previous7Days.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(previous7Days.count, 1)
 
         return currentQuality - previousQuality
+    }
+
+    private func calculateDailyStepsChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        guard yesterday.steps > 0 else { return 0 }
+
+        let change = (Double(current - yesterday.steps) / Double(yesterday.steps)) * 100
+        return Int(change)
+    }
+
+    private func calculateWeeklyStepsChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { $0.steps }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { $0.steps }.reduce(0, +) / max(lastWeek.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+
+        let change = (Double(thisAvg - lastAvg) / Double(lastAvg)) * 100
+        return Int(change)
+    }
+
+    private func calculateMonthlyStepsChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { $0.steps }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { $0.steps }.reduce(0, +) / max(lastMonth.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateDailyCaloriesChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        guard yesterday.kcal > 0 else { return 0 }
+        return Int((Double(current - yesterday.kcal) / Double(yesterday.kcal)) * 100)
+    }
+
+    private func calculateWeeklyCaloriesChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { $0.kcal }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { $0.kcal }.reduce(0, +) / max(lastWeek.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateMonthlyCaloriesChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { $0.kcal }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { $0.kcal }.reduce(0, +) / max(lastMonth.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateDailySleepTimeChange(from yearlyData: [HealthManager.DailyMetric], current: Double) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        let yesterdayHours = Double(yesterday.sleepMinutes) / 60.0
+        guard yesterdayHours > 0 else { return 0 }
+        return Int((current - yesterdayHours) / yesterdayHours * 100)
+    }
+
+    private func calculateWeeklySleepTimeChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(thisWeek.count, 1)) / 60.0
+        let lastAvg = lastWeek.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(lastWeek.count, 1)) / 60.0
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((thisAvg - lastAvg) / lastAvg * 100)
+    }
+
+    private func calculateMonthlySleepTimeChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(thisMonth.count, 1)) / 60.0
+        let lastAvg = lastMonth.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(lastMonth.count, 1)) / 60.0
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((thisAvg - lastAvg) / lastAvg * 100)
+    }
+
+    private func calculateDailySleepQualityChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        let yesterdayHours = Double(yesterday.sleepMinutes) / 60.0
+        let yesterdayQuality = calculateSleepQuality(hours: yesterdayHours)
+        guard yesterdayQuality > 0 else { return 0 }
+        return current - yesterdayQuality
+    }
+
+    private func calculateWeeklySleepQualityChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(lastWeek.count, 1)
+
+        return thisAvg - lastAvg
+    }
+
+    private func calculateMonthlySleepQualityChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(lastMonth.count, 1)
+
+        return thisAvg - lastAvg
     }
 
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
