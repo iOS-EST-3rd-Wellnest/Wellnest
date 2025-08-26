@@ -14,6 +14,10 @@ struct ScheduleSheetView: View {
     @State private var currentDragOffset: CGFloat = 0
     @State private var isDragging: Bool = false
 
+    @State private var selectedItem: ScheduleItem?
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
             Capsule()
@@ -37,6 +41,9 @@ struct ScheduleSheetView: View {
                              let item = planVM.selectedDateScheduleItems[idx]
 
                              ScheduleItemView(schedule: item, contextDate: planVM.selectedDate)
+                                 .onTapGesture {
+                                     selectedItem = item
+                                 }
                          }
                      }
                 }
@@ -53,6 +60,14 @@ struct ScheduleSheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .defaultShadow()
         .gesture(dragGesture)
+        .sheet(item: $selectedItem) { item in
+            ManualScheduleInputView(
+                mode: .create,
+                selectedTab: $selectedTab,
+                selectedCreationType: $selectedCreationType,
+                onSaved: { id in /* 새로 만든 ID 처리 */ }
+            )
+        }
     }
 
     @ViewBuilder
@@ -99,5 +114,5 @@ struct ScheduleSheetView: View {
 }
 
 #Preview {
-    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false))
+    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }

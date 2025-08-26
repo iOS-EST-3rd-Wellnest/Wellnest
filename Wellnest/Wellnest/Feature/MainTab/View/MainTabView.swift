@@ -19,7 +19,7 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                 case .plan:
-                    PlanView()
+                    PlanView(selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
                 case .analysis:
                     AnalyticsView()
                 case .settings:
