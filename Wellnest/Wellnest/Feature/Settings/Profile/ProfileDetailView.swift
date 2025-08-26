@@ -220,7 +220,7 @@ struct ProfileDetailView: View {
         .onAppear {
             loadUserEntity()
         }
-        .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
+        .layoutWidth()
         .navigationTitle("사용자 정보")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

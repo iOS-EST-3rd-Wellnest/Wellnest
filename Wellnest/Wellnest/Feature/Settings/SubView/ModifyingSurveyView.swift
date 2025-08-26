@@ -39,7 +39,7 @@ struct ModifyingSurveyView: View {
                 }
             }
         }
-        .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
+        .layoutWidth()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
