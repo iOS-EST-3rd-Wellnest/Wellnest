@@ -15,8 +15,6 @@ struct UserInfoTabView: View {
 
     enum Field {
         case nickname
-        case ageRange
-        case gender
         case height
         case weight
     }
@@ -24,7 +22,7 @@ struct UserInfoTabView: View {
     @FocusState private var isFieldFocused: Field?
     @State private var selectedField: Field?
     @Binding var isNicknameValid: Bool
-
+    
     @State private var nickname: String = ""
     @State private var selectedAge = ""
     @State private var selectedGender = ""
@@ -32,8 +30,6 @@ struct UserInfoTabView: View {
     @State private var weight: Int?
     @State private var heightText: String = ""
     @State private var weightText: String = ""
-
-    let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
         nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
@@ -86,13 +82,11 @@ struct UserInfoTabView: View {
                 }
 
                 /// 연령대
-                // TODO: 연령대, 성별 포커스 다시 하기, 설정뷰도 동일하게 수정
-                UserInfoForm(title: "연령대", isRequired: true, isFocused: selectedField == .ageRange) {
+                UserInfoForm(title: "연령대", isRequired: true) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
                                 selectedAge = age.value
-                                selectedField = .ageRange
                             } label: {
                                 Text(age.title)
                             }
@@ -105,12 +99,11 @@ struct UserInfoTabView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true, isFocused: selectedField == .gender) {
+                UserInfoForm(title: "성별", isRequired: true) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
                                 selectedGender = gender.value
-                                selectedField = .gender
                             } label: {
                                 GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
@@ -160,7 +153,7 @@ struct UserInfoTabView: View {
                     }
                 }
             }
-            .padding(.horizontal, spacing)
+            .padding(.horizontal, Spacing.layout)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -200,7 +193,7 @@ struct UserInfoFormTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundColor(.primary) // label로 변경
+            .foregroundColor(.primary)
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -231,7 +224,6 @@ struct UserInfoForm<Content: View>: View {
             UserInfoFormTitle(title: title + (isRequired ? " *" : ""))
             content
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 58)
         .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
         .cornerRadius(CornerRadius.large)
@@ -254,7 +246,7 @@ struct NicknameValidator {
     }
 }
 
-/// 나이 선택 버튼 레이아웃
+/// 연령대 선택 버튼 레이아웃
 struct AgeMenuLabel: View {
     let selectedAge: String
 

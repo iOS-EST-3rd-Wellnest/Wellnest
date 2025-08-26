@@ -17,8 +17,6 @@ struct WellnessGoalTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
-    let spacing = OnboardingCardLayout.spacing
-
     var isButtonDisabled: Bool {
         !viewModel.wellnessGoals.contains(where: { $0.isSelected })
     }
@@ -60,7 +58,7 @@ struct WellnessGoalTabView: View {
                 }
                 .padding(.bottom, Spacing.content)
             }
-            .padding(.horizontal, spacing)
+            .padding(.horizontal, Spacing.layout)
         }
         .background(Color(.systemBackground))
         .scrollIndicators(.hidden)

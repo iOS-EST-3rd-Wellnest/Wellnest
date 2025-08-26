@@ -56,6 +56,7 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+            .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -102,21 +103,17 @@ struct OnboardingCardLayout {
         isIPad ? 3 : 2
     }
 
-    static var spacing: CGFloat {
-        isIPad ? 25 : Spacing.layout
-    }
-
     static var spacingCount: CGFloat {
         isIPad ? 4 : 3
     }
 
     static var columns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount)
+        Array(repeating: GridItem(.flexible(), spacing: Spacing.layout), count: columnCount)
     }
 
     static var cardWidth: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
-        return (screenWidth - (spacing * spacingCount)) / CGFloat(columnCount)
+        let screenWidth = isIPad ? 600 : UIScreen.main.bounds.width
+        return (CGFloat(screenWidth) - (Spacing.layout * spacingCount)) / CGFloat(columnCount)
     }
 }
 
@@ -151,7 +148,6 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
     let columns = OnboardingCardLayout.columns
     let cardWidth = OnboardingCardLayout.cardWidth
-    let spacing = OnboardingCardLayout.spacing
 
     var body: some View {
         VStack {
@@ -164,7 +160,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
             .padding(.horizontal, Spacing.content)
             .padding(.bottom, Spacing.content)
 
-            LazyVGrid(columns: columns, spacing: spacing) {
+            LazyVGrid(columns: columns, spacing: Spacing.layout) {
                 ForEach($items, id: \.id) { $item in
                     Button {
                         ToggleCardHelper.toggleCard(item: $item, items: $items)
@@ -186,11 +182,12 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                 }
             }
         }
-        .padding(.horizontal, spacing)
+        .padding(.horizontal, Spacing.layout)
         .padding(.bottom)
     }
 }
 
+// TODO: disabled 될 때 애니메이션 되면 좋을 것 같음
 /// 온보딩 버튼 레이아웃
 struct OnboardingButton: View {
     @Environment(\.colorScheme) var colorScheme
@@ -239,7 +236,7 @@ struct OnboardingButton: View {
                     }
                 )
             }
-            .padding(.horizontal, OnboardingCardLayout.spacing)
+            .padding(.horizontal, Spacing.layout)
             .padding(.bottom, Spacing.content)
             .background(colorScheme == .dark ? Color.black : Color.white)
         }
@@ -249,4 +246,3 @@ struct OnboardingButton: View {
 #Preview {
     OnboardingTabView(userDefaultsManager: UserDefaultsManager.shared)
 }
-

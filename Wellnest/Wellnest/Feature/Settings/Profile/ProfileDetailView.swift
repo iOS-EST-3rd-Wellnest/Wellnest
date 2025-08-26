@@ -15,8 +15,6 @@ struct ProfileDetailView: View {
 
     enum Field {
         case nickname
-        case ageRange
-        case gender
         case height
         case weight
     }
@@ -124,7 +122,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
+                UserInfoForm(title: "연령대", isRequired: true) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
@@ -141,7 +139,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
+                UserInfoForm(title: "성별", isRequired: true) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
@@ -196,7 +194,7 @@ struct ProfileDetailView: View {
                     }
                 }
             }
-            .padding(.horizontal, OnboardingCardLayout.spacing)
+            .padding(.horizontal, Spacing.layout)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -237,6 +235,7 @@ struct ProfileDetailView: View {
                 }
             }
         }
+        .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
     }
 }
 
