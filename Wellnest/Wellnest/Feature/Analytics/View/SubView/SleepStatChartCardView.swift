@@ -15,7 +15,7 @@ struct SleepStatChartCardView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-            .frame(minHeight: 350)
+            .frame(minHeight: 360)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
@@ -56,13 +56,13 @@ struct SleepStatChartCardView: View {
                             }
 
                             HStack(spacing: Spacing.inline) {
-                                Image(systemName: "minus")
+                                Image(systemName: getSleepTimeChangeIcon())
                                     .font(.caption)
-                                    .foregroundColor(.gray)
-                                Text("유지")
+                                    .foregroundColor(getSleepTimeChangeColor())
+                                Text(getSleepTimeChangeText())
                                     .font(.caption)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(getSleepTimeChangeColor())
                             }
                         }
 
@@ -80,20 +80,20 @@ struct SleepStatChartCardView: View {
                             }
 
                             HStack(spacing: Spacing.inline) {
-                                Image(systemName: sleepData.qualityChange >= 0 ? "arrow.up" : "arrow.down")
+                                Image(systemName: getSleepEfficiencyChangeIcon())
                                     .font(.caption)
-                                    .foregroundColor(sleepData.qualityChange >= 0 ? .green : .red)
-                                Text(formatChange(sleepData.qualityChange))
+                                    .foregroundColor(getSleepEfficiencyChangeColor())
+                                Text(getSleepEfficiencyChangeText())
                                     .font(.caption)
                                     .fontWeight(.medium)
-                                    .foregroundColor(sleepData.qualityChange >= 0 ? .green : .red)
+                                    .foregroundColor(getSleepEfficiencyChangeColor())
                             }
                         }
 
                         Spacer()
                     }
 
-                    VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
+                    VStack(alignment: .leading, spacing: Spacing.layout) {
                         Text(getChartTitle())
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -185,13 +185,106 @@ struct SleepStatChartCardView: View {
         }
     }
 
-    private func formatChange(_ change: Int) -> String {
+    private func getSleepTimeChangeIcon() -> String {
+        let change = getSleepTimeChange()
         if change > 0 {
-            return "+\(change)%"
+            return "arrow.up"
         } else if change < 0 {
-            return "\(change)%"
+            return "arrow.down"
         } else {
-            return "0%"
+            return "minus"
+        }
+    }
+
+    private func getSleepTimeChangeColor() -> Color {
+        let change = getSleepTimeChange()
+        if change > 0 {
+            return .green
+        } else if change < 0 {
+            return .red
+        } else {
+            return .gray
+        }
+    }
+
+    private func getSleepTimeChangeText() -> String {
+        let change = getSleepTimeChange()
+        let comparisonText = getComparisonText()
+
+        if change > 0 {
+            return "+\(change)% \(comparisonText)"
+        } else if change < 0 {
+            return "\(change)% \(comparisonText)"
+        } else {
+            return "유지 \(comparisonText)"
+        }
+    }
+
+    private func getSleepTimeChange() -> Int {
+        switch selectedPeriod {
+        case .today:
+            return sleepData.dailySleepTimeChange
+        case .week:
+            return sleepData.weeklySleepTimeChange
+        case .month:
+            return sleepData.monthlySleepTimeChange
+        }
+    }
+
+    private func getSleepEfficiencyChangeIcon() -> String {
+        let change = getSleepEfficiencyChange()
+        if change > 0 {
+            return "arrow.up"
+        } else if change < 0 {
+            return "arrow.down"
+        } else {
+            return "minus"
+        }
+    }
+
+    private func getSleepEfficiencyChangeColor() -> Color {
+        let change = getSleepEfficiencyChange()
+        if change > 0 {
+            return .green
+        } else if change < 0 {
+            return .red
+        } else {
+            return .gray
+        }
+    }
+
+    private func getSleepEfficiencyChangeText() -> String {
+        let change = getSleepEfficiencyChange()
+        let comparisonText = getComparisonText()
+
+        if change > 0 {
+            return "+\(change)% \(comparisonText)"
+        } else if change < 0 {
+            return "\(change)% \(comparisonText)"
+        } else {
+            return "유지 \(comparisonText)"
+        }
+    }
+
+    private func getSleepEfficiencyChange() -> Int {
+        switch selectedPeriod {
+        case .today:
+            return sleepData.dailyQualityChange
+        case .week:
+            return sleepData.weeklyQualityChange
+        case .month:
+            return sleepData.monthlyQualityChange
+        }
+    }
+
+    private func getComparisonText() -> String {
+        switch selectedPeriod {
+        case .today:
+            return "어제 대비"
+        case .week:
+            return "전주 대비"
+        case .month:
+            return "전월 대비"
         }
     }
 }

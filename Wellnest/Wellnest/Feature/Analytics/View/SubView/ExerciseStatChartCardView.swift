@@ -15,7 +15,7 @@ struct ExerciseStatChartCardView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-            .frame(minHeight: 350)
+            .frame(minHeight: 360)
             .defaultShadow()
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: Spacing.content) {
@@ -54,13 +54,13 @@ struct ExerciseStatChartCardView: View {
                                     .foregroundColor(.secondary)
                             }
                             HStack(spacing: Spacing.inline) {
-                                Image(systemName: exerciseData.stepsChange >= 0 ? "arrow.up" : "arrow.down")
+                                Image(systemName: getStepsChangeIcon())
                                     .font(.caption)
-                                    .foregroundColor(exerciseData.stepsChange >= 0 ? .green : .red)
-                                Text(formatChange(exerciseData.stepsChange))
+                                    .foregroundColor(getStepsChangeColor())
+                                Text(getStepsChangeText())
                                     .font(.caption)
                                     .fontWeight(.medium)
-                                    .foregroundColor(exerciseData.stepsChange >= 0 ? .green : .red)
+                                    .foregroundColor(getStepsChangeColor())
                             }
                         }
 
@@ -77,19 +77,19 @@ struct ExerciseStatChartCardView: View {
                                     .foregroundColor(.secondary)
                             }
                             HStack(spacing: Spacing.inline) {
-                                Image(systemName: exerciseData.caloriesChange >= 0 ? "arrow.up" : "arrow.down")
+                                Image(systemName: getCaloriesChangeIcon())
                                     .font(.caption)
-                                    .foregroundColor(exerciseData.caloriesChange >= 0 ? .green : .red)
-                                Text(formatChange(exerciseData.caloriesChange))
+                                    .foregroundColor(getCaloriesChangeColor())
+                                Text(getCaloriesChangeText())
                                     .font(.caption)
                                     .fontWeight(.medium)
-                                    .foregroundColor(exerciseData.caloriesChange >= 0 ? .green : .red)
+                                    .foregroundColor(getCaloriesChangeColor())
                             }
                         }
                         Spacer()
                     }
 
-                    VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
+                    VStack(alignment: .leading, spacing: Spacing.layout) {
                         Text(getChartTitle())
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -194,13 +194,106 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
-    private func formatChange(_ change: Int) -> String {
+    private func getStepsChangeIcon() -> String {
+        let change = getStepsChange()
         if change > 0 {
-            return "+\(change)%"
+            return "arrow.up"
         } else if change < 0 {
-            return "\(change)%"
+            return "arrow.down"
         } else {
-            return "0%"
+            return "minus"
+        }
+    }
+
+    private func getStepsChangeColor() -> Color {
+        let change = getStepsChange()
+        if change > 0 {
+            return .green
+        } else if change < 0 {
+            return .red
+        } else {
+            return .gray
+        }
+    }
+
+    private func getStepsChangeText() -> String {
+        let change = getStepsChange()
+        let comparisonText = getComparisonText()
+
+        if change > 0 {
+            return "+\(change)% \(comparisonText)"
+        } else if change < 0 {
+            return "\(change)% \(comparisonText)"
+        } else {
+            return "유지 \(comparisonText)"
+        }
+    }
+
+    private func getStepsChange() -> Int {
+        switch selectedPeriod {
+        case .today:
+            return exerciseData.dailyStepsChange
+        case .week:
+            return exerciseData.weeklyStepsChange
+        case .month:
+            return exerciseData.monthlyStepsChange
+        }
+    }
+
+    private func getCaloriesChangeIcon() -> String {
+        let change = getCaloriesChange()
+        if change > 0 {
+            return "arrow.up"
+        } else if change < 0 {
+            return "arrow.down"
+        } else {
+            return "minus"
+        }
+    }
+
+    private func getCaloriesChangeColor() -> Color {
+        let change = getCaloriesChange()
+        if change > 0 {
+            return .green
+        } else if change < 0 {
+            return .red
+        } else {
+            return .gray
+        }
+    }
+
+    private func getCaloriesChangeText() -> String {
+        let change = getCaloriesChange()
+        let comparisonText = getComparisonText()
+
+        if change > 0 {
+            return "+\(change)% \(comparisonText)"
+        } else if change < 0 {
+            return "\(change)% \(comparisonText)"
+        } else {
+            return "유지 \(comparisonText)"
+        }
+    }
+
+    private func getCaloriesChange() -> Int {
+        switch selectedPeriod {
+        case .today:
+            return exerciseData.dailyCaloriesChange
+        case .week:
+            return exerciseData.weeklyCaloriesChange
+        case .month:
+            return exerciseData.monthlyCaloriesChange
+        }
+    }
+
+    private func getComparisonText() -> String {
+        switch selectedPeriod {
+        case .today:
+            return "어제 대비"
+        case .week:
+            return "전주 대비"
+        case .month:
+            return "전월 대비"
         }
     }
 }
