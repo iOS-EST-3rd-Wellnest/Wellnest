@@ -144,34 +144,16 @@ struct ManualScheduleInputView: View {
 
                     // 버튼
                     FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
-                        if viewModel.canUpdateAll {
-                            showAlert = true
-                        } else {
-                            saveSchedule()
+                        Task {
+                            try await viewModel.saveSchedule()
                         }
+                        selectedTab = .plan
+                        selectedCreationType = nil
+                        dismiss()
                     }
                     .padding(.horizontal)
                     .frame(maxWidth: .infinity)
                     .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
-                    .confirmationDialog("",
-                                        isPresented: $showAlert,
-                                        titleVisibility: .visible) {
-                        Button("이 이벤트만 저장") {
-                            saveSchedule()
-                        }
-                        Button("이후 이벤트에 대해 저장") {
-                            Task {
-                                try await viewModel.updateAll()
-                            }
-                            selectedTab = .plan
-                            selectedCreationType = nil
-                            dismiss()
-                        }
-                        Button("취소", role: .cancel) { }
-                    } message: {
-                        Text("반복 일정의 수정 범위를 선택하세요.")
-                    }
-
                 }
             }
             .padding(.bottom, 8)

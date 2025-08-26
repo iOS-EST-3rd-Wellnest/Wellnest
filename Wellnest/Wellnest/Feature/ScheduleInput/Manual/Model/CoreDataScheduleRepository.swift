@@ -16,7 +16,7 @@ protocol ScheduleRepository {
     func fetch(by id: UUID) async throws -> ScheduleSnapshot
     func update(seriesId: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID]
     func update(id: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID
-    func delete(id: NSManagedObjectID) async throws
+    func delete(id: UUID) async throws
 }
 
 enum ScheduleRepoError: Error {
@@ -181,9 +181,40 @@ class CoreDataScheduleRepository: ScheduleRepository {
         }
         return ids
     }
+    
+    // MARK: - UUID로 단일 삭제
+    func delete(id: UUID) async throws {
+        let ids = try await store.fetchIDs(
+            ScheduleEntity.self,
+            predicate: NSPredicate(format: "id == %@", id as CVarArg),
+            fetchLimit: 1
+        )
+        guard let oid = ids.first else {
+            throw ScheduleRepoError.notFound
+        }
 
-    func delete(id: NSManagedObjectID) async throws {
-        try await store.delete(id: id)
+        try await store.delete(id: oid)
+    }
+
+
+    // MARK: - 시리즈 단위 일괄 삭제
+    func deleteAll(seriesId uuid: UUID) async throws -> [NSManagedObjectID] {
+        // 1. 해당 seriesId를 가진 모든 엔티티의 objectID 가져오기
+        let ids = try await store.fetchIDs(
+            ScheduleEntity.self,
+            predicate: NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+        )
+        guard !ids.isEmpty else {
+            throw ScheduleRepoError.notFound
+        }
+
+        // 2. 반복문 돌면서 하나씩 삭제
+        for oid in ids {
+            try await store.delete(id: oid)
+        }
+
+        // 3. 삭제한 objectID 배열 리턴
+        return ids
     }
 
 }

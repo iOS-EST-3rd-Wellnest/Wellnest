@@ -126,9 +126,16 @@ final class ScheduleEditorViewModel: ObservableObject {
             lastSavedID = ids.first
             return ids
         case let .edit(id):
-            let updated = try await repository.update(id: id, with: input)
-            lastSavedID = updated
-            return [updated]
+            var updated: [NSManagedObjectID] = []
+            if form.isRepeated {
+                let delete = try await repository.delete(id: id)
+                let ids = try await repository.create(with: input)
+
+            } else {
+                let updated = try await repository.update(id: id, with: input)
+                lastSavedID = updated
+            }
+            return updated
         }
     }
 
