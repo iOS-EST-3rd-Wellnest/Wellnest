@@ -46,7 +46,7 @@ final class ScheduleEditorViewModel: ObservableObject {
         case .create:
             return "저장하기"
         case .edit:
-            return "업데이트"
+            return "수정하기"
         }
     }
 

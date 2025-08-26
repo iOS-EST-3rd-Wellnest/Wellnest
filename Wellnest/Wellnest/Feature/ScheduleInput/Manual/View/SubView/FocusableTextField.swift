@@ -33,6 +33,7 @@ struct FocusableTextField: UIViewRepresentable {
         textField.placeholder = placeholder
         textField.returnKeyType = returnKeyType
         textField.keyboardType = keyboardType
+        textField.tintColor = .wellnestOrange
         textField.autocorrectionType = .no // 자동완성 비활성화
         textField.spellCheckingType = .no // 철자검사 비활성화
         textField.clearButtonMode = clearButtonMode

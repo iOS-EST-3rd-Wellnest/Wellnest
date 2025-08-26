@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 struct ManualScheduleInputView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
@@ -124,8 +125,8 @@ struct ManualScheduleInputView: View {
                     // 버튼 위로 덮일 페이드
                     LinearGradient(
                         gradient: Gradient(stops: [
-                            .init(color: Color.white.opacity(0.0), location: 0.0),
-                            .init(color: Color.white.opacity(1.0), location: 1.0),
+                            .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
+                            .init(color:colorScheme == .dark ? .black : .white, location: 1.0),
                         ]),
                         startPoint: .top, endPoint: .bottom
                     )
@@ -140,7 +141,7 @@ struct ManualScheduleInputView: View {
                     }
                     .padding(.horizontal)
                     .frame(maxWidth: .infinity)
-                    .background(Color.white.ignoresSafeArea(edges: .bottom))
+                    .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
                 }
             }
             .padding(.bottom, 8)
