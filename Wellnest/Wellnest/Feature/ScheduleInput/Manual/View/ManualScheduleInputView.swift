@@ -15,6 +15,7 @@ struct ManualScheduleInputView: View {
     @Binding var selectedCreationType: ScheduleCreationType?
 
     @StateObject private var viewModel: ScheduleEditorViewModel
+    @ObservedObject var planVM: PlanViewModel
 
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
@@ -26,12 +27,12 @@ struct ManualScheduleInputView: View {
         mode: EditorMode,
         selectedTab: Binding<TabBarItem>,
         selectedCreationType: Binding<ScheduleCreationType?>,
-        onSaved: ((NSManagedObjectID) -> Void)? = nil,
-        onDeleted: (() -> Void)? = nil
+        planVM: PlanViewModel
     ) {
         _selectedTab = selectedTab
         _selectedCreationType = selectedCreationType
         _viewModel = StateObject(wrappedValue: ScheduleEditorFactory.make(mode: mode))
+        self.planVM = planVM
     }
 
     var body: some View {
@@ -101,7 +102,14 @@ struct ManualScheduleInputView: View {
                     .padding()
                 }
                 .padding(.bottom, 30)
-                .task { await viewModel.loadIfNeeded() }
+                .task {
+                    await viewModel.loadIfNeeded()
+                }
+                .onAppear {
+                    viewModel.form.startDate = planVM.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
+                    viewModel.form.endDate   = viewModel.form.startDate.addingTimeInterval(3600).roundedUpToFiveMinutes()
+
+                }
                 .onDisappear {
                     isKeyboardVisible = false
                 }
@@ -119,6 +127,7 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 }
+
             }
 
             .overlay(alignment: .bottom) {

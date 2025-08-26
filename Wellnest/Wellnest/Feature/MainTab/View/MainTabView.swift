@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @StateObject private var planVM = PlanViewModel()
+
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-    
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
@@ -19,7 +21,7 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                 case .plan:
-                    PlanView(selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
+                    PlanView(planVM: planVM, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
                 case .analysis:
                     AnalyticsView()
                 case .settings:
@@ -58,7 +60,8 @@ struct MainTabView: View {
                 ManualScheduleInputView(
                     mode: .create,
                     selectedTab: $selectedTab,
-                    selectedCreationType: $selectedCreationType
+                    selectedCreationType: $selectedCreationType,
+                    planVM: planVM
                 )
             }
         }

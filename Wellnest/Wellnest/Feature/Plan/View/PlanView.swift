@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PlanView: View {
-    @StateObject private var planVM = PlanViewModel()
+    @ObservedObject var planVM: PlanViewModel
 
     @State private var isSheetExpanded: Bool = false
     @State private var showDatePicker: Bool = false
@@ -81,5 +81,5 @@ struct PlanView: View {
 }
 
 #Preview {
-    PlanView(selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
+    PlanView(planVM: PlanViewModel(), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }

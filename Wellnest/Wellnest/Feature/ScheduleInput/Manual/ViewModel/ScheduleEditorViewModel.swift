@@ -25,11 +25,6 @@ final class ScheduleEditorViewModel: ObservableObject {
     init(mode: EditorMode, repository: ScheduleRepository) {
         self.mode = mode
         self.repository = repository
-
-        if case .create = mode {
-            form.startDate = Date().roundedUpToFiveMinutes()
-            form.endDate   = Date().addingTimeInterval(3600).roundedUpToFiveMinutes()
-        }
     }
 
     var navigationBarTitle: String {
@@ -89,7 +84,7 @@ final class ScheduleEditorViewModel: ObservableObject {
                 endDate: scheduleSnapshot.endDate,
                 isAllDay: scheduleSnapshot.isAllDay,
                 isRepeated: scheduleSnapshot.repeatRuleName != nil,
-                selectedRepeatRule: scheduleSnapshot.repeatRuleName.flatMap(RepeatRule.init(name:)),
+                selectedRepeatRule: scheduleSnapshot.repeatRuleName.flatMap { RepeatRule.init(name: $0) },
                 repeatEndMode: (scheduleSnapshot.repeatEndDate == nil) ? .none : .date,
                 repeatEndDate: scheduleSnapshot.repeatEndDate ?? Date(),
                 isAlarmOn: scheduleSnapshot.isAlarmOn,
@@ -123,6 +118,7 @@ final class ScheduleEditorViewModel: ObservableObject {
             isAlarmOn: form.isAlarmOn,
             isCompleted: false,
         )
+        print(input)
 
         switch mode {
         case .create:

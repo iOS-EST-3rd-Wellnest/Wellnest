@@ -64,8 +64,7 @@ struct ScheduleSheetView: View {
             ManualScheduleInputView(
                 mode: .edit(id: item.id),
                 selectedTab: $selectedTab,
-                selectedCreationType: $selectedCreationType,
-                onSaved: { id in /* 새로 만든 ID 처리 */ }
+                selectedCreationType: $selectedCreationType, planVM: planVM
             )
         }
     }
