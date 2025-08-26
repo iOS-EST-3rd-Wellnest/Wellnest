@@ -56,6 +56,7 @@ struct MainTabView: View {
                 )
             case .createByUser:
                 ManualScheduleInputView(
+                    mode: .create,
                     selectedTab: $selectedTab,
                     selectedCreationType: $selectedCreationType
                 )
