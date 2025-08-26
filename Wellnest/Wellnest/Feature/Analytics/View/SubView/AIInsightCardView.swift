@@ -20,7 +20,7 @@ struct AIInsightCardView: View {
                 HStack(spacing: Spacing.content) {
                     Image(systemName: "lightbulb.max.fill")
                         .font(.title2)
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.wellnestOrange)
                         .frame(width: 30)
 
                     VStack(alignment: .leading, spacing: Spacing.content) {
@@ -28,10 +28,10 @@ struct AIInsightCardView: View {
                             .font(.footnote)
                             .foregroundColor(.secondary)
                         Text(insight.message)
-                            .font(.subheadline)
+                            .font(.caption)
                             .fontWeight(.medium)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer()
                 }
                 .padding()
             }
