@@ -209,14 +209,12 @@ struct SleepStatChartCardView: View {
 
     private func getSleepTimeChangeText() -> String {
         let change = getSleepTimeChange()
-        let comparisonText = getComparisonText()
-
         if change > 0 {
-            return "+\(change)% \(comparisonText)"
+            return "+\(change)%"
         } else if change < 0 {
-            return "\(change)% \(comparisonText)"
+            return "\(change)%"
         } else {
-            return "유지 \(comparisonText)"
+            return "유지"
         }
     }
 
@@ -255,14 +253,12 @@ struct SleepStatChartCardView: View {
 
     private func getSleepEfficiencyChangeText() -> String {
         let change = getSleepEfficiencyChange()
-        let comparisonText = getComparisonText()
-
         if change > 0 {
-            return "+\(change)% \(comparisonText)"
+            return "+\(change)%"
         } else if change < 0 {
-            return "\(change)% \(comparisonText)"
+            return "\(change)%"
         } else {
-            return "유지 \(comparisonText)"
+            return "유지"
         }
     }
 
@@ -274,17 +270,6 @@ struct SleepStatChartCardView: View {
             return sleepData.weeklyQualityChange
         case .month:
             return sleepData.monthlyQualityChange
-        }
-    }
-
-    private func getComparisonText() -> String {
-        switch selectedPeriod {
-        case .today:
-            return "어제 대비"
-        case .week:
-            return "전주 대비"
-        case .month:
-            return "전월 대비"
         }
     }
 }

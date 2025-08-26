@@ -218,14 +218,12 @@ struct ExerciseStatChartCardView: View {
 
     private func getStepsChangeText() -> String {
         let change = getStepsChange()
-        let comparisonText = getComparisonText()
-
         if change > 0 {
-            return "+\(change)% \(comparisonText)"
+            return "+\(change)%"
         } else if change < 0 {
-            return "\(change)% \(comparisonText)"
+            return "\(change)%"
         } else {
-            return "유지 \(comparisonText)"
+            return "유지"
         }
     }
 
@@ -264,14 +262,12 @@ struct ExerciseStatChartCardView: View {
 
     private func getCaloriesChangeText() -> String {
         let change = getCaloriesChange()
-        let comparisonText = getComparisonText()
-
         if change > 0 {
-            return "+\(change)% \(comparisonText)"
+            return "+\(change)%"
         } else if change < 0 {
-            return "\(change)% \(comparisonText)"
+            return "\(change)%"
         } else {
-            return "유지 \(comparisonText)"
+            return "유지"
         }
     }
 
@@ -283,17 +279,6 @@ struct ExerciseStatChartCardView: View {
             return exerciseData.weeklyCaloriesChange
         case .month:
             return exerciseData.monthlyCaloriesChange
-        }
-    }
-
-    private func getComparisonText() -> String {
-        switch selectedPeriod {
-        case .today:
-            return "어제 대비"
-        case .week:
-            return "전주 대비"
-        case .month:
-            return "전월 대비"
         }
     }
 }
