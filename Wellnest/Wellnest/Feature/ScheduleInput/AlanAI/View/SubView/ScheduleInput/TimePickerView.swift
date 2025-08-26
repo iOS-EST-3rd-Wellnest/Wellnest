@@ -13,6 +13,9 @@ struct TimePickerView: View {
     @Binding var time: Date
     @Binding var isPresented: Bool
 
+    // Dark Mode 감지
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
             HStack(spacing: Spacing.content) {
@@ -29,15 +32,23 @@ struct TimePickerView: View {
                     }
                 } label: {
                     Text(formattedTimeOnly(time))
-                        .foregroundColor(isPresented ? .blue : .black)
+                        .foregroundColor(isPresented ? .blue : .primary) // .black -> .primary로 변경
                 }
                 .padding(.horizontal, Spacing.layout)
                 .padding(.vertical, Spacing.content)
                 .foregroundColor(isPresented ? .blue : .primary)
-                .background(isPresented ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                .background(
+                    isPresented ?
+                    Color.blue.opacity(0.2) :
+                    (colorScheme == .dark ? Color.gray.opacity(0.2) : Color.gray.opacity(0.1)) // Dark Mode에서 배경색 조정
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .stroke(isPresented ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(
+                            isPresented ? Color.blue :
+                            (colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.3)), // Dark Mode에서 테두리 조정
+                            lineWidth: 1
+                        )
                 )
                 .cornerRadius(16)
             }
@@ -46,6 +57,11 @@ struct TimePickerView: View {
                 MinuteIntervalWheelDatePicker(date: $time, minuteInterval: 5, isAllDay: false)
                     .frame(height: 200)
                     .frame(maxWidth: .infinity)
+                    .background(
+                        // Picker 배경색 Dark Mode 대응
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(colorScheme == .dark ? Color(.systemGray6) : Color(.systemBackground))
+                    )
                     .transition(.dropFromButton)
             }
         }

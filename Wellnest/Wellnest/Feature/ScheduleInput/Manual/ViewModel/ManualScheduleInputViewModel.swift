@@ -61,6 +61,8 @@ final class ManualScheduleInputViewModel {
                 e.updatedAt = Date()
                 e.seriesId = seriesId
                 e.occurrenceIndex = Int64(idx)
+
+                print(e)
             }
             createdIDs.append(id)
         }

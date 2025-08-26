@@ -31,13 +31,14 @@ struct ScheduleSheetView: View {
             ScrollView {
                 LazyVStack(spacing: Spacing.layout) {
                     if planVM.selectedDateScheduleItems.isEmpty {
-                        emptyStateView
-                    } else {
-                        ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { index in
-                            let item = planVM.selectedDateScheduleItems[index]
-							ScheduleItemView(schedule: item)
-                        }
-                    }
+                         emptyStateView
+                     } else {
+                         ForEach(planVM.selectedDateScheduleItems.indices, id: \.self) { idx in
+                             let item = planVM.selectedDateScheduleItems[idx]
+
+                             ScheduleItemView(schedule: item, contextDate: planVM.selectedDate)
+                         }
+                     }
                 }
                 .padding()
             }
