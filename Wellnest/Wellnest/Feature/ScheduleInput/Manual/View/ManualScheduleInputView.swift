@@ -59,7 +59,7 @@ struct ManualScheduleInputView: View {
                         }
                         .padding(.bottom, 5)
                         .onChange(of: viewModel.form.isRepeated) { newValue in
-                            UIApplication.hideKeyboard()
+                            isKeyboardVisible = false
                         }
                         TagToggleSection(
                             title: "알람",
@@ -69,7 +69,7 @@ struct ManualScheduleInputView: View {
                         )
                         .padding(.bottom, 5)
                         .onChange(of: viewModel.form.isAlarmOn) { newValue in
-                            UIApplication.hideKeyboard()
+                            isKeyboardVisible = false
                         }
                         HStack {
                             Text("배경색")
@@ -101,7 +101,7 @@ struct ManualScheduleInputView: View {
                 .padding(.bottom, 30)
                 .task { await viewModel.loadIfNeeded() }
                 .onDisappear {
-                    UIApplication.hideKeyboard()
+                    isKeyboardVisible = false
                 }
                 .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
