@@ -26,6 +26,7 @@ struct ActivityPreferenceTabView: View {
             OnboardingTitleDescription(description: "평소에 선호하는 운동이나 활동을 골라주세요.")
             OnboardingCardContent(items: $viewModel.activityPreferences)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -47,6 +48,7 @@ struct ActivityPreferenceTabView: View {
 }
 
 extension ActivityPreferenceTabView {
+    /// CoreData 저장
     private func saveActivityPreference() {
         let selectedActivities = viewModel.activityPreferences.filter { $0.isSelected }
 
@@ -57,7 +59,6 @@ extension ActivityPreferenceTabView {
             userEntity.activityPreferences = activities
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }

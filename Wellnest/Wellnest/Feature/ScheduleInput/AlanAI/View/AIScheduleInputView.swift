@@ -41,7 +41,7 @@ struct AIScheduleInputView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.wellnestOrange)
                     }
                 }
             }

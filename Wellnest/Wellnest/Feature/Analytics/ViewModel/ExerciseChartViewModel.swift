@@ -9,13 +9,13 @@ import Foundation
 
 class ExerciseChartViewModel: ObservableObject {
     @Published var selectedPeriod: ChartPeriod = .week
-    
+
     private let exerciseData: ExerciseData
-    
+
     init(exerciseData: ExerciseData) {
         self.exerciseData = exerciseData
     }
-    
+
     var currentChartData: [Double] {
         switch selectedPeriod {
         case .week:
@@ -24,19 +24,19 @@ class ExerciseChartViewModel: ObservableObject {
             return exerciseData.monthlySteps
         }
     }
-    
+
     var averageSteps: String {
         "\(exerciseData.averageSteps)보"
     }
-    
+
     var stepsChangeText: String {
         "+\(exerciseData.stepsChange)%"
     }
-    
+
     var averageCalories: String {
         "\(exerciseData.averageCalories)kcal"
     }
-    
+
     var caloriesChangeText: String {
         "+\(exerciseData.caloriesChange)%"
     }

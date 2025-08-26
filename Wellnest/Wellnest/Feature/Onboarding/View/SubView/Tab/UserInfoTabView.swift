@@ -15,11 +15,15 @@ struct UserInfoTabView: View {
 
     enum Field {
         case nickname
+        case ageRange
+        case gender
         case height
         case weight
     }
 
     @FocusState private var isFieldFocused: Field?
+    @State private var selectedField: Field?
+    @Binding var isNicknameValid: Bool
 
     @State private var nickname: String = ""
     @State private var selectedAge = ""
@@ -32,7 +36,7 @@ struct UserInfoTabView: View {
     let spacing = OnboardingCardLayout.spacing
 
     var isButtonDisabled: Bool {
-        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty
+        nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
     }
 
     var body: some View {
@@ -40,24 +44,35 @@ struct UserInfoTabView: View {
             OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
 
             VStack {
+                HStack {
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                        .font(.caption2)
+                        .foregroundColor(.red)
+                        .padding(.leading, 4)
+                        .opacity(isNicknameValid ? 0 : 1)
+
+                    Spacer()
+                }
+
                 /// 닉네임
-                UserInfoForm(title: "닉네임", isRequired: true) {
+                UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
                         text: $nickname,
                         prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
-                            .foregroundColor(.gray.opacity(0.4)) // TODO: 임시
+                            .foregroundColor(.gray.opacity(0.4))
                     )
-                    .foregroundColor(.black)
+                    .foregroundColor(isNicknameValid ? .black : .red)
                     .padding(.horizontal)
-                    .padding(.leading, 10)
+                    .padding(.leading, 20)
                     .focused($isFieldFocused, equals: .nickname)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .submitLabel(.done)
                     .onChange(of: nickname) { newValue in
                         nickname = newValue.onlyLettersAndNumbers(maxLength: 10)
+                        isNicknameValid = NicknameValidator.isNicknameValid(nickname)
                     }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -70,11 +85,13 @@ struct UserInfoTabView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true) {
+                // TODO: 연령대, 성별 포커스 다시 하기, 설정뷰도 동일하게 수정
+                UserInfoForm(title: "연령대", isRequired: true, isFocused: selectedField == .ageRange) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
                                 selectedAge = age.value
+                                selectedField = .ageRange
                             } label: {
                                 Text(age.title)
                             }
@@ -83,38 +100,39 @@ struct UserInfoTabView: View {
                         AgeMenuLabel(selectedAge: selectedAge)
                     }
                     .padding(.horizontal)
-                    .padding(.leading, 10)
+                    .padding(.leading, 20)
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true) {
+                UserInfoForm(title: "성별", isRequired: true, isFocused: selectedField == .gender) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
                                 selectedGender = gender.value
+                                selectedField = .gender
                             } label: {
                                 GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
                         }
                     }
-                    .padding(.leading, 36)
+                    .padding(.leading, 48)
 
                     Spacer()
                 }
 
                 /// 키
-                UserInfoForm(title: "키") {
+                UserInfoForm(title: "키(cm)", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("cm 단위로 정수만 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
-                    .padding(.leading, 46)
+                    .padding(.leading, 22)
                     .focused($isFieldFocused, equals: .height)
                     .onChange(of: heightText) { newValue in
                         heightText = newValue.onlyNumbers(maxLength: 3)
@@ -123,18 +141,17 @@ struct UserInfoTabView: View {
                 }
 
                 /// 몸무게
-                UserInfoForm(title: "몸무게") {
+                UserInfoForm(title: "몸무게(kg)", isFocused: isFieldFocused == .weight) {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("kg 단위로 정수만 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
                     .foregroundColor(.black)
                     .padding(.horizontal)
-                    .padding(.leading, 18)
                     .focused($isFieldFocused, equals: .weight)
                     .onChange(of: weightText) { newValue in
                         weightText = newValue.onlyNumbers(maxLength: 3)
@@ -154,6 +171,7 @@ struct UserInfoTabView: View {
                 }
             }
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -181,7 +199,7 @@ struct UserInfoFormTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundColor(.black)
+            .foregroundColor(.primary) // label로 변경
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -191,11 +209,15 @@ struct UserInfoFormTitle: View {
 struct UserInfoForm<Content: View>: View {
     let title: String
     let isRequired: Bool
+    let isFocused: Bool
+    @Binding var isNicknameValid: Bool
     @ViewBuilder let content: Content
 
-    init(title: String, isRequired: Bool = false, @ViewBuilder content: () -> Content) {
+    init(title: String, isRequired: Bool = false, isFocused: Bool = false, isNicknameValid: Binding<Bool> = .constant(true), @ViewBuilder content: () -> Content) {
         self.title = title
         self.isRequired = isRequired
+        self.isFocused = isFocused
+        self._isNicknameValid = isNicknameValid
         self.content = content()
     }
 
@@ -206,13 +228,39 @@ struct UserInfoForm<Content: View>: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 58)
-        .background(.customSecondary)
+        .background(Color(.systemGray6))
         .cornerRadius(CornerRadius.large)
+        .overlay{
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .strokeBorder(borderColor, lineWidth: 0.5)
+        }
         .padding(.bottom, Spacing.content)
+    }
+
+    private var borderColor: Color {
+        if isFocused {
+            if title.contains("닉네임") {
+                return isNicknameValid ? .secondary.opacity(0.6) : .red
+            } else {
+                return .secondary.opacity(0.6)
+            }
+        } else {
+            return .clear
+        }
     }
 }
 
-/// 나이 선택 메뉴
+/// 닉네임 유효성 검사
+struct NicknameValidator {
+    static func isNicknameValid(_ text: String) -> Bool {
+        let pattern = "^[가-힣a-zA-Z0-9]*$"
+        let regex = try! NSRegularExpression(pattern: pattern)
+        let range = NSRange(location: 0, length: text.utf16.count)
+        return regex.firstMatch(in: text, options: [], range: range) != nil
+    }
+}
+
+/// 나이 선택 버튼 레이아웃
 struct AgeMenuLabel: View {
     let selectedAge: String
 
@@ -232,7 +280,7 @@ struct AgeMenuLabel: View {
     }
 }
 
-/// 성별 선택 버튼
+/// 성별 선택 버튼 레이아웃
 struct GenderMenuLabel: View {
     let selectedGender: String
     let gender: UserInfo
@@ -244,7 +292,7 @@ struct GenderMenuLabel: View {
             .multilineTextAlignment(.center)
             .background(
                 Capsule()
-                    .fill(selectedGender == gender.value ? .blue : Color.gray.opacity(0.2))
+                    .fill(selectedGender == gender.value ? .wellnestOrange : Color.gray.opacity(0.2))
             )
             .foregroundColor(selectedGender == gender.value ? .white : .black)
     }
@@ -254,7 +302,7 @@ struct GenderMenuLabel: View {
 extension UserInfoTabView {
     /// CoreData 저장
     private func saveUserInfo() {
-        // 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
+        /// 이미 기존에 저장된 userEntity라면 id와 createdAt은 처음 한 번만 설정
         if userEntity.id == nil {
             userEntity.id = UUID()
         }
@@ -277,7 +325,6 @@ extension UserInfoTabView {
             userEntity.weight = nil
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 
@@ -298,7 +345,6 @@ extension UserInfoTabView {
         } else {
             height = nil
         }
-
         if let weightValue = userEntity.weight?.intValue, weightValue != 0 {
             weight = weightValue
             weightText = "\(weightValue)"
@@ -316,13 +362,15 @@ private struct Preview: View {
     @StateObject private var userInfoVM = UserInfoViewModel()
     @State private var currentPage = 0
     @State private var title = "사용자 정보"
+    @State private var isNicknameValid = true
 
     var body: some View {
         if let userEntity = userInfoVM.userEntity {
             UserInfoTabView(
                 userEntity: userEntity,
                 currentPage: $currentPage,
-                title: $title
+                title: $title,
+                isNicknameValid: $isNicknameValid
             )
         } else {
             ProgressView("Loading...")

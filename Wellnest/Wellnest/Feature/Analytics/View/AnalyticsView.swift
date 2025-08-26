@@ -11,10 +11,16 @@ struct AnalyticsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel = AnalyticsViewModel()
-
+    @State private var showDivider = false
+    @State private var offsetY: CGFloat = .zero
+    
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
+            VStack {
+                SafeAreaBlurView(offsetY: $offsetY, space: .named("analyticsViewScroll"))
+                
+                customNavigationHeader
+                
                 if horizontalSizeClass == .regular {
                     iPadLayout
                 } else {
@@ -22,12 +28,34 @@ struct AnalyticsView: View {
                 }
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .background(Color(.systemBackground))
+        .coordinateSpace(name: "analyticsViewScroll")
+        .safeAreaBlur(offsetY: $offsetY)
+    }
+
+    private var customNavigationHeader: some View {
+        VStack {
+            HStack {
+                Text("\(viewModel.healthData.userName)님의 건강지표")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+
+            if showDivider {
+                Divider()
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(Color(.systemBackground))
+        .animation(.easeInOut(duration: 0.2), value: showDivider)
     }
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            TitleHeaderView(name: viewModel.healthData.userName)
             PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
             AIInsightCardView(insight: viewModel.healthData.aiInsight)
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
@@ -41,7 +69,6 @@ struct AnalyticsView: View {
 
     private var iPadLayout: some View {
         VStack(spacing: Spacing.layout) {
-            TitleHeaderView(name: viewModel.healthData.userName)
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: Spacing.layout),
                 GridItem(.flexible(), spacing: Spacing.layout)

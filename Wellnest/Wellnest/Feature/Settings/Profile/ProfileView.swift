@@ -42,13 +42,15 @@ struct ProfileView: View {
                         .frame(width: 80, height: 80)
                         .clipShape(Circle())
                 } else {
-                    Circle()
+                    Image("img_profile")
+                        .resizable()
+                        .scaledToFit()
                         .frame(width: 80, height: 80)
-                        .foregroundStyle(.gray)
                 }
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom)
     }
 }
 

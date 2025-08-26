@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct WellnessGoalTabView: View {
+    @Environment(\.colorScheme) var colorScheme
+
     var userEntity: UserEntity
 
     @ObservedObject var viewModel: UserInfoViewModel
@@ -46,21 +48,21 @@ struct WellnessGoalTabView: View {
 
                             Text(goal.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(goal.isSelected ? .black : .gray)
+                                .foregroundColor(goal.isSelected ? .primary : .gray)
 
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 58)
-                        .background(goal.isSelected ? .customGray : .customSecondary)
+                        .background(goal.isSelected ? (colorScheme == .dark ? Color(.systemGray) : Color(.systemGray3)) : Color(.systemGray6))
                         .cornerRadius(CornerRadius.large)
                     }
-                    .padding(.bottom, Spacing.content)
-                    .defaultShadow()
                 }
+                .padding(.bottom, Spacing.content)
             }
             .padding(.horizontal, spacing)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -80,6 +82,7 @@ struct WellnessGoalTabView: View {
 }
 
 extension WellnessGoalTabView {
+    /// CoreData 저장
     private func saveWellnessGoal() {
         let selectedGoals = viewModel.wellnessGoals.filter { $0.isSelected }
 
@@ -90,7 +93,6 @@ extension WellnessGoalTabView {
             userEntity.goal = goals
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }

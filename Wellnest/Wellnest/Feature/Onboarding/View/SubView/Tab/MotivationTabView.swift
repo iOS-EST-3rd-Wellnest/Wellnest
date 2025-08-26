@@ -24,6 +24,7 @@ struct MotivationTabView: View {
                 currentPage: $currentPage
             )
         }
+        .background(Color(.systemBackground))
         .onAppear {
             title = "동기부여 문구"
         }

@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct PlanHeaderSectionResult: View {
+    @Environment(\.colorScheme) private var colorScheme
     let plan: HealthPlanResponse
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: planTypeIcon(plan.planType))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.wellnestOrange)
                     .font(.title2)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -26,8 +27,8 @@ struct PlanHeaderSectionResult: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .background(Color.wellnestOrange.opacity(0.1))
+                        .foregroundColor(.wellnestOrange)
                         .cornerRadius(8)
                 }
 
@@ -41,8 +42,9 @@ struct PlanHeaderSectionResult: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
+        .roundedBorder(cornerRadius: 12)
+        .defaultShadow()
     }
     
     private func planTypeIcon(_ planType: String) -> String {

@@ -26,6 +26,7 @@ struct PreferredTimeSlotTabView: View {
             OnboardingTitleDescription(description: "앞에서 선택하신 활동은 주로 언제 하시나요?")
             OnboardingCardContent(items: $viewModel.preferredTimeSlots)
         }
+        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -46,6 +47,7 @@ struct PreferredTimeSlotTabView: View {
 }
 
 extension PreferredTimeSlotTabView {
+    /// CoreData 저장
     private func savePreferredTimeSlot() {
         let selectedTimeSlots = viewModel.preferredTimeSlots.filter { $0.isSelected }
 
@@ -56,7 +58,6 @@ extension PreferredTimeSlotTabView {
             userEntity.preferredTimeSlot = timeSlots
         }
 
-        print(userEntity)
         try? CoreDataService.shared.saveContext()
     }
 }
