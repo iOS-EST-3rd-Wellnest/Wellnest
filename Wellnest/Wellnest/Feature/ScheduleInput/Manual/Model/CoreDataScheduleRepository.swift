@@ -117,64 +117,81 @@ class CoreDataScheduleRepository: ScheduleRepository {
             seriesId: entity.seriesId
         )
     }
+    private func apply(_ input: ScheduleInput,
+                           to entity: ScheduleEntity,
+                           updateDates: Bool = true) {
+            entity.title        = input.title
+            entity.location     = input.location
+            entity.detail       = input.detail
 
+            if updateDates {
+                entity.startDate  = input.startDate
+                entity.endDate    = input.endDate
+            } 
 
-    func update(seriesId uuid: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID] {
-        try await viewContext.perform { [self] in
-            let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+            entity.isAllDay     = NSNumber(value: input.isAllDay)
+            entity.isCompleted  = NSNumber(value: input.isCompleted)
 
-            let entity = try self.viewContext.fetch(request)
-            var ids: [NSManagedObjectID] = []
-            entity.map {
-                $0.title = input.title
-                $0.location = input.location
-                $0.detail = input.detail
-                $0.startDate = input.startDate
-                $0.endDate = input.endDate
-                $0.isAllDay = NSNumber(value: input.isAllDay)
-                $0.isCompleted = NSNumber(value: input.isCompleted)
-                $0.backgroundColor = input.backgroundColorName
-                $0.repeatRule = input.repeatRuleName
-                $0.hasRepeatEndDate = input.hasRepeatEndDate
-                $0.repeatEndDate = input.repeatEndDate
-                $0.alarm = input.alarmRuleName
-                $0.updatedAt = Date()
-                ids.append($0.objectID)
-            }
-            try viewContext.save()
-            return ids
-        }
-    }
-    func update(id uuid: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID {
-        try await viewContext.perform { [self] in
-            let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
-            request.fetchLimit = 1
-
-            guard let entity = try self.viewContext.fetch(request).first else {
-                throw ScheduleRepoError.notFound
-            }
-
-            entity.title = input.title
-            entity.location = input.location
-            entity.detail = input.detail
-            entity.startDate = input.startDate
-            entity.endDate = input.endDate
-            entity.isAllDay = NSNumber(value: input.isAllDay)
-            entity.isCompleted = NSNumber(value: input.isCompleted)
             entity.backgroundColor = input.backgroundColorName
-            entity.repeatRule = input.repeatRuleName
-            entity.hasRepeatEndDate = input.hasRepeatEndDate
-            entity.repeatEndDate = input.repeatEndDate
-            entity.alarm = input.alarmRuleName
+            entity.repeatRule      = input.repeatRuleName
+            entity.alarm           = input.alarmRuleName
+
+            if input.hasRepeatEndDate {
+                entity.hasRepeatEndDate = true
+                entity.repeatEndDate    = input.repeatEndDate
+            } else {
+                entity.hasRepeatEndDate = false
+                entity.repeatEndDate    = nil
+            }
+
             entity.updatedAt = Date()
-
-            try viewContext.save()
-            return entity.objectID
         }
-    }
 
+        // MARK: - 시리즈 단위 일괄 업데이트 (날짜 보존)
+        func update(seriesId uuid: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID] {
+            try await viewContext.perform {
+                let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+                request.includesSubentities = false
+                request.returnsObjectsAsFaults = false
+
+                let objs = try self.viewContext.fetch(request)
+                guard !objs.isEmpty else { throw ScheduleRepoError.notFound }
+
+                var ids: [NSManagedObjectID] = []
+                for obj in objs {
+                    self.apply(input, to: obj, updateDates: false)
+                    ids.append(obj.objectID)
+                }
+
+                if self.viewContext.hasChanges {
+                    try self.viewContext.save()
+                }
+                return ids
+            }
+        }
+
+        // MARK: - 단일 아이템 업데이트 (날짜 변경 허용)
+        func update(id uuid: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID {
+            try await viewContext.perform {
+                let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+                request.predicate  = NSPredicate(format: "id == %@", uuid as CVarArg)
+                request.fetchLimit = 1
+                request.includesSubentities = false
+                request.returnsObjectsAsFaults = false
+
+                guard let entity = try self.viewContext.fetch(request).first else {
+                    throw ScheduleRepoError.notFound
+                }
+
+                self.apply(input, to: entity, updateDates: true) // 기본값이므로 생략 가능
+
+                if self.viewContext.hasChanges {
+                    try self.viewContext.save()
+                }
+                return entity.objectID
+            }
+        }
     func delete(id: NSManagedObjectID) async throws {
         try await viewContext.perform {
             guard let e = try? self.viewContext.existingObject(with: id) as? ScheduleEntity else {
