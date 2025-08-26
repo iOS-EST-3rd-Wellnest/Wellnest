@@ -186,7 +186,7 @@ struct BarChartView: View {
         switch dataType {
         case .steps:
             if value >= 10000 {
-                return "\(Int(value / 1000))만"
+                return "\(String(format: "%.1f", value / 10000))만"
             } else if value >= 1000 {
                 return "\(Int(value / 1000))천"
             } else if value == 0 {
