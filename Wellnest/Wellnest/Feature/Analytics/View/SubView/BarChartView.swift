@@ -24,7 +24,7 @@ struct BarChartView: View {
         case .week:
             return ["월", "화", "수", "목", "금", "토", "일"]
         case .month:
-            return ["1주", "2주", "3주", "4주", "5주", "6주", "7주", "8주"]
+            return getWeeksInCurrentMonth().enumerated().map { "\($0.offset + 1)주" }
         }
     }
 
@@ -58,6 +58,16 @@ struct BarChartView: View {
         case .sleep:
             return [0, 2, 4, 6, 8, 10]
         }
+    }
+
+    private func getWeeksInCurrentMonth() -> [Date] {
+        let calendar = Calendar.current
+        let today = Date()
+        guard let monthRange = calendar.range(of: .weekOfMonth, in: .month, for: today) else {
+            return []
+        }
+
+        return Array(monthRange).map { _ in today }
     }
 
     var body: some View {
