@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct GoalSkeletonView: View {
+    let height: CGFloat
     var body: some View {
-        HStack {
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(minHeight: 180)
-            
-            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(minHeight: 180)
-        }
+        SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
+            .frame(minHeight: height)
+        
+        SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
+            .frame(minHeight: height)
     }
 }
 
@@ -26,7 +25,6 @@ struct SectionHeaderView: View {
     
     var body: some View {
         HStack {
-            
             if isLoading {
                 SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                     .frame(width: 150, height: height, alignment: .topLeading)
@@ -43,10 +41,11 @@ struct SectionHeaderView: View {
 }
 
 struct ContentSkeletonView: View {
+    let category: RecommendCategory
     var body: some View {
         VStack(alignment: .leading ) {
             SkeletonView(shape: .rect(cornerRadius: CornerRadius.large))
-                .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: category == RecommendCategory.weather ? 100 : 60, alignment: .leading)
         }
     }
 }
@@ -55,16 +54,35 @@ struct VideoCardSkeletonView: View {
     let thumbWidth: CGFloat
     let titleWidth: CGFloat
     let twoLineHeight: CGFloat
-    let isLoading: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.inline) {
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-                .frame(width: thumbWidth, height: thumbWidth * 9 / 16)
+                .aspectRatio(16/9, contentMode: .fill)
+                .frame(width: thumbWidth)
             
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .frame(width: titleWidth, height: twoLineHeight - 10, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
+        }
+    }
+}
+
+struct VideoiPadSkeletonView: View {
+    let thumbWidth: CGFloat
+    let titleWidth: CGFloat
+    let twoLineHeight: CGFloat
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.inline) {
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
+                .aspectRatio(16/9, contentMode: .fill)
+                .frame(maxWidth: thumbWidth)
+            
+            SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
+                .frame(maxWidth: titleWidth, maxHeight: twoLineHeight - 10, alignment: .topLeading)
+                .padding(.vertical, Spacing.inline)
+                .padding(.trailing, Spacing.layout * 8)
         }
     }
 }

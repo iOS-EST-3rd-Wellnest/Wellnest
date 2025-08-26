@@ -62,7 +62,7 @@ struct ScheduleCardView: View {
                         }
                         .background(
                             Capsule()
-                                .fill(Color(.systemGray6))
+                                .fill(Color.scheduleSolid(color: schedule.backgroundColor))
                         )
                         
                         Spacer()

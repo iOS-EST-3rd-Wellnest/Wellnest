@@ -1,5 +1,5 @@
 //
-//  VideoView.swift
+//  VideoCardView.swift
 //  Wellnest
 //
 //  Created by JuYong Lee on 8/7/25.
@@ -8,15 +8,15 @@
 import SwiftUI
 import SafariServices
 
-struct VideoView: View {
+struct VideoCardView: View {
     @Environment(\.colorScheme) var colorScheme
-    
+
     @ObservedObject var homeVM: HomeViewModel
     
     @State private var isOnVideo = false
     @State private var videoId: String?
     
-    private let placeholderCount = 5
+    private let placeholderCount = 10
     
     // .callout 두 줄 높이
     private var twoLineHeight: CGFloat {
@@ -30,27 +30,30 @@ struct VideoView: View {
         let titleWidth = UIScreen.main.bounds.width - (Spacing.layout * 6)
         let isLoading = homeVM.videoList.isEmpty
 
-        HStack(spacing: Spacing.layout * 1.5) {
-            if isLoading {
+        Group {
+            if homeVM.videoList.isEmpty {
                 ForEach(0 ..< placeholderCount, id: \.self) { _ in
                     VideoCardSkeletonView(
                         thumbWidth: thumbWidth,
                         titleWidth: titleWidth,
                         twoLineHeight: twoLineHeight,
-                        isLoading: isLoading
                     )
                 }
             } else {
                 ForEach(homeVM.videoList) { video in
                     VStack {
-                        VideoImageView(urlString: video.thumbnail, width: thumbWidth)
+                        VideoImageView(urlString: video.thumbnail)
+                            .aspectRatio(16/9, contentMode: .fill)
+                            .frame(width: thumbWidth)
+                            .clipped()
+                            .cornerRadius(CornerRadius.large)
                         
                         Text(video.title)
-                            .multilineTextAlignment(.leading)
                             .font(.callout)
                             .foregroundStyle(colorScheme == .dark ? .white : .black)
                             .lineLimit(2)
                             .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
+                            .multilineTextAlignment(.leading)
                             .padding(.vertical, Spacing.inline)
                     }
                     .onTapGesture {
@@ -60,7 +63,6 @@ struct VideoView: View {
                 }
             }
         }
-        .padding(.horizontal)
         .allowsHitTesting(!isLoading)
         .fullScreenCover(isPresented: $isOnVideo) {
             SafariView(videoId: $videoId)
@@ -68,9 +70,68 @@ struct VideoView: View {
     }
 }
 
+struct VideoiPadView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    @ObservedObject var homeVM: HomeViewModel
+    
+    @State private var isOnVideo = false
+    @State private var videoId: String?
+    
+    private let placeholderCount = 10
+    
+    private var twoLineHeight: CGFloat {
+        let base = UIFont.preferredFont(forTextStyle: .callout)
+        let scaled = UIFontMetrics(forTextStyle: .callout).scaledFont(for: base)
+        return ceil(scaled.lineHeight * 2)
+    }
+
+    var body: some View {
+        let isLoading = homeVM.videoList.isEmpty
+        
+        Group {
+            if isLoading {
+                ForEach(0 ..< placeholderCount, id: \.self) { _ in
+                    VideoiPadSkeletonView(
+                        thumbWidth: .infinity,
+                        titleWidth: .infinity,
+                        twoLineHeight: twoLineHeight,
+                    )
+                }
+            } else {
+                ForEach(homeVM.videoList) { video in
+                    VStack {
+                        VideoImageView(urlString: video.thumbnail)
+                            .aspectRatio(16/9, contentMode: .fit)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+                            .cornerRadius(CornerRadius.large)
+                        
+                        Text(video.title)
+                            .font(.body)
+                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, minHeight: twoLineHeight, alignment: .topLeading)
+                            .multilineTextAlignment(.leading)
+                            .padding(.vertical, Spacing.inline)
+                            .padding(.horizontal, Spacing.layout * 1.5)
+                    }
+                    .onTapGesture {
+                        videoId = video.id
+                        isOnVideo = true
+                    }
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $isOnVideo) {
+            SafariView(videoId: $videoId)
+        }
+    }
+}
+
+
 private struct VideoImageView: View {
     let urlString: String
-    let width: CGFloat
 
     @State private var image: UIImage?
 
@@ -84,10 +145,6 @@ private struct VideoImageView: View {
                 SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
             }
         }
-        .aspectRatio(16/9, contentMode: .fill)
-        .frame(width: width)
-        .clipped()
-        .cornerRadius(CornerRadius.large)
         .task(id: urlString) {
             image = await ImageLoader.shared.load(urlString)
         }
@@ -113,6 +170,3 @@ private struct SafariView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) { }
 }
 
-#Preview {
-    VideoView(homeVM: HomeViewModel())
-}

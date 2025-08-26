@@ -80,7 +80,6 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
-    
     /// entity 데이터  조회 및 생성
     /// 기존 entity 데이터 조회 후 없으면 생성
     /// - Returns: 조회 또는 신규 생성 DailySummaryEntity
@@ -96,7 +95,6 @@ final class HomeViewModel: ObservableObject {
             return entity
         }
     }
-    
     
     /// 컨텐츠 개별 fetch 및 저장
     /// - Parameters:
@@ -310,8 +308,7 @@ final class HomeViewModel: ObservableObject {
             // 썸네일 프리패치
             prefetchThumbnails(for: models)
             
-            //return models
-            return []
+            return models
         } catch {
             print("동영상 불러오기 실패:", error.localizedDescription)
             return []
@@ -335,7 +332,7 @@ final class HomeViewModel: ObservableObject {
         }
         
         guard let keywords else { return nil }
-        let url = "https://www.googleapis.com/youtube/v3/search?part=snippet&relevanceLanguage=ko&type=video&videoEmbeddable=true&videoDuration=medium&key=\(key)&q=\(keywords)"
+        let url = "https://www.googleapis.com/youtube/v3/search?part=snippet&relevanceLanguage=ko&type=video&videoEmbeddable=true&videoDuration=medium&maxResults=10&key=\(key)&q=\(keywords)"
         
         do {
             let videoModel: VideoModel = try await NetworkManager.shared.request(url: url)
