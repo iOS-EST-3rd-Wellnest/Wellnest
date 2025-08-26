@@ -99,10 +99,11 @@ struct ManualScheduleInputView: View {
                     .padding()
                 }
                 .padding(.bottom, 30)
+                .task { await viewModel.loadIfNeeded() }
                 .onDisappear {
                     UIApplication.hideKeyboard()
                 }
-                .navigationTitle("새 일정")
+                .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -131,7 +132,7 @@ struct ManualScheduleInputView: View {
                     .frame(height: 28)
 
                     // 버튼
-                    FilledButton(title: "저장하기", disabled: viewModel.form.isTextEmpty) {
+                    FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
                         saveSchedule()
                         selectedTab = .plan
                         selectedCreationType = nil

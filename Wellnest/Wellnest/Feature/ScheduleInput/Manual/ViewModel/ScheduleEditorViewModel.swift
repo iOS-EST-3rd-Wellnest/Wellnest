@@ -10,7 +10,7 @@ import SwiftUI
 
 enum EditorMode: Equatable {
     case create
-    case edit(objectID: NSManagedObjectID)
+    case edit(id: UUID)
 }
 
 final class ScheduleEditorViewModel: ObservableObject {
@@ -18,7 +18,6 @@ final class ScheduleEditorViewModel: ObservableObject {
     @Published var previewColor: Color = .wellnestBlue
     @Published var lastSavedID: NSManagedObjectID?
     @Published var isSaving = false
-    @Published var isLoading = false
 
     private let mode: EditorMode
     private let repository: ScheduleRepository
@@ -65,10 +64,9 @@ final class ScheduleEditorViewModel: ObservableObject {
         previewColor = Color(name)
     }
 
+    @MainActor
     func loadIfNeeded() async {
         guard case let .edit(id) = mode else { return }
-        isLoading = true
-        defer { isLoading = false }
         do {
             let scheduleSnapshot = try await repository.fetch(by: id)
             form = ScheduleFormState(

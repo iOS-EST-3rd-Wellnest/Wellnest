@@ -76,7 +76,9 @@ struct FocusableTextField: UIViewRepresentable {
         }
 
         func textFieldDidChangeSelection(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
+            DispatchQueue.main.async {
+                self.parent.text = textField.text ?? ""
+            }
         }
 
         @objc func editingChanged(_ sender: UITextField) {

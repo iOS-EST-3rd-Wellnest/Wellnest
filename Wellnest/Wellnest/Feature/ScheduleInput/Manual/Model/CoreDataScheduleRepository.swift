@@ -11,8 +11,10 @@ import SwiftUI
 
 protocol ScheduleRepository {
     func create(with input: ScheduleInput) async throws -> [NSManagedObjectID]
-    func fetch(by id: NSManagedObjectID) async throws -> ScheduleSnapshot
-    func update(id: NSManagedObjectID, with input: ScheduleInput) async throws -> NSManagedObjectID
+//    func fetch(by id: NSManagedObjectID) async throws -> ScheduleSnapshot
+//    func update(id: NSManagedObjectID, with input: ScheduleInput) async throws -> NSManagedObjectID
+    func fetch(by id: UUID) async throws -> ScheduleSnapshot
+    func update(id: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID
     func delete(id: NSManagedObjectID) async throws
 }
 
@@ -88,35 +90,42 @@ class CoreDataScheduleRepository: ScheduleRepository {
         return createdIds
     }
 
-    func fetch(by id: NSManagedObjectID) async throws -> ScheduleSnapshot {
-        try await viewContext.perform {
-            guard let entity = try? self.viewContext.existingObject(with: id) as? ScheduleEntity else {
-                throw ScheduleRepoError.notFound
-            }
-            return ScheduleSnapshot(
-                id: entity.objectID,
-                title: entity.title ?? "",
-                location: entity.location ?? "",
-                detail: entity.detail ?? "",
-                startDate: entity.startDate ?? Date(),
-                endDate: entity.endDate ?? Date(),
-                isAllDay: entity.isAllDay?.boolValue ?? false,
-                backgroundColorName: entity.backgroundColor ?? "wellnestBlue",
-                repeatRuleName: entity.repeatRule,
-                repeatEndDate: entity.hasRepeatEndDate ? entity.repeatEndDate : nil,
-                alarmRuleName: entity.alarm,
-                isAlarmOn: entity.alarm != nil,
-                isCompleted: entity.isCompleted?.boolValue ?? false
-            )
+    func fetch(by uuid: UUID) async throws -> ScheduleSnapshot {
+        let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try viewContext.fetch(request).first else {
+            throw NSError(domain: "Repository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Not found"])
         }
+        return ScheduleSnapshot(
+            id: entity.objectID,
+            title: entity.title ?? "",
+            location: entity.location ?? "",
+            detail: entity.detail ?? "",
+            startDate: entity.startDate ?? Date(),
+            endDate: entity.endDate ?? Date(),
+            isAllDay: entity.isAllDay?.boolValue ?? false,
+            backgroundColorName: entity.backgroundColor ?? "wellnestBlue",
+            repeatRuleName: entity.repeatRule,
+            repeatEndDate: entity.hasRepeatEndDate ? entity.repeatEndDate : nil,
+            alarmRuleName: entity.alarm,
+            isAlarmOn: entity.alarm != nil,
+            isCompleted: entity.isCompleted?.boolValue ?? false
+        )
     }
 
 
-    func update(id: NSManagedObjectID, with input: ScheduleInput) async throws -> NSManagedObjectID {
-        try await viewContext.perform {
-            guard let entity = try? self.viewContext.existingObject(with: id) as? ScheduleEntity else {
+    func update(id uuid: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID {
+        try await viewContext.perform { [self] in
+            let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+            request.predicate = NSPredicate(format: "uuid == %@", uuid as CVarArg)
+            request.fetchLimit = 1
+
+            guard let entity = try self.viewContext.fetch(request).first else {
                 throw ScheduleRepoError.notFound
             }
+
             entity.title = input.title
             entity.location = input.location
             entity.detail = input.detail
@@ -130,7 +139,8 @@ class CoreDataScheduleRepository: ScheduleRepository {
             entity.repeatEndDate = input.repeatEndDate
             entity.alarm = input.alarmRuleName
             entity.updatedAt = Date()
-            try self.viewContext.save()
+
+            try viewContext.save()
             return entity.objectID
         }
     }
@@ -156,7 +166,7 @@ struct ScheduleSnapshot {
     let endDate: Date
     let isAllDay: Bool
     let backgroundColorName: String
-    let repeatRuleName: String?      // nil = 반복 없음
+    let repeatRuleName: String?     
     let repeatEndDate: Date?
     let alarmRuleName: String?
     let isAlarmOn: Bool
