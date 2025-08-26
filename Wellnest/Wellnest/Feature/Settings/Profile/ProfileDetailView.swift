@@ -96,7 +96,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("10글자 이하로 입력해주세요.")
+                        prompt: Text("10글자 이하로 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -158,7 +158,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("cm 단위로 정수만 입력해주세요.")
+                        prompt: Text("cm 단위로 정수만 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -177,7 +177,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("kg 단위로 정수만 입력해주세요.")
+                        prompt: Text("kg 단위로 정수만 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -220,6 +220,7 @@ struct ProfileDetailView: View {
         .onAppear {
             loadUserEntity()
         }
+        .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
         .navigationTitle("사용자 정보")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -229,10 +230,11 @@ struct ProfileDetailView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .foregroundColor(.wellnestOrange)
+                        .font(.body)
+                        .fontWeight(.regular)
                 }
             }
         }
-        .frame(width: OnboardingCardLayout.isIPad ? 600 : nil)
     }
 }
 

@@ -49,6 +49,8 @@ struct ModifyingSurveyView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .foregroundColor(.wellnestOrange)
+                        .font(.body)
+                        .fontWeight(.regular)
                 }
             }
         }

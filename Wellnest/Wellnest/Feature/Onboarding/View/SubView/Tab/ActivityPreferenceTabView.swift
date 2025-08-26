@@ -23,7 +23,7 @@ struct ActivityPreferenceTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitleDescription(description: "평소에 선호하는 운동이나 활동을 골라주세요.")
+            OnboardingTitleDescription(description: "평소에 선호하는 운동이나 활동을 골라주세요")
             OnboardingCardContent(items: $viewModel.activityPreferences)
         }
         .background(Color(.systemBackground))

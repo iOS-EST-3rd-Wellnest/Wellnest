@@ -37,7 +37,7 @@ struct UserInfoTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
+            OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요")
 
             VStack {
                 HStack {
@@ -56,7 +56,7 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("10글자 이하로 입력해주세요.")
+                        prompt: Text("10글자 이하로 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -118,7 +118,7 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("소수점은 제외하고 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -137,7 +137,7 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("소수점은 제외하고 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -249,7 +249,7 @@ struct AgeMenuLabel: View {
 
     var body: some View {
         HStack {
-            Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
+            Text(selectedAge.isEmpty ? "연령대를 선택해주세요" : selectedAge)
                 .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.4) : .primary)
                 .font(selectedAge.isEmpty ? .footnote : .body)
 

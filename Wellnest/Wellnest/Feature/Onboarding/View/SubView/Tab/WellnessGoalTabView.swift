@@ -23,7 +23,7 @@ struct WellnessGoalTabView: View {
 
     var body: some View {
         ScrollView {
-            OnboardingTitleDescription(description: "삶의 질을 높이고 지속 가능한 건강 루틴을 만드는 것에 집중해보세요.")
+            OnboardingTitleDescription(description: "삶의 질을 높이고 지속 가능한 건강 루틴을 만드는 것에 집중해보세요")
 
             VStack {
                 HStack {
