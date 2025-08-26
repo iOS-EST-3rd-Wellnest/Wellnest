@@ -172,7 +172,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
 
                             Text(item.title)
                                 .fontWeight(.semibold)
-                                .foregroundColor(item.isSelected ? Color.primary : Color.gray)
+                                .foregroundColor(item.isSelected ? .primary : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
                         .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))

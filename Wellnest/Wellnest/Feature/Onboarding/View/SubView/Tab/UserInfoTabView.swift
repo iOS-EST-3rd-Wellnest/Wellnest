@@ -60,7 +60,6 @@ struct UserInfoTabView: View {
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
-                    .foregroundColor(isNicknameValid ? .black : .red)
                     .padding(.horizontal)
                     .padding(.leading, 20)
                     .focused($isFieldFocused, equals: .nickname)
@@ -124,7 +123,6 @@ struct UserInfoTabView: View {
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 22)
                     .focused($isFieldFocused, equals: .height)
@@ -144,7 +142,6 @@ struct UserInfoTabView: View {
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .focused($isFieldFocused, equals: .weight)
                     .onChange(of: weightText) { newValue in
@@ -253,7 +250,7 @@ struct AgeMenuLabel: View {
     var body: some View {
         HStack {
             Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
-                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.5) : .black)
+                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.4) : .primary)
                 .font(selectedAge.isEmpty ? .footnote : .body)
 
             Spacer()
@@ -268,6 +265,8 @@ struct AgeMenuLabel: View {
 
 /// 성별 선택 버튼 레이아웃
 struct GenderMenuLabel: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let selectedGender: String
     let gender: UserInfo
 
@@ -278,9 +277,9 @@ struct GenderMenuLabel: View {
             .multilineTextAlignment(.center)
             .background(
                 Capsule()
-                    .fill(selectedGender == gender.value ? .wellnestOrange : Color.gray.opacity(0.2))
+                    .fill(selectedGender == gender.value ? .wellnestOrange : .gray.opacity(0.2))
             )
-            .foregroundColor(selectedGender == gender.value ? .white : .black)
+            .foregroundColor(selectedGender == gender.value ? (colorScheme == .dark ? .black : .white) : .primary)
     }
 }
 
