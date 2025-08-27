@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AppRouter: View {
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
+    @StateObject private var hiddenTabBar = TabBarState()
 
     var body: some View {
         if userDefaultsManager.hasCompletedOnboarding {
@@ -16,6 +17,7 @@ struct AppRouter: View {
                 .task {
                     await WeatherCenter.shared.preloadIfNeeded()
                 }
+                .environmentObject(hiddenTabBar)
         } else {
             OnboardingTabView(userDefaultsManager: userDefaultsManager)
         }

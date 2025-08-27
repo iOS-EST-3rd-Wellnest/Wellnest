@@ -18,7 +18,9 @@ struct MainTabView: View {
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-
+    
+    @EnvironmentObject private var hiddenTabBar: TabBarState
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
@@ -63,6 +65,10 @@ struct MainTabView: View {
                                 .ignoresSafeArea(edges: .bottom)
                         }
                     }
+                
+                if hiddenTabBar.isHidden == false {
+                    CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
+                }
             }
             .zIndex(1)
 

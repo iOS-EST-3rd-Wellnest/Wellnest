@@ -11,20 +11,23 @@ import EventKit
 struct CalendarInterworkView: View {
     @StateObject private var userDefault = UserDefaultsManager.shared
     
+    @EnvironmentObject private var hiddenTabBar: TabBarState
+    
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
     
     @State private var showSettingAlert: Bool = false
     @State private var isAuthorizing: Bool = false
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(alignment: .center) {
             
             Spacer()
             
             VStack(alignment: .leading, spacing: 40) {
                 HStack {
                     Image(systemName: "calendar")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.wellnestOrange)
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -33,13 +36,14 @@ struct CalendarInterworkView: View {
                             .fontWeight(.bold)
                         
                         Text("캘란더를 연동하면 일정과 목표를 함께 관리할 수 있습니다.")
+                            .foregroundStyle(.secondary)
                             .font(.footnote)
                     }
                 }
                 
                 HStack {
                     Image(systemName: "checkmark.circle")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.wellnestOrange)
                         .font(.system(size: 40))
                     
                     VStack(alignment: .leading) {
@@ -48,6 +52,7 @@ struct CalendarInterworkView: View {
                             .fontWeight(.bold)
                         
                         Text("캘린더를 연동하여 오늘 할 일과 건강 목표를 함께 체크하세요.")
+                            .foregroundStyle(.secondary)
                             .font(.footnote)
                     }
                 }
@@ -55,19 +60,25 @@ struct CalendarInterworkView: View {
             
             Spacer()
             
-            FilledButton(title: isAuthorizing ? "연동중..." : (userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"), backgroundColor: userDefault.isCalendarEnabled ? .gray : .blue) {
+            FilledButton(
+                title: isAuthorizing ? "연동중..." : (
+                    userDefault.isCalendarEnabled ? "캘린더 앱 연동 됨" : "캘린더 앱 연동하기"
+                ),
+                disabled: userDefault.isCalendarEnabled
+            ) {
                 Task {
                     await linkCalendar()
                 }
             }
-            .disabled(userDefault.isCalendarEnabled)
         }
         .padding()
         .navigationTitle("캘린더 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
-        .padding(.bottom, 100)
         .task {
             await refreshCalendarLinkState()
+        }
+        .onAppear {
+            hiddenTabBar.isHidden = true
         }
         .onChange(of: scenePhase) { newValue in
             if newValue == .active {
@@ -75,8 +86,20 @@ struct CalendarInterworkView: View {
             }
         }
         .alert("설정에서 캘린더 권한이 필요합니다.", isPresented: $showSettingAlert) {
-            Button("설정으로 가기") { goToSetting() }
+            Button("설정으로 이동") { goToSetting() }
             Button("취소", role: .cancel) {}
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    hiddenTabBar.isHidden = false
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.wellnestOrange)
+                }
+            }
         }
     }
 }

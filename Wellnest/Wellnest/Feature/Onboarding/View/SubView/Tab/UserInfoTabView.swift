@@ -15,8 +15,6 @@ struct UserInfoTabView: View {
 
     enum Field {
         case nickname
-        case ageRange
-        case gender
         case height
         case weight
     }
@@ -24,7 +22,7 @@ struct UserInfoTabView: View {
     @FocusState private var isFieldFocused: Field?
     @State private var selectedField: Field?
     @Binding var isNicknameValid: Bool
-
+    
     @State private var nickname: String = ""
     @State private var selectedAge = ""
     @State private var selectedGender = ""
@@ -33,15 +31,13 @@ struct UserInfoTabView: View {
     @State private var heightText: String = ""
     @State private var weightText: String = ""
 
-    let spacing = OnboardingCardLayout.spacing
-
     var isButtonDisabled: Bool {
         nickname.isEmpty || selectedAge.isEmpty || selectedGender.isEmpty || !isNicknameValid
     }
 
     var body: some View {
         ScrollView {
-            OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요.")
+            OnboardingTitleDescription(description: "당신의 정보를 알려주시면 그에 맞게 루틴을 추천해줄게요")
 
             VStack {
                 HStack {
@@ -50,6 +46,7 @@ struct UserInfoTabView: View {
                         .foregroundColor(.red)
                         .padding(.leading, 4)
                         .opacity(isNicknameValid ? 0 : 1)
+                        .animation(.easeInOut, value: isNicknameValid)
 
                     Spacer()
                 }
@@ -59,11 +56,10 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("10글자 이하로 입력해주세요.")
+                        prompt: Text("10글자 이하로 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
-                    .foregroundColor(isNicknameValid ? .black : .red)
                     .padding(.horizontal)
                     .padding(.leading, 20)
                     .focused($isFieldFocused, equals: .nickname)
@@ -85,13 +81,11 @@ struct UserInfoTabView: View {
                 }
 
                 /// 연령대
-                // TODO: 연령대, 성별 포커스 다시 하기, 설정뷰도 동일하게 수정
-                UserInfoForm(title: "연령대", isRequired: true, isFocused: selectedField == .ageRange) {
+                UserInfoForm(title: "연령대", isRequired: true) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
                                 selectedAge = age.value
-                                selectedField = .ageRange
                             } label: {
                                 Text(age.title)
                             }
@@ -104,12 +98,11 @@ struct UserInfoTabView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true, isFocused: selectedField == .gender) {
+                UserInfoForm(title: "성별", isRequired: true) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
                                 selectedGender = gender.value
-                                selectedField = .gender
                             } label: {
                                 GenderMenuLabel(selectedGender: selectedGender, gender: gender)
                             }
@@ -125,12 +118,11 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("소수점은 제외하고 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 22)
                     .focused($isFieldFocused, equals: .height)
@@ -145,12 +137,11 @@ struct UserInfoTabView: View {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("소수점은 제외하고 입력해주세요.")
+                        prompt: Text("소수점은 제외하고 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .focused($isFieldFocused, equals: .weight)
                     .onChange(of: weightText) { newValue in
@@ -159,7 +150,7 @@ struct UserInfoTabView: View {
                     }
                 }
             }
-            .padding(.horizontal, spacing)
+            .padding(.horizontal, Spacing.layout)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -199,7 +190,7 @@ struct UserInfoFormTitle: View {
         Text(title)
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundColor(.primary) // label로 변경
+            .foregroundColor(.primary)
             .padding(.vertical)
             .padding(.leading, 28)
     }
@@ -207,10 +198,14 @@ struct UserInfoFormTitle: View {
 
 /// 입력폼 레이아웃
 struct UserInfoForm<Content: View>: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let title: String
     let isRequired: Bool
     let isFocused: Bool
+
     @Binding var isNicknameValid: Bool
+
     @ViewBuilder let content: Content
 
     init(title: String, isRequired: Bool = false, isFocused: Bool = false, isNicknameValid: Binding<Bool> = .constant(true), @ViewBuilder content: () -> Content) {
@@ -226,27 +221,15 @@ struct UserInfoForm<Content: View>: View {
             UserInfoFormTitle(title: title + (isRequired ? " *" : ""))
             content
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 58)
-        .background(Color(.systemGray6))
+        .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
         .cornerRadius(CornerRadius.large)
         .overlay{
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .strokeBorder(borderColor, lineWidth: 0.5)
+                .strokeBorder(isNicknameValid ? .clear : .red, lineWidth: 0.5)
+                .animation(.easeInOut, value: isNicknameValid)
         }
         .padding(.bottom, Spacing.content)
-    }
-
-    private var borderColor: Color {
-        if isFocused {
-            if title.contains("닉네임") {
-                return isNicknameValid ? .secondary.opacity(0.6) : .red
-            } else {
-                return .secondary.opacity(0.6)
-            }
-        } else {
-            return .clear
-        }
     }
 }
 
@@ -260,14 +243,14 @@ struct NicknameValidator {
     }
 }
 
-/// 나이 선택 버튼 레이아웃
+/// 연령대 선택 버튼 레이아웃
 struct AgeMenuLabel: View {
     let selectedAge: String
 
     var body: some View {
         HStack {
-            Text(selectedAge.isEmpty ? "연령대를 선택해주세요." : selectedAge)
-                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.5) : .black)
+            Text(selectedAge.isEmpty ? "연령대를 선택해주세요" : selectedAge)
+                .foregroundColor(selectedAge.isEmpty ? .gray.opacity(0.4) : .primary)
                 .font(selectedAge.isEmpty ? .footnote : .body)
 
             Spacer()
@@ -282,6 +265,8 @@ struct AgeMenuLabel: View {
 
 /// 성별 선택 버튼 레이아웃
 struct GenderMenuLabel: View {
+    @Environment(\.colorScheme) var colorScheme
+
     let selectedGender: String
     let gender: UserInfo
 
@@ -292,9 +277,9 @@ struct GenderMenuLabel: View {
             .multilineTextAlignment(.center)
             .background(
                 Capsule()
-                    .fill(selectedGender == gender.value ? .wellnestOrange : Color.gray.opacity(0.2))
+                    .fill(selectedGender == gender.value ? .wellnestOrange : .gray.opacity(0.2))
             )
-            .foregroundColor(selectedGender == gender.value ? .white : .black)
+            .foregroundColor(selectedGender == gender.value ? (colorScheme == .dark ? .black : .white) : .primary)
     }
 }
 
