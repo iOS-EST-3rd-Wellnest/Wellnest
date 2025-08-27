@@ -23,10 +23,10 @@ struct OnboardingTabView: View {
                     switch currentPage {
                     /// 동기부여
                     case 0:
-                        MotivationTabView(currentPage: $currentPage, title: $title)
+                        FirstIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 앱 소개
                     case 1, 2:
-                        IntroductionTabView(currentPage: $currentPage, title: $title)
+                        SecondIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 사용자 정보
                     case 3:
                         UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title, isNicknameValid: $isNicknameValid)
@@ -50,9 +50,9 @@ struct OnboardingTabView: View {
                     }
                 } else {
                     if currentPage == 0 {
-                        MotivationTabView(currentPage: $currentPage, title: $title)
+                        FirstIntroductionTabView(currentPage: $currentPage, title: $title)
                     } else if currentPage == 1 || currentPage == 2 {
-                        IntroductionTabView(currentPage: $currentPage, title: $title)
+                        SecondIntroductionTabView(currentPage: $currentPage, title: $title)
                     }
                 }
             }
