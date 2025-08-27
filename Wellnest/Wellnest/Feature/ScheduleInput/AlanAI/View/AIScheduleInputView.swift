@@ -25,8 +25,7 @@ struct AIScheduleInputView: View {
                     dateTimeInputSection
 
                     PreferencesSelectionSection(
-                        selectedPreferences: $viewModel.selectedPreferences,
-                        onPreferenceToggle: viewModel.togglePreference
+                        selectedPreferences: $viewModel.selectedPreferences
                     )
                 }
                 .padding(.horizontal, Spacing.layout)
