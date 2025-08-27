@@ -41,7 +41,7 @@ struct UserInfoTabView: View {
 
             VStack {
                 HStack {
-                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. a, ㅏ, ㅈ 불가능)")
                         .font(.caption2)
                         .foregroundColor(.red)
                         .padding(.leading, 4)
@@ -239,10 +239,21 @@ struct UserInfoForm<Content: View>: View {
 /// 닉네임 유효성 검사
 struct NicknameValidator {
     static func isNicknameValid(_ text: String) -> Bool {
+        // 허용된 문자 (완성된 한글, 영어, 숫자)
         let pattern = "^[가-힣a-zA-Z0-9]*$"
         let regex = try! NSRegularExpression(pattern: pattern)
         let range = NSRange(location: 0, length: text.utf16.count)
-        return regex.firstMatch(in: text, options: [], range: range) != nil
+        guard regex.firstMatch(in: text, options: [], range: range) != nil else {
+            return false
+        }
+
+        // 영어만 입력한 경우 → 최소 2글자 이상
+        if text.range(of: "^[A-Za-z]+$", options: .regularExpression) != nil {
+            return text.count >= 2
+        }
+
+        // 한글이나 숫자 포함 시에는 길이 제한 없음
+        return true
     }
 }
 

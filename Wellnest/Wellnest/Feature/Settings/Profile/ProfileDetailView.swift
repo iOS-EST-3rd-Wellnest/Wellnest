@@ -81,7 +81,7 @@ struct ProfileDetailView: View {
             /// 사용자 정보 입력 폼
             VStack {
                 HStack {
-                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. a, ㅏ, ㅈ 불가능)")
                         .font(.caption2)
                         .foregroundColor(.red)
                         .padding(.leading, 4)
