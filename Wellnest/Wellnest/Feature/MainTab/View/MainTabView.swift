@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @StateObject private var planVM = PlanViewModel()
+
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-    
     @EnvironmentObject private var hiddenTabBar: TabBarState
     
     var body: some View {
@@ -21,7 +22,7 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                 case .plan:
-                    PlanView()
+                    PlanView(planVM: planVM, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
                 case .analysis:
                     AnalyticsView()
                 case .settings:
@@ -60,8 +61,10 @@ struct MainTabView: View {
                 )
             case .createByUser:
                 ManualScheduleInputView(
+                    mode: .create,
                     selectedTab: $selectedTab,
-                    selectedCreationType: $selectedCreationType
+                    selectedCreationType: $selectedCreationType,
+                    planVM: planVM
                 )
             }
         }

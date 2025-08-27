@@ -86,7 +86,8 @@ struct LocationSearchView: View {
                         isPresented = false
                         dismiss()
                     } label: {
-                        Image(systemName: "xmark").foregroundColor(.black)
+                        Image(systemName: "xmark")
+                            .foregroundColor(.wellnestOrange)
                     }
                 }
             }
