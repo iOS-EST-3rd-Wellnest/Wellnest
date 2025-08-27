@@ -97,8 +97,8 @@ extension Date {
 
     static func weekdayColor(at index: Int) -> Color {
         switch index {
-        case 0: return .red // 일요일
-        case 6: return .blue // 토요일
+        case 0: return .red
+        case 6: return .blue
         default: return .primary
         }
     }

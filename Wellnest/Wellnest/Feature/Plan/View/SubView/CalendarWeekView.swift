@@ -68,7 +68,7 @@ struct CalendarWeekView: View {
                  Group {
                      if isSelected {
                          RoundedRectangle(cornerRadius: CornerRadius.medium)
-                             .foregroundStyle(Color.accentColor)
+                             .foregroundStyle(.wellnestOrange)
                      } else if isToday {
                          RoundedRectangle(cornerRadius: CornerRadius.medium)
                              .stroke(Color.gray.opacity(0.5), lineWidth: 1)

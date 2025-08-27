@@ -12,7 +12,7 @@ enum TabBarItem: Hashable, CaseIterable {
 
     var iconName: String {
         switch self {
-        case .home: return "house"
+        case .home: return "house.fill"
         case .plan: return "calendar"
         case .analysis: return "chart.bar.xaxis"
         case .settings: return "gearshape.fill"

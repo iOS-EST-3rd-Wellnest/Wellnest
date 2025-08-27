@@ -53,7 +53,9 @@ final class ManualScheduleViewModel: ObservableObject {
                     hasRepeatEndDate: e.hasRepeatEndDate,
                     repeatEndDate: e.repeatEndDate,
                     isCompleted: e.isCompleted?.boolValue ?? false,
-                    eventIdentifier: nil
+                    eventIdentifier: nil, 
+                    location: e.location ?? "",
+                    alarm: e.alarm ?? nil
                 )
             }
 

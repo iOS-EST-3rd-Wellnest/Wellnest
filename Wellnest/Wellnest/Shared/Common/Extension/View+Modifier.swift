@@ -9,8 +9,8 @@ import SwiftUI
 
 struct RoundedBorderModifier: ViewModifier {
     var cornerRadius: CGFloat
-    var color: Color = .secondary.opacity(0.2)
-    var lineWidth: CGFloat = 0.5
+    var color: Color
+    var lineWidth: CGFloat
 
     func body(content: Content) -> some View {
         content
@@ -30,13 +30,18 @@ struct LayoutWidthModifier: ViewModifier {
 }
 
 extension View {
-    func defaultShadow() -> some View {
-        self.shadow(color: .secondary.opacity(0.2), radius: 8, x: 6, y: 6)
+    func defaultShadow(
+        color: Color = .black.opacity(0.05),
+        radius: CGFloat = 6,
+        x: CGFloat = 2,
+        y: CGFloat = 2
+    ) -> some View {
+        self.shadow(color: color, radius: radius, x: x, y: y)
     }
 
     func roundedBorder(
         cornerRadius: CGFloat,
-        color: Color = .secondary.opacity(0.6),
+        color: Color = .secondary.opacity(0.5),
         lineWidth: CGFloat = 0.2
     ) -> some View {
         self.modifier(RoundedBorderModifier(
