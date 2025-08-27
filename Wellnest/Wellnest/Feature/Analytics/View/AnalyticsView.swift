@@ -60,7 +60,6 @@ struct AnalyticsView: View {
             AIInsightCardView(insight: viewModel.healthData.aiInsight)
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
             SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
-            MeditationStatCardView(meditationData: viewModel.healthData.meditation)
         }
         .padding(.horizontal)
         .padding(.top, Spacing.layout)
@@ -80,7 +79,6 @@ struct AnalyticsView: View {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
                     AIInsightCardView(insight: viewModel.healthData.aiInsight)
                     SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
-                    MeditationStatCardView(meditationData: viewModel.healthData.meditation)
                 }
             }
         }

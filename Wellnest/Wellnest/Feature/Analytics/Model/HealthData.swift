@@ -13,7 +13,6 @@ struct HealthData {
     let aiInsight: AIInsightData
     let exercise: ExerciseData
     let sleep: SleepData
-    let meditation: MeditationData
 }
 
 enum ChartPeriod: String, CaseIterable {

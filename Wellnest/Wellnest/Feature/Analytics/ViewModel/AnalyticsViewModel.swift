@@ -51,7 +51,6 @@ class AnalyticsViewModel: ObservableObject {
                 weeklyQualityChange: 0,
                 monthlyQualityChange: 0
             ),
-            meditation: MeditationData(weeklyCount: 0, changeCount: 0)
         )
 
         Task {
@@ -70,10 +69,9 @@ class AnalyticsViewModel: ObservableObject {
         async let planData = loadPlanCompletionData()
         async let exerciseData = loadExerciseData()
         async let sleepData = loadSleepData()
-        async let meditationData = loadMeditationData()
 
-        let (plan, exercise, sleep, meditation) = await (
-            planData, exerciseData, sleepData, meditationData
+        let (plan, exercise, sleep) = await (
+            planData, exerciseData, sleepData
         )
 
         print("로드된 데이터:")
@@ -87,7 +85,6 @@ class AnalyticsViewModel: ObservableObject {
             planCompletion: plan,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation,
             hasRealData: self.hasRealData
         )
 
@@ -97,7 +94,6 @@ class AnalyticsViewModel: ObservableObject {
             aiInsight: aiInsight,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation
         )
 
         print("건강 데이터 로드 완료 - UI 업데이트됨")
@@ -373,75 +369,10 @@ class AnalyticsViewModel: ObservableObject {
         )
     }
 
-    private func loadMeditationData() async -> MeditationData {
-        print("명상 데이터 로드 시작")
-
-        let coreDataService = CoreDataService.shared
-        let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
-        let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
-
-        guard entityNames.contains("ScheduledActivity") else {
-            print("ScheduledActivity 엔터티가 없음. 기본 데이터 사용")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-
-        do {
-            let calendar = Calendar.current
-            let now = Date()
-            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
-
-            let weekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            weekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt <= %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                weekAgo as NSDate,
-                now as NSDate
-            )
-            weekRequest.sortDescriptors = [NSSortDescriptor(key: "completedAt", ascending: false)]
-
-            let weekActivities = try coreDataService.context.fetch(weekRequest)
-            let weeklyCount = weekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            print("이번 주 명상 횟수: \(weeklyCount)")
-
-            let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now)!
-            let previousWeekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            previousWeekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt < %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                twoWeeksAgo as NSDate,
-                weekAgo as NSDate
-            )
-
-            let previousWeekActivities = try coreDataService.context.fetch(previousWeekRequest)
-            let previousWeekCount = previousWeekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            let changeCount = weeklyCount - previousWeekCount
-            print("명상 변화량: \(changeCount)")
-
-            if weeklyCount > 0 {
-                self.hasRealData = true
-                print("실제 명상 데이터 발견")
-            }
-
-            return MeditationData(
-                weeklyCount: weeklyCount,
-                changeCount: changeCount
-            )
-
-        } catch {
-            print("명상 데이터 로드 오류: \(error)")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-    }
-
     private func generateAIInsight(
         planCompletion: PlanCompletionData,
         exercise: ExerciseData,
         sleep: SleepData,
-        meditation: MeditationData,
         hasRealData: Bool
     ) -> AIInsightData {
 
@@ -495,14 +426,6 @@ class AnalyticsViewModel: ObservableObject {
             insights.append("수면이 부족해 보여요. 오늘은 일찍 잠자리에 들어보세요")
         } else if sleep.averageHours > 9 {
             insights.append("충분히 잠을 잤네요. 활기찬 하루 되세요!")
-        }
-
-        if meditation.weeklyCount >= 5 {
-            insights.append("이번 주 \(meditation.weeklyCount)회 명상으로 마음이 평온해졌을 거예요")
-        } else if meditation.weeklyCount >= 3 {
-            insights.append("꾸준한 명상이 좋은 습관이 되고 있네요")
-        } else if meditation.weeklyCount > 0 {
-            insights.append("명상을 시작했네요! 꾸준히 이어가 보세요")
         }
 
         if exercise.stepsChange > 15 && sleep.sleepQuality >= 80 {
