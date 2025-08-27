@@ -60,7 +60,7 @@ struct SecondIntroductionTabView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: isIPad ? 48 : 35)
-                                    .padding(.trailing, isIPad ? Spacing.inline : nil)
+                                    .padding(.trailing, isIPad ? Spacing.inline : 0)
                                 Text("당신을 위한 맞춤 추천")
                             }
                         }
