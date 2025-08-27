@@ -65,11 +65,19 @@ struct HomeProfileView: View {
             
             Spacer()
             
-            Image("img_profile")
-                .resizable()
-                .aspectRatio(1, contentMode: .fit)
-                .frame(width: imgHeight, height: imgHeight)
-                .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
+            if let data = homeVM.userInfo?.profileImage, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(width: imgHeight, height: imgHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
+            } else {
+                Image("img_profile")
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(width: imgHeight, height: imgHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
+            }
         }
     }
 }

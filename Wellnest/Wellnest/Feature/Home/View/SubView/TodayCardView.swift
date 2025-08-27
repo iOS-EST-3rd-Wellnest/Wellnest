@@ -28,7 +28,7 @@ struct TodayCardView: View {
     }
     
     private var cardHeight: CGFloat {
-        isDevicePad ? 200 : 180
+        isDevicePad ? 240 : 180
     }
     
     var body: some View {
@@ -53,18 +53,18 @@ struct TodayCardView: View {
                         .overlay(alignment: .topLeading) {
                             VStack(alignment: .leading, spacing: Spacing.content) {
                                 Text("목표")
-                                    .font(.title3)
+                                    .font(isDevicePad ? .title2 : .title3)
                                     .fontWeight(.semibold)
                                     .padding(.vertical, Spacing.inline)
                                 
                                 ForEach(homeVM.goalList, id: \.self) {
                                     Text("\($0)")
-                                        .font(isDevicePad ? .body : .subheadline)
+                                        .font(isDevicePad ? .headline : .subheadline)
                                 }
                             }
                             .padding()
-                            .padding(.top, isDevicePad ? Spacing.content : 0)
-                            .padding(.leading, isDevicePad ? Spacing.content : 0)
+                            .padding(.top, isDevicePad ? Spacing.layout : 0)
+                            .padding(.leading, isDevicePad ? Spacing.layout : 0)
                         }
                     
                     RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -75,7 +75,7 @@ struct TodayCardView: View {
                         .overlay {
                             Circle()
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 18)
-                                .frame(width: 120, height: 120)
+                                .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
                             
                             Circle()
                                 .trim(from: 0, to: 0.3)
@@ -87,7 +87,7 @@ struct TodayCardView: View {
                                     ),
                                     style: StrokeStyle(lineWidth: 18, lineCap: .round)
                                 )
-                                .frame(width: 120, height: 120)
+                                .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
                                 .rotationEffect(.degrees(-90))
                             
                             VStack(spacing: Spacing.inline) {
