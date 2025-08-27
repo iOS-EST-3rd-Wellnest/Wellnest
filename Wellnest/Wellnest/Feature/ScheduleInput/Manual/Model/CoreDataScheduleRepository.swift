@@ -17,6 +17,8 @@ protocol ScheduleRepository {
     func update(seriesId: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID]
     func update(id: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID
     func delete(id: UUID) async throws
+    func deleteAll(seriesId: UUID) async throws -> [NSManagedObjectID]
+    func deleteSeriesOccurrences(seriesId: UUID, after anchor: Date, includeAnchor: Bool) async throws
 }
 
 enum ScheduleRepoError: Error {
@@ -216,6 +218,26 @@ class CoreDataScheduleRepository: ScheduleRepository {
         // 3. 삭제한 objectID 배열 리턴
         return ids
     }
+
+    func deleteSeriesOccurrences(seriesId: UUID,
+                                 after anchor: Date,
+                                 includeAnchor: Bool) async throws {
+        let op = includeAnchor ? ">=" : ">"
+        let predicate = NSPredicate(
+            format: "seriesId == %@ AND startDate \(op) %@",
+            seriesId as CVarArg, anchor as CVarArg
+        )
+
+        // IDs만 가져와서
+        let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate)
+
+        // 개별 삭제
+        for id in ids {
+            try await store.delete(id: id)
+        }
+    }
+
+    
 
 }
 

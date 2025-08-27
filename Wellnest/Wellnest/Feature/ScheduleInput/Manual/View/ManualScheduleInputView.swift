@@ -107,11 +107,12 @@ struct ManualScheduleInputView: View {
                 }
                 .onAppear {
                     if selectedTab == .plan {
-                        viewModel.form.startDate = planVM.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
-                        viewModel.form.endDate   = viewModel.form.startDate.addingTimeInterval(3600).roundedUpToFiveMinutes()
+                        let selectedDate = planVM.combine(
+                            date: planVM.selectedDate
+                        )?.roundedUpToFiveMinutes() ?? Date()
+                        viewModel.setDefaultDate(for: selectedDate)
                     } else {
-                        viewModel.form.startDate = Date().roundedUpToFiveMinutes() 
-                        viewModel.form.endDate   = Date().addingTimeInterval(3600).roundedUpToFiveMinutes()
+                        viewModel.setDefaultDate(for: Date())
                     }
                 }
                 .onDisappear {
@@ -121,13 +122,20 @@ struct ManualScheduleInputView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        if viewModel.isEditMode {
+                            closeTapBarButton
+                        }
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            selectedCreationType = nil
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .foregroundColor(.wellnestOrange)
+                        if viewModel.isEditMode {
+                            if viewModel.form.isRepeated {
+                                deleteRepeatScheduleTapBarButton
+                            } else {
+                                deleteTapBarButton
+                            }
+                        } else {
+                            closeTapBarButton
                         }
                     }
                 }
@@ -217,6 +225,69 @@ struct ManualScheduleInputView: View {
         }
         Divider()
     }
+
+    @ViewBuilder
+    private var closeTapBarButton: some View {
+        Button {
+            selectedCreationType = nil
+            dismiss()
+        } label: {
+            Image(systemName: "xmark")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 15, height: 15)
+                .foregroundColor(.wellnestOrange)
+        }
+    }
+
+    @ViewBuilder
+    private var deleteRepeatScheduleTapBarButton: some View {
+        Menu {
+            Section("반복 이벤트 삭제 옵션") {
+                Button("이 이벤트만 삭제") {
+                    Task {
+                        try await viewModel.delete()
+                        selectedTab = .plan
+                        selectedCreationType = nil
+                        dismiss()
+                    }
+                }
+                Button("이후 모든 이벤트 삭제") {
+                    Task {
+                        try await viewModel.deleteFollowingInSeries()
+                        selectedTab = .plan
+                        selectedCreationType = nil
+                        dismiss()
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "trash")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
+                .foregroundColor(.red)
+        }
+    }
+
+    @ViewBuilder
+    var deleteTapBarButton: some View {
+        Button {
+            Task {
+                try await viewModel.delete()
+                selectedTab = .plan
+                selectedCreationType = nil
+                dismiss()
+            }
+        } label: {
+            Image(systemName: "trash")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
+                .foregroundColor(.red)
+        }
+    }
+
 }
 
 extension ManualScheduleInputView {

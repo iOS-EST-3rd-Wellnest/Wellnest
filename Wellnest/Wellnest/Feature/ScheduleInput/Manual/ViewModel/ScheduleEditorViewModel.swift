@@ -25,8 +25,6 @@ final class ScheduleEditorViewModel: ObservableObject {
     init(mode: EditorMode, repository: ScheduleRepository) {
         self.mode = mode
         self.repository = repository
-
-
     }
 
     var navigationBarTitle: String {
@@ -68,6 +66,13 @@ final class ScheduleEditorViewModel: ObservableObject {
         }
     }
 
+    var isEditMode: Bool {
+        switch mode {
+        case .create: return false
+        case .edit: return true
+        }
+    }
+
     func updateColorName(_ name: String) {
         form.selectedColorName = name
         previewColor = Color(name)
@@ -97,6 +102,11 @@ final class ScheduleEditorViewModel: ObservableObject {
         } catch {
             print("편집 데이터 로드 실패: \(error)")
         }
+    }
+
+    func setDefaultDate(for selectedDate: Date = Date()) {
+        form.startDate = selectedDate.roundedUpToFiveMinutes()
+        form.endDate   = form.startDate.addingTimeInterval(3600).roundedUpToFiveMinutes()
     }
 
     @discardableResult
@@ -166,6 +176,37 @@ final class ScheduleEditorViewModel: ObservableObject {
         default: break
         }
 
+    }
+
+    @MainActor
+    func delete() async throws {
+        if case let .edit(id) = mode {
+            try await repository.delete(id: id)
+        }
+    }
+
+    @MainActor
+    func deleteAll() async throws {
+        if case let .edit(id) = mode {
+            let snapshot = try await repository.fetch(by: id)
+            try await repository.deleteAll(seriesId: snapshot.seriesId ?? UUID())
+        }
+    }
+
+    @MainActor
+    func deleteFollowingInSeries() async throws {
+        guard case let .edit(objectID) = mode else { return }
+
+        let snapshot = try await repository.fetch(by: objectID)
+        guard let seriesId = snapshot.seriesId else { return }
+        let anchor = snapshot.startDate
+
+        // 기준 아이템보다 "늦은 것만" 삭제 ⇒ startDate > anchor
+        try await repository.deleteSeriesOccurrences(
+            seriesId: seriesId,
+            after: anchor,
+            includeAnchor: true
+        )
     }
 }
 
