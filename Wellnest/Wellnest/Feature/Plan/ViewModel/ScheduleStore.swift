@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 
+@MainActor
 final class ScheduleStore: ObservableObject {
     @Published private(set) var schedulesByDate: [Date: [ScheduleItem]] = [:]
 
@@ -16,8 +17,28 @@ final class ScheduleStore: ObservableObject {
 
     private var monthCache: [Date: [ScheduleItem]] = [:]
 
+    private var objectsDidChangeObserver: NSObjectProtocol?
+
     init(context: NSManagedObjectContext) {
         self.viewContext = context
+
+        objectsDidChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSManagedObjectContextObjectsDidChange,
+            object: viewContext,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else { return }
+
+            Task { @MainActor in
+                self.handleObjectsDidChange(notification)
+            }
+        }
+    }
+
+    deinit {
+        if let obs = objectsDidChangeObserver {
+            NotificationCenter.default.removeObserver(obs)
+        }
     }
 
     func scheduleItems(for date: Date) -> [ScheduleItem] {
@@ -29,7 +50,6 @@ final class ScheduleStore: ObservableObject {
         return !arr.isEmpty
     }
 
-    @MainActor
     func fetchSchedules(in month: Date) async -> [ScheduleItem] {
         let monthStart = month.startOfMonth
         let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)!
@@ -56,15 +76,14 @@ final class ScheduleStore: ObservableObject {
           do {
               let entities = try viewContext.fetch(request)
 
-              let items: [ScheduleItem] = entities.compactMap { e -> ScheduleItem? in
-                  guard
-                      let id = e.id,
-                      let title = e.title,
-                      let startDate = e.startDate,
-                      let endDate = e.endDate,
-                      let createdAt = e.createdAt,
-                      let updatedAt = e.updatedAt,
-                      let bg = e.backgroundColor
+              return entities.compactMap { e in
+                  guard let id = e.id,
+                        let title = e.title,
+                        let startDate = e.startDate,
+                        let endDate = e.endDate,
+                        let createdAt = e.createdAt,
+                        let updatedAt = e.updatedAt,
+                        let bg = e.backgroundColor
                   else { return nil }
 
                   return ScheduleItem(
@@ -83,15 +102,12 @@ final class ScheduleStore: ObservableObject {
                       eventIdentifier: e.eventIdentifier
                   )
               }
-
-              return items
           } catch {
               print(error.localizedDescription)
               return []
           }
       }
     
-    @MainActor
     private func rebuildSchedulesByDate(for rangeStart: Date,
                                         rangeEnd: Date,
                                         items: [ScheduleItem]) {
@@ -129,6 +145,50 @@ final class ScheduleStore: ObservableObject {
 
         for (day, schedules) in schedulesByDay {
             schedulesByDate[day] = schedules
+        }
+    }
+}
+
+private extension ScheduleStore {
+    func handleObjectsDidChange(_ notification: Notification) {
+        guard let userInfo = notification.userInfo else { return }
+
+        let insertedEntities = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?
+            .compactMap { $0 as? ScheduleEntity } ?? []
+        let updatedEntities = (userInfo[NSUpdatedObjectsKey] as? Set<NSManagedObject>)?
+            .compactMap { $0 as? ScheduleEntity } ?? []
+        let deletedEntities = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?
+            .compactMap { $0 as? ScheduleEntity } ?? []
+
+        if insertedEntities.isEmpty, updatedEntities.isEmpty, deletedEntities.isEmpty { return }
+
+        func monthRange(for entity: ScheduleEntity) -> [Date] {
+            guard let startDate = entity.startDate,
+                  let endDate = entity.endDate else { return [] }
+
+            var months: Set<Date> = []
+            var currentMonth = startDate.startOfMonth
+            let lastMonth = endDate.startOfMonth
+
+            while currentMonth <= lastMonth {
+                months.insert(currentMonth)
+                guard let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) else { break }
+                currentMonth = nextMonth
+            }
+            return Array(months)
+        }
+
+        let affectedMonths = (insertedEntities + updatedEntities + deletedEntities)
+            .flatMap { monthRange(for: $0) }
+            .map { $0.startOfMonth }
+
+        let uniqueAffectedMonths = Set(affectedMonths)
+
+        for monthStart in uniqueAffectedMonths {
+            monthCache[monthStart] = nil
+            Task { [weak self] in
+                _ = await self?.fetchSchedules(in: monthStart)
+            }
         }
     }
 }
