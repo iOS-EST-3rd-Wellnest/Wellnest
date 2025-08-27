@@ -21,4 +21,5 @@ struct ScheduleInput {
     var alarmRuleName: String?
     var isAlarmOn: Bool
     var isCompleted: Bool
+    var seriesId: String?
 }

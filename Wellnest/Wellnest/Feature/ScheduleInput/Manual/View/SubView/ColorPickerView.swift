@@ -15,14 +15,14 @@ struct ColorPickerView: View {
     @State private var showColorPicker = false
 
     private let colorNames: [String] = [
-        "accentButtonColor",
-        "accentCardBlueColor",
-        "accentCardGreenColor",
-        "accentCardPinkColor",
-        "accentCardYellowColor",
-        "backgroudColor",
-        "CustomSecondaryColor",
-        "CustomGrayColor"
+        "wellnestPink",
+        "wellnestPeach",
+        "wellnestGray",
+        "wellnestGreen",
+        "wellnestBlue",
+        "wellnestPurple",
+        "wellnestYellow",
+        "wellnestBrown"
     ]
 
     var body: some View {

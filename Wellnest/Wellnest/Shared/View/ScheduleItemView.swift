@@ -75,12 +75,12 @@ struct ScheduleItemView: View {
         .frame(height: 70)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.large)
-                .fill(Color.scheduleSolid(color: schedule.backgroundColor))
+                .fill(Color.scheduleBackground(color: schedule.backgroundColor))
                 .defaultShadow()
         )
     }
 }
 
 #Preview {
-    PlanView()
+    PlanView(planVM: PlanViewModel(), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }

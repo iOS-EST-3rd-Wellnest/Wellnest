@@ -8,7 +8,7 @@
 import CoreData
 
 final class ManualScheduleInputViewModel {
-    private let store: CoreDataStore            // actor (백그라운드 CRUD)
+    private let store: CoreDataStore           
     private let viewContext: NSManagedObjectContext
     private let notifier: LocalNotifying
 
@@ -83,14 +83,3 @@ final class ManualScheduleInputViewModel {
     }
 }
 
-enum ScheduleEditorFactory {
-    static func makeDefault() -> ManualScheduleInputViewModel {
-        let container = CoreDataStack.shared.container
-        let viewContext = container.viewContext
-        let store = CoreDataStore(container: container) // actor
-        let notifier: LocalNotifying = LocalNotiManager.shared
-        return ManualScheduleInputViewModel(store: store,
-                              viewContext: viewContext,
-                              notifier: notifier)
-    }
-}

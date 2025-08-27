@@ -9,88 +9,31 @@ import SwiftUI
 import CoreData
 
 struct ManualScheduleInputView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
-    // 뷰모델(서비스) — 관찰 필요 없으므로 let
-    private let editor: ManualScheduleInputViewModel = {
-        // 필요 시 DI로 주입 가능
-        return ScheduleEditorFactory.makeDefault()
-    }()
+    @StateObject private var viewModel: ScheduleEditorViewModel
+    @ObservedObject var planVM: PlanViewModel
 
-    @State private var lastSavedID: NSManagedObjectID?
-
-    // 일정 제목
-    @State private var title: String = ""
-    @State private var selectedColorName = "accentButtonColor"
-    @State private var previewColor: Color = Color("accentButtonColor")
-    @State private var showColorPickerSheet = false
-
-    enum InputField: Hashable {
-        case title
-    }
-
-    // MARK: - locationSection
-
-    // 위치
-    @State private var location: String = ""
-
-    @State private var showLocationPicker: Bool = false
-
-    @State private var showLocationSearchIcon: Bool = false
-
+    @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
+    @State private var showColorPickerSheet = false
+    @State private var showDeleteConfirmationSheet = false
+    @State private var showAlert = false
 
-
-    // MARK: - periodSection
-
-    // 시작 일
-    @State private var startDate: Date = Date()
-
-    // 종료 일
-    @State private var endDate: Date = Date().addingTimeInterval(3600)
-
-    // 하루 종일 여부
-    @State private var isAllDay: Bool = false
-
-
-    // MARK: - repeatSection
-
-    // 반복 여부
-    @State private var isRepeated: Bool = false
-
-    // 반복 주기
-    @State private var selectedRepeatRule: RepeatRule? = nil
-
-    // 반복 종료일 여부
-    var hasRepeatEndDate: Bool {
-        return mode == .date
+    init(
+        mode: EditorMode,
+        selectedTab: Binding<TabBarItem>,
+        selectedCreationType: Binding<ScheduleCreationType?>,
+        planVM: PlanViewModel
+    ) {
+        _selectedTab = selectedTab
+        _selectedCreationType = selectedCreationType
+        _viewModel = StateObject(wrappedValue: ScheduleEditorFactory.make(mode: mode))
+        self.planVM = planVM
     }
-
-    @State private var mode: Mode = .none
-
-    // 반복 종료 일 (default value: 오늘로부터 7일 뒤의 날짜)
-    @State private var repeatEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
-
-    @State private var isRepeatEndDateOpen: Bool = false
-
-    // MARK: - alarmSection
-
-    // 알람 여부
-    @State private var isAlarmOn: Bool = false
-
-    // 알람 주기
-    @State private var alarmRule: AlarmRule? = nil
-
-    // 일정 상세 정보 - 아직 미정
-    @State private var detail: String = ""
-
-    @State var isKeyboardVisible: Bool = true
-
-    @State private var didInit = false
-    @State private var isSaving = false
-
 
     var body: some View {
         NavigationView {
@@ -98,79 +41,38 @@ struct ManualScheduleInputView: View {
                 ScrollView(.vertical) {
                     VStack(alignment: .leading, spacing: Spacing.layout) {
                         VStack {
-                            HStack {
-                                FocusableTextField(
-                                    text: $title,
-                                    placeholder: "일정을 입력하세요.",
-                                    isFirstResponder: isKeyboardVisible,
-                                    returnKeyType: .next,
-                                    keyboardType: .default,
-                                    onReturn: {
-                                        showLocationSearchSheet = true
-                                        isKeyboardVisible = false
-                                    },
-                                    onEditing: {
-                                        if !isKeyboardVisible {
-                                            isKeyboardVisible = true
-                                        }
-                                    }
-                                )
-                            }
-                            Divider()
-                            HStack {
-                                Button {
-                                    showLocationSearchSheet = true
-                                    isKeyboardVisible = false
-                                } label: {
-                                    HStack {
-                                        Text(location.isEmpty ? "장소" : location)
-                                            .foregroundStyle(location.isEmpty ? .tertiary : .primary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        Image(systemName: "magnifyingglass")
-                                            .frame(width: 20, height: 20)
-                                    }
-                                    .contentShape(Rectangle())
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .buttonStyle(.plain)
-                                .frame(maxWidth: .infinity)
-
-                            }
-                            .padding(.top, 2)
-                            .sheet(isPresented: $showLocationSearchSheet) {
-                                LocationSearchView(selectedLocation: $location, isPresented: $showLocationSearchSheet)
-                            }
-                            Divider()
+                            titleTextField
+                            locationSearchField
                         }
                         PeriodPickerView(
-                            startDate: $startDate,
-                            endDate: $endDate,
-                            isAllDay: $isAllDay
+                            startDate: $viewModel.form.startDate,
+                            endDate: $viewModel.form.endDate,
+                            isAllDay: $viewModel.form.isAllDay
                         )
                         .padding(.bottom, 5)
                         TagToggleSection(
                             title: "반복",
                             tags: RepeatRule.tags,
-                            isOn: $isRepeated,
-                            selectedTag: $selectedRepeatRule,
-                            showDetail: selectedRepeatRule != nil,
+                            isOn: $viewModel.form.isRepeated,
+                            selectedTag: $viewModel.form.selectedRepeatRule,
+                            showDetail: viewModel.form.selectedRepeatRule != nil,
                             onTagTap: { _ in isKeyboardVisible = false }
                         ) {
-                            EndDateSelectorView(mode: $mode, endDate: $repeatEndDate)
+                            EndDateSelectorView(mode: $viewModel.form.repeatEndMode, endDate: $viewModel.form.repeatEndDate)
                         }
                         .padding(.bottom, 5)
-                        .onChange(of: isRepeated) { newValue in
-                            UIApplication.hideKeyboard()
+                        .onChange(of: viewModel.form.isRepeated) { newValue in
+                            isKeyboardVisible = false
                         }
                         TagToggleSection(
                             title: "알람",
                             tags: AlarmRule.tags,
-                            isOn: $isAlarmOn,
-                            selectedTag: $alarmRule
+                            isOn: $viewModel.form.isAlarmOn,
+                            selectedTag: $viewModel.form.alarmRule
                         )
                         .padding(.bottom, 5)
-                        .onChange(of: isAlarmOn) { newValue in
-                            UIApplication.hideKeyboard()
+                        .onChange(of: viewModel.form.isAlarmOn) { newValue in
+                            isKeyboardVisible = false
                         }
                         HStack {
                             Text("배경색")
@@ -182,111 +84,223 @@ struct ManualScheduleInputView: View {
                                 showColorPickerSheet = true
                                 isKeyboardVisible = false
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $previewColor)
+                                ColorPicker("배경 색상 선택", selection: $viewModel.previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }
                         }
                         .sheet(isPresented: $showColorPickerSheet) {
-                            ColorPickerView(selectedColorName: $selectedColorName)
+                            ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
 
                         }
-                        .onChange(of: selectedColorName) { newName in
-                            previewColor = Color(newName)
+                        .onChange(of: viewModel.form.selectedColorName) { newName in
+                            viewModel.updateColorName(newName)
                         }
                         Spacer()
                     }
                     .padding()
                 }
                 .padding(.bottom, 30)
-                .onDisappear {
-                    UIApplication.hideKeyboard()
+                .task {
+                    await viewModel.loadIfNeeded()
                 }
                 .onAppear {
-                    guard !didInit else { return }
-                    startDate = Date().roundedUpToFiveMinutes()
-                    endDate = Date().addingTimeInterval(3600).roundedUpToFiveMinutes()
-                    didInit = true
+                    if selectedTab == .plan {
+                        let selectedDate = planVM.combine(
+                            date: planVM.selectedDate
+                        )?.roundedUpToFiveMinutes() ?? Date()
+                        viewModel.setDefaultDate(for: selectedDate)
+                    } else {
+                        viewModel.setDefaultDate(for: Date())
+                    }
                 }
-                .navigationTitle("새 일정")
+                .onDisappear {
+                    isKeyboardVisible = false
+                }
+                .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        if viewModel.isEditMode {
+                            closeTapBarButton
+                        }
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            selectedCreationType = nil
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .foregroundColor(.secondary)
+                        if viewModel.isEditMode {
+                            if viewModel.form.isRepeated {
+                                deleteRepeatScheduleTapBarButton
+                            } else {
+                                deleteTapBarButton
+                            }
+                        } else {
+                            closeTapBarButton
                         }
                     }
                 }
-            }
 
+            }
             .overlay(alignment: .bottom) {
                 VStack(spacing: 0) {
                     // 버튼 위로 덮일 페이드
                     LinearGradient(
                         gradient: Gradient(stops: [
-                            .init(color: Color.white.opacity(0.0), location: 0.0),
-                            .init(color: Color.white.opacity(1.0), location: 1.0),
+                            .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
+                            .init(color:colorScheme == .dark ? .black : .white, location: 1.0),
                         ]),
                         startPoint: .top, endPoint: .bottom
                     )
                     .frame(height: 28)
 
                     // 버튼
-                    FilledButton(title: "저장하기", disabled: title.isEmpty) {
-                        saveSchedule()
+                    FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
+                        Task {
+                            try await viewModel.saveSchedule()
+                        }
                         selectedTab = .plan
                         selectedCreationType = nil
                         dismiss()
                     }
                     .padding(.horizontal)
                     .frame(maxWidth: .infinity)
-                    .background(Color.white.ignoresSafeArea(edges: .bottom))
+                    .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
                 }
             }
             .padding(.bottom, 8)
 
         }
     }
+
+    @ViewBuilder
+    private var titleTextField: some View {
+        HStack {
+            FocusableTextField(
+                text: $viewModel.form.title,
+                placeholder: "일정을 입력하세요.",
+                isFirstResponder: isKeyboardVisible,
+                returnKeyType: .next,
+                keyboardType: .default,
+                onReturn: {
+                    showLocationSearchSheet = true
+                    isKeyboardVisible = false
+                },
+                onEditing: {
+                    if !isKeyboardVisible {
+                        isKeyboardVisible = true
+                    }
+                }
+            )
+        }
+        Divider()
+    }
+
+    @ViewBuilder
+    private var locationSearchField: some View {
+        HStack {
+            Button {
+                showLocationSearchSheet = true
+                isKeyboardVisible = false
+            } label: {
+                HStack {
+                    Text(viewModel.form.location.isEmpty ? "장소" : viewModel.form.location)
+                        .foregroundStyle(viewModel.form.location.isEmpty ? .tertiary : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "magnifyingglass")
+                        .frame(width: 20, height: 20)
+                }
+                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+
+        }
+        .padding(.top, 2)
+        .sheet(isPresented: $showLocationSearchSheet) {
+            LocationSearchView(
+                selectedLocation: $viewModel.form.location,
+                isPresented: $showLocationSearchSheet
+            )
+        }
+        Divider()
+    }
+
+    @ViewBuilder
+    private var closeTapBarButton: some View {
+        Button {
+            selectedCreationType = nil
+            dismiss()
+        } label: {
+            Image(systemName: "xmark")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 15, height: 15)
+                .foregroundColor(.wellnestOrange)
+        }
+    }
+
+    @ViewBuilder
+    private var deleteRepeatScheduleTapBarButton: some View {
+        Menu {
+            Section("반복 이벤트 삭제 옵션") {
+                Button("이 이벤트만 삭제") {
+                    Task {
+                        try await viewModel.delete()
+                        selectedTab = .plan
+                        selectedCreationType = nil
+                        dismiss()
+                    }
+                }
+                Button("이후 모든 이벤트 삭제") {
+                    Task {
+                        try await viewModel.deleteFollowingInSeries()
+                        selectedTab = .plan
+                        selectedCreationType = nil
+                        dismiss()
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "trash")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
+                .foregroundColor(.red)
+        }
+    }
+
+    @ViewBuilder
+    var deleteTapBarButton: some View {
+        Button {
+            Task {
+                try await viewModel.delete()
+                selectedTab = .plan
+                selectedCreationType = nil
+                dismiss()
+            }
+        } label: {
+            Image(systemName: "trash")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
+                .foregroundColor(.red)
+        }
+    }
+
 }
 
 extension ManualScheduleInputView {
     @MainActor
     func saveSchedule() {
-        Task { await saveScheduleAsync() }
-    }
-
-    @MainActor
-    func saveScheduleAsync() async {
-        let input = ScheduleInput(
-            title: title,
-            location: location,
-            detail: detail,
-            startDate: startDate,
-            endDate: endDate,
-            isAllDay: isAllDay,
-            backgroundColorName: selectedColorName,
-            repeatRuleName: isRepeated ? selectedRepeatRule?.name : nil,
-            hasRepeatEndDate: hasRepeatEndDate,
-            repeatEndDate: hasRepeatEndDate ? repeatEndDate : nil,
-            alarmRuleName: isAlarmOn ? alarmRule?.name : nil,
-            isAlarmOn: isAlarmOn,
-            isCompleted: false
-        )
-
-        do {
-            let ids = try await editor.saveSchedule(input)
-            lastSavedID = ids.first
-        } catch {
-            print("저장 실패: \(error)")
+        Task {
+            let id = try await viewModel.saveSchedule()
         }
-        isSaving = false
+        selectedTab = .plan
+        selectedCreationType = nil
+        dismiss()
     }
+
 }
 
 extension Date {

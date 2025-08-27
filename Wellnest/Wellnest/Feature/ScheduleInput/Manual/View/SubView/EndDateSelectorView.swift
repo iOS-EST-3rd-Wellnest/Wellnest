@@ -70,7 +70,9 @@ struct EndDateSelectorView: View {
                         selection: $endDate,
                         displayedComponents: [.date]
                     )
+                    .tint(.wellnestOrange)
                     .datePickerStyle(.graphical)
+                    .environment(\.locale, Locale(identifier: "ko_KR"))
                     .labelsHidden()
                     .transition(.dropFromButton)
                 }
