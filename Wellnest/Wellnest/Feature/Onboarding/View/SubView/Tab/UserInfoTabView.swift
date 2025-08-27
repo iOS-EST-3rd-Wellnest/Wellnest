@@ -52,6 +52,7 @@ struct UserInfoTabView: View {
                 }
 
                 /// 닉네임
+                // TODO: 영어 최소 2글자 이상
                 UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
@@ -114,6 +115,7 @@ struct UserInfoTabView: View {
                 }
 
                 /// 키
+                // TODO: 키 입력하고 키보드의 다음버튼이 아니라, 온보딩 버튼 누르면 몸무게로 포커스 이동하고 몸무게 입력하고 다시 온보딩 버튼 누르면 저장되고 다음 페이지로 넘어가게 해보기
                 UserInfoForm(title: "키(cm)", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
@@ -222,6 +224,7 @@ struct UserInfoForm<Content: View>: View {
             content
         }
         .frame(height: 58)
+        // TODO: 선택하지 않았을 때 카드 배경색 wellnestbackground으로 적용하기, 컬러스킴으로 안나눠도 됨
         .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
         .cornerRadius(CornerRadius.large)
         .overlay{
