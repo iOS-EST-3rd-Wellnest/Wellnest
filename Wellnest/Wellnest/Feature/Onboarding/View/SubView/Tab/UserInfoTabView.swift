@@ -153,16 +153,6 @@ struct UserInfoTabView: View {
                 }
             }
             .padding(.horizontal, Spacing.layout)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    if isFieldFocused == .height {
-                        Button("다음") { isFieldFocused = .weight }
-                    } else if isFieldFocused == .weight {
-                        Button("완료") { isFieldFocused = nil }
-                    }
-                }
-            }
         }
         .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
@@ -171,8 +161,18 @@ struct UserInfoTabView: View {
                 title: "다음",
                 isDisabled: isButtonDisabled,
                 action: {
-                    saveUserInfo()
-                    withAnimation { currentPage += 1 }
+                    if isFieldFocused == .height {
+                        /// 키 입력 후 → 몸무게로 포커스 이동
+                        isFieldFocused = .weight
+                    } else if isFieldFocused == .weight {
+                        /// 몸무게 입력 후 → 저장하고 다음 페이지
+                        saveUserInfo()
+                        withAnimation { currentPage += 1 }
+                    } else {
+                        /// 혹시 포커스 없는 상태 → 저장하고 다음 페이지
+                        saveUserInfo()
+                        withAnimation { currentPage += 1 }
+                    }
                 },
                 currentPage: $currentPage
             )
