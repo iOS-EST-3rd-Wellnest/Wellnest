@@ -36,11 +36,9 @@ struct MainTabView: View {
                         .padding(.bottom, Spacing.layout * 2)
                 }
                 
-                CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
-                    .offset(y: hiddenTabBar.isHidden ? 120 : 0)
-                    .opacity(hiddenTabBar.isHidden ? 0 : 1)
-                    .allowsHitTesting(!hiddenTabBar.isHidden)
-                    .animation(.easeInOut(duration: 0.15), value: hiddenTabBar.isHidden)
+                if hiddenTabBar.isHidden == false {
+                    CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
+                }
             }
             .zIndex(1)
             
