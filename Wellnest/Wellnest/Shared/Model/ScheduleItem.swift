@@ -21,6 +21,12 @@ struct ScheduleItem: Identifiable, Codable, Hashable {
     let repeatEndDate: Date?
     var isCompleted: Bool
     let eventIdentifier: String?
+    let location: String?
+    let alarm: String?
+
+    var hasAlarm: Bool {
+         return alarm != nil && !alarm!.isEmpty
+     }
 }
 
 struct ScheduleDayDisplay {

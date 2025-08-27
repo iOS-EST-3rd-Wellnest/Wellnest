@@ -38,14 +38,14 @@ struct CalendarHeaderView: View {
                     }
                 } label: {
                     Text("오늘")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.layout)
-                        .padding(.vertical, Spacing.content)
-                        .background(
+                        .font(.body)
+                        .foregroundStyle(.wellnestOrange)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background {
                             Capsule()
-                                .fill(Color.wellnestOrange)
-                        )
+                                .stroke(Color.wellnestOrange, lineWidth: 0.5)
+                        }
                 }
             }
         }

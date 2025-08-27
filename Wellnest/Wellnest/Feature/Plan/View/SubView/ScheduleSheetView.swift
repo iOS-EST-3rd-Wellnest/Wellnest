@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ScheduleSheetView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @ObservedObject var planVM: PlanViewModel
     @Binding var isSheetExpanded: Bool
 
@@ -33,7 +35,7 @@ struct ScheduleSheetView: View {
                 .opacity(isDragging ? 0.7 : 1.0)
 
             ScrollView {
-                LazyVStack(spacing: Spacing.layout) {
+                LazyVStack(spacing: 10) {
                     if planVM.selectedDateScheduleItems.isEmpty {
                          emptyStateView
                      } else {
@@ -58,8 +60,16 @@ struct ScheduleSheetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .defaultShadow()
-//        .roundedBorder(cornerRadius: 32, color: .secondary.opacity(0.8), lineWidth: 0.5)
+        .if(colorScheme == .dark) { view in
+            view.overlay(alignment: .top) {
+                Rectangle()
+                    .fill(Color.secondary)
+                    .frame(height: 0.5)
+            }
+        }
+        .if(colorScheme == .light) { view in
+            view.defaultShadow(color: .secondary.opacity(0.4), radius: 4, x: 0, y: 0)
+        }
         .gesture(dragGesture)
         .sheet(item: $selectedItem) { item in
             ManualScheduleInputView(

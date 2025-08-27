@@ -15,6 +15,36 @@ struct CustomTabBar: View {
     
     var body: some View {
         ZStack {
+            HStack {
+                tabButton(tab: .home)
+                tabButton(tab: .plan)
+                Spacer()
+                    .frame(width: 40 + Spacing.layout*2)
+                tabButton(tab: .analysis)
+                tabButton(tab: .settings)
+            }
+            .padding(.vertical, Spacing.content)
+            .padding(.horizontal)
+            .background {
+                GeometryReader { geo in
+                    ZStack {
+                        Capsule()
+                            .fill(.wellnestTabBar)
+
+                        Circle()
+                            .frame(width: 70, height: 70)
+                            .position(x: geo.size.width / 2, y: 0)
+                            .blendMode(.destinationOut)
+                    }
+                    .compositingGroup()
+                }
+            }
+            .clipShape(Capsule())
+            .if(colorScheme == .light) { view in
+                    view.defaultShadow(color: .secondary.opacity(0.5), radius: 4 , x: 2, y: 2)
+            }
+            .padding(.horizontal)
+
             Button {
                 showScheduleMenu.toggle()
             } label: {
@@ -30,38 +60,8 @@ struct CustomTabBar: View {
                     .foregroundStyle(.white)
 
             }
-            .defaultShadow(color: .wellnestOrange.opacity(0.4))
+            .defaultShadow(color: .wellnestOrange.opacity(0.4), radius: 4)
             .offset(y: -(20 + Spacing.content))
-
-            HStack {
-                tabButton(tab: .home)
-                tabButton(tab: .plan)
-                Spacer()
-                    .frame(width: 40 + Spacing.layout*2)
-                tabButton(tab: .analysis)
-                tabButton(tab: .settings)
-            }
-            .padding(.vertical, Spacing.content)
-            .padding(.horizontal)
-            .background {
-                GeometryReader { geo in
-                    ZStack {
-                        Capsule()
-                            .fill(.white)
-
-                        Circle()
-                            .frame(width: 70, height: 70)
-                            .position(x: geo.size.width / 2, y: 0)
-                            .blendMode(.destinationOut)
-
-                    }
-                    .compositingGroup()
-                    .allowsHitTesting(false)
-                }
-            }
-            .clipShape(Capsule())
-            .defaultShadow(color: .secondary.opacity(0.5), radius: 4 , x: 2, y: 2)
-            .padding(.horizontal)
         }
     }
     
@@ -78,9 +78,11 @@ struct CustomTabBar: View {
                     .frame(width: 24, height: 24)
                 
                 Text(tab.title)
-                    .font(.caption2)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+
             }
-            .foregroundStyle(selectedTab == tab ? .wellnestOrange : .black)
+            .foregroundStyle(selectedTab == tab ? .wellnestSelected : .wellnestTabItem)
         }
         .frame(maxWidth: .infinity)
     }

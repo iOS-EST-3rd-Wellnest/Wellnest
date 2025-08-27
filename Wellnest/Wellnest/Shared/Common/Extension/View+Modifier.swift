@@ -31,10 +31,10 @@ struct LayoutWidthModifier: ViewModifier {
 
 extension View {
     func defaultShadow(
-        color: Color = .black.opacity(0.1),
-        radius: CGFloat = 8,
-        x: CGFloat = 4,
-        y: CGFloat = 4
+        color: Color = .black.opacity(0.05),
+        radius: CGFloat = 6,
+        x: CGFloat = 2,
+        y: CGFloat = 2
     ) -> some View {
         self.shadow(color: color, radius: radius, x: x, y: y)
     }
