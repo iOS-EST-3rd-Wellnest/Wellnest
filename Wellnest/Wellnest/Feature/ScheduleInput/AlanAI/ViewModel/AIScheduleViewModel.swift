@@ -258,27 +258,79 @@ final class AIScheduleViewModel: ObservableObject {
             return (startDateTime, endDateTime)
 
         case .routine:
-            // 루틴의 시작일과 선택한 시간 조합
-            let startDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: routineStartTime),
-                minute: calendar.component(.minute, from: routineStartTime),
-                second: 0,
-                of: routineStartDate
-            ) ?? routineStartDate
+            // 루틴의 경우: AI 응답의 실제 요일과 시간을 사용
+            guard let plan = healthPlan, scheduleIndex < plan.schedules.count else {
+                // 기본값 반환
+                let startDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: routineStartTime),
+                    minute: calendar.component(.minute, from: routineStartTime),
+                    second: 0,
+                    of: routineStartDate
+                ) ?? routineStartDate
 
-            let endDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: routineEndTime),
-                minute: calendar.component(.minute, from: routineEndTime),
-                second: 0,
-                of: routineStartDate
-            ) ?? routineStartDate.addingTimeInterval(3600)
+                let endDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: routineEndTime),
+                    minute: calendar.component(.minute, from: routineEndTime),
+                    second: 0,
+                    of: routineStartDate
+                ) ?? routineStartDate.addingTimeInterval(3600)
 
-            return (startDateTime, endDateTime)
+                return (startDateTime, endDateTime)
+            }
+
+            let scheduleItem = plan.schedules[scheduleIndex]
+
+            if let dayString = scheduleItem.day {
+                let targetDate = getNextDate(for: dayString) ?? routineStartDate
+                let timeComponents = parseTime(from: scheduleItem.time)
+                let endTimeComponents = parseEndTime(from: scheduleItem.time)
+
+                print("🔍 targetDate: \(targetDate)")
+                print("🔍 timeComponents: \(timeComponents)")
+
+                // 더 직접적인 접근: 날짜의 시작부터 계산
+                let calendar = Calendar.current
+                let startOfTargetDay = calendar.startOfDay(for: targetDate)
+
+                print("🔍 startOfTargetDay: \(startOfTargetDay)")
+
+                let startDateTime = calendar.date(byAdding: .hour, value: timeComponents.hour, to: startOfTargetDay)!
+                    .addingTimeInterval(TimeInterval(timeComponents.minute * 60))
+
+                let endDateTime = calendar.date(byAdding: .hour, value: endTimeComponents.hour, to: startOfTargetDay)!
+                    .addingTimeInterval(TimeInterval(endTimeComponents.minute * 60))
+
+                print("🔍 최종 계산된 startDateTime: \(startDateTime)")
+                print("🔍 최종 계산된 endDateTime: \(endDateTime)")
+
+                return (startDateTime, endDateTime)
+
+            } else {
+                // day가 없는 경우 기본 처리
+                let timeComponents = parseTime(from: scheduleItem.time)
+                let endTimeComponents = parseEndTime(from: scheduleItem.time)
+
+                let startDateTime = calendar.date(
+                    bySettingHour: timeComponents.hour,
+                    minute: timeComponents.minute,
+                    second: 0,
+                    of: routineStartDate
+                ) ?? routineStartDate
+
+                let endDateTime = calendar.date(
+                    bySettingHour: endTimeComponents.hour,
+                    minute: endTimeComponents.minute,
+                    second: 0,
+                    of: routineStartDate
+                ) ?? routineStartDate.addingTimeInterval(3600)
+
+                return (startDateTime, endDateTime)
+            }
         }
     }
 
     private func saveSchedulesToCoreData(plan: HealthPlanResponse) async throws {
-        print("Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
+        //print("Core Data 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (index, scheduleItem) in plan.schedules.enumerated() {
             let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
@@ -293,7 +345,7 @@ final class AIScheduleViewModel: ObservableObject {
 
             newSchedule.isAllDay = false
             newSchedule.isCompleted = false
-            newSchedule.repeatRule = plan.planType == "routine" ? "weekly" : nil
+            newSchedule.repeatRule = plan.planType == "routine" ? "매주" : nil
             newSchedule.hasRepeatEndDate = false
             newSchedule.repeatEndDate = nil
             newSchedule.alarm = nil
@@ -301,11 +353,11 @@ final class AIScheduleViewModel: ObservableObject {
             newSchedule.createdAt = Date()
             newSchedule.updatedAt = Date()
 
-            print("AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(dates.startDate) - 종료: \(dates.endDate)")
+            //print("AI 스케줄 \(index + 1) 생성: \(newSchedule.title ?? "제목없음") - 시작: \(dates.startDate) - 종료: \(dates.endDate)")
         }
 
         try CoreDataService.shared.saveContext()
-        print("Core Data 저장 완료")
+        //print("Core Data 저장 완료")
     }
 
     private func parseTime(from timeString: String) -> (hour: Int, minute: Int) {
@@ -350,10 +402,11 @@ final class AIScheduleViewModel: ObservableObject {
         let currentWeekday = calendar.component(.weekday, from: today)
         var daysToAdd = targetWeekday - currentWeekday
 
-        if daysToAdd <= 0 {
+        if daysToAdd < 0 {
             daysToAdd += 7
         }
 
+        // 단순히 날짜만 더하고, 시간 조작은 하지 않기
         return calendar.date(byAdding: .day, value: daysToAdd, to: today)
     }
 
@@ -377,9 +430,12 @@ final class AIScheduleViewModel: ObservableObject {
             let startDate = dates.startDate
             let endDate = dates.endDate
 
+            print(dates.startDate)
+            print(dates.endDate)
+
             var recurrenceRules: [EKRecurrenceRule]? = nil
             if plan.planType == "routine", !selectedWeekdays.isEmpty {
-                let weekdays = Array(selectedWeekdays).sorted()
+                let weekdays = Array(selectedWeekdays).sorted().map { $0 + 1 }
                 let rule = CalendarManager.shared.weeklyRecurrence(weekdays: weekdays, end: routineEndDate)
                 recurrenceRules = [rule]
             } else if plan.planType == "multiple" {
@@ -412,7 +468,7 @@ final class AIScheduleViewModel: ObservableObject {
             entity.endDate = endDate
             entity.isAllDay = false
             entity.isCompleted = false
-            entity.repeatRule = plan.planType == "routine" ? "weekly" : nil
+            entity.repeatRule = plan.planType == "routine" ? "매주" : nil
             entity.hasRepeatEndDate = false
             entity.repeatEndDate = nil
             entity.alarm = nil
@@ -488,7 +544,7 @@ final class AIScheduleViewModel: ObservableObject {
 
             newSchedule.isAllDay = false
             newSchedule.isCompleted = false
-            newSchedule.repeatRule = plan.planType == "routine" ? "weekly" : nil
+            newSchedule.repeatRule = plan.planType == "routine" ? "매주" : nil
             newSchedule.hasRepeatEndDate = false
             newSchedule.repeatEndDate = nil
             newSchedule.alarm = nil

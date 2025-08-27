@@ -12,6 +12,7 @@ struct PlanRequest {
     let userGoal: String
     let timeframe: String?
     let preferences: [String]
+    let selectedWeekdays: Set<Int> // 추가된 필드
 
     func toPrompt(userProfile: UserProfile) -> String {
         // Core Data에서 최신 사용자 정보 가져오기
@@ -31,6 +32,7 @@ struct PlanRequest {
         - 목표: \(userGoal)
         - 일정: \(timeframe ?? "미지정")
         - 선호 운동: \(preferences.joined(separator: ", "))
+        \(planType == .routine ? "- 선택된 요일: \(getSelectedWeekdayNames())" : "")
 
         중요: 반드시 아래 JSON 형식으로만 응답해주세요. 다른 텍스트는 포함하지 마세요.
 
@@ -101,5 +103,11 @@ struct PlanRequest {
         case .single, .multiple:
             return "\"date\": \"2025-08-01\","
         }
+    }
+
+    private func getSelectedWeekdayNames() -> String {
+        let weekdayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"]
+        let selectedNames = Array(selectedWeekdays).sorted().map { weekdayNames[$0] }
+        return selectedNames.joined(separator: ", ")
     }
 }
