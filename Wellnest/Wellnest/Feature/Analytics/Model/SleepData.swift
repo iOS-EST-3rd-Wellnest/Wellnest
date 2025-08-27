@@ -14,4 +14,11 @@ struct SleepData {
     let qualityChange: Int
     let weeklySleepHours: [Double]
     let monthlySleepHours: [Double]
+
+    let dailySleepTimeChange: Int
+    let weeklySleepTimeChange: Int
+    let monthlySleepTimeChange: Int
+    let dailyQualityChange: Int
+    let weeklyQualityChange: Int
+    let monthlyQualityChange: Int
 }

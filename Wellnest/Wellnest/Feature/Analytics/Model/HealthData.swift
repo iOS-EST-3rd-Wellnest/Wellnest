@@ -17,6 +17,12 @@ struct HealthData {
 }
 
 enum ChartPeriod: String, CaseIterable {
+    case today = "오늘"
     case week = "1주"
     case month = "1개월"
+}
+
+enum DataType {
+    case steps
+    case sleep
 }
