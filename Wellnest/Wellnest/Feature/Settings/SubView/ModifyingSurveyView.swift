@@ -39,6 +39,7 @@ struct ModifyingSurveyView: View {
                 }
             }
         }
+        .layoutWidth()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -48,6 +49,8 @@ struct ModifyingSurveyView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .foregroundColor(.wellnestOrange)
+                        .font(.body)
+                        .fontWeight(.regular)
                 }
             }
         }

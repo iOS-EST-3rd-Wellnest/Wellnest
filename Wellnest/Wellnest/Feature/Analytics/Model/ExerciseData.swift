@@ -14,4 +14,11 @@ struct ExerciseData {
     let caloriesChange: Int
     let weeklySteps: [Double]
     let monthlySteps: [Double]
+
+    let dailyStepsChange: Int
+    let weeklyStepsChange: Int
+    let monthlyStepsChange: Int
+    let dailyCaloriesChange: Int
+    let weeklyCaloriesChange: Int
+    let monthlyCaloriesChange: Int
 }

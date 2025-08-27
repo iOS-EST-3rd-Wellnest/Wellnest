@@ -13,14 +13,13 @@ extension AIScheduleResultView {
 
         print("AI 스케줄 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
-        for (index, scheduleItem) in plan.schedules.enumerated() {
+        for scheduleItem in plan.schedules {
             let newSchedule = ScheduleEntity(context: CoreDataService.shared.context)
             newSchedule.id = UUID()
             newSchedule.title = scheduleItem.activity
             newSchedule.location = ""
             newSchedule.detail = scheduleItem.notes ?? ""
 
-            // AIScheduleDateTimeHelper를 사용하여 날짜/시간 설정
             let dates = AIScheduleDateTimeHelper.parseDatesForCoreData(
                 scheduleItem: scheduleItem,
                 planType: plan.planType
