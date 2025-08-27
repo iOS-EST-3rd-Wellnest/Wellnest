@@ -17,7 +17,6 @@ class AnalyticsViewModel: ObservableObject {
     @Published var hasRealData: Bool = false
 
     private let healthManager = HealthManager.shared
-    private let coreDataStore = CoreDataStore()
 
     init() {
         self.healthData = HealthData(

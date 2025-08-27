@@ -39,6 +39,13 @@ struct CalendarHeaderView: View {
                 } label: {
                     Text("오늘")
                         .font(.body)
+                        .foregroundStyle(.wellnestOrange)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background {
+                            Capsule()
+                                .stroke(Color.wellnestOrange, lineWidth: 0.5)
+                        }
                 }
             }
         }

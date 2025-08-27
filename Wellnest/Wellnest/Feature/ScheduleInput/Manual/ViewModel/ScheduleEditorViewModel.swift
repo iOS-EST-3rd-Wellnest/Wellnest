@@ -212,11 +212,9 @@ final class ScheduleEditorViewModel: ObservableObject {
 
 enum ScheduleEditorFactory {
     static func make(mode: EditorMode) -> ScheduleEditorViewModel {
-        let container = CoreDataStack.shared.container
-        let viewContext = container.viewContext
-        let store = CoreDataStore(container: container)
+        let service = CoreDataService.shared
         let notifier: LocalNotifying = LocalNotiManager.shared
-        let repository = CoreDataScheduleRepository(store: store, viewContext: viewContext, notifier: notifier)
+        let repository = CoreDataScheduleRepository(service: service, notifier: notifier)
         return ScheduleEditorViewModel(mode: mode, repository: repository)
     }
 }
