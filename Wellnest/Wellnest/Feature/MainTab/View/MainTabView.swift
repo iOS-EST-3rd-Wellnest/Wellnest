@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @StateObject private var planVM = PlanViewModel()
+
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
-    
     @EnvironmentObject private var hiddenTabBar: TabBarState
     
     var body: some View {
@@ -21,7 +22,7 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                 case .plan:
-                    PlanView()
+                    PlanView(planVM: planVM, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
                 case .analysis:
                     AnalyticsView()
                 case .settings:
@@ -36,11 +37,9 @@ struct MainTabView: View {
                         .padding(.bottom, Spacing.layout * 2)
                 }
                 
-                CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
-                    .offset(y: hiddenTabBar.isHidden ? 120 : 0)
-                    .opacity(hiddenTabBar.isHidden ? 0 : 1)
-                    .allowsHitTesting(!hiddenTabBar.isHidden)
-                    .animation(.easeInOut(duration: 0.15), value: hiddenTabBar.isHidden)
+                if hiddenTabBar.isHidden == false {
+                    CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
+                }
             }
             .zIndex(1)
             
@@ -62,8 +61,10 @@ struct MainTabView: View {
                 )
             case .createByUser:
                 ManualScheduleInputView(
+                    mode: .create,
                     selectedTab: $selectedTab,
-                    selectedCreationType: $selectedCreationType
+                    selectedCreationType: $selectedCreationType,
+                    planVM: planVM
                 )
             }
         }

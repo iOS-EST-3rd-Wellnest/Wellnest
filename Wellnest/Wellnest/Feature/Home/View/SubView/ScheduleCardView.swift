@@ -73,7 +73,7 @@ struct ScheduleCardView: View {
                     }
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .fill(Color.scheduleSolid(color: schedule.backgroundColor))
+                            .fill(Color.scheduleBackground(color: schedule.backgroundColor))
                     )
                     
                     Spacer()

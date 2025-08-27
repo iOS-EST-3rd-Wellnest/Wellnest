@@ -62,7 +62,7 @@ struct CalendarLayoutView: View {
                     ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
                         Circle()
                             .frame(width: 4, height: 4)
-                            .foregroundStyle(Color.scheduleSolid(color: scheduleItems[index].backgroundColor))
+                            .foregroundStyle(Color.scheduleDot(color: scheduleItems[index].backgroundColor))
                     }
                 }
             } else {

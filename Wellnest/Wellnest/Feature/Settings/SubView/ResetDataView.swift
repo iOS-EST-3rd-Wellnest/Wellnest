@@ -56,7 +56,8 @@ struct ResetDataView: View {
                 // TODO: 데이터 초기화
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom, Spacing.content)
         .navigationTitle("데이터 초기화")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -64,12 +65,12 @@ struct ResetDataView: View {
         }
         .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     hiddenTabBar.isHidden = false
                     withAnimation { dismiss() }
                 } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.backward")
                         .foregroundColor(.wellnestOrange)
                 }
             }

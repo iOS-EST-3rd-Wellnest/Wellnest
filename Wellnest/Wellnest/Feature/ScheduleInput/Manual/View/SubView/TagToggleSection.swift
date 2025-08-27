@@ -43,7 +43,7 @@ struct TagToggleSection<Model: TagModel & Equatable, Detail: View>: View {
                     .font(.headline)
                     .fontWeight(.semibold)
             }
-
+            .tint(.wellnestOrange)
             if isOn {
                 HStack {
                     FlexibleView(data: tags, spacing: Spacing.content, alignment: .leading) { tag in
@@ -85,7 +85,11 @@ extension TagToggleSection where Detail == EmptyView {
     }
 }
 
-protocol TagModel: Identifiable, Hashable {
+protocol TagModel: Identifiable, Hashable, Equatable {
     var name: String { get }
     static var tags: [Self] { get }
+}
+
+extension TagModel {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
 }

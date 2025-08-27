@@ -106,6 +106,11 @@ struct HealthKitInterworkView: View {
             
             Spacer()
             
+            Text("건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
+                .padding(.top, Spacing.inline)
+                .foregroundStyle(.secondary)
+                .font(.caption2)
+            
             FilledButton(
                 title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"),
                 disabled: userDefault.isHealthKitEnabled
@@ -114,14 +119,9 @@ struct HealthKitInterworkView: View {
                     await connectHealthKit()
                 }
             }
-            
-            Text("건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
-                .padding(.top, Spacing.inline)
-                .foregroundStyle(.secondary)
-                .font(.caption2)
-            
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom, Spacing.content)
         .navigationTitle("건강 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -164,12 +164,12 @@ struct HealthKitInterworkView: View {
         } message: { Text(alertMessage) }
         .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     hiddenTabBar.isHidden = false
                     withAnimation { dismiss() }
                 } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.backward")
                         .foregroundColor(.wellnestOrange)
                 }
             }

@@ -71,7 +71,8 @@ struct CalendarInterworkView: View {
                 }
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom, Spacing.content)
         .navigationTitle("캘린더 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -91,12 +92,12 @@ struct CalendarInterworkView: View {
         }
         .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     hiddenTabBar.isHidden = false
                     withAnimation { dismiss() }
                 } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.backward")
                         .foregroundColor(.wellnestOrange)
                 }
             }
