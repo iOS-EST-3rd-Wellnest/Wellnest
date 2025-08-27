@@ -201,7 +201,6 @@ final class ScheduleEditorViewModel: ObservableObject {
         guard let seriesId = snapshot.seriesId else { return }
         let anchor = snapshot.startDate
 
-        // 기준 아이템보다 "늦은 것만" 삭제 ⇒ startDate > anchor
         try await repository.deleteSeriesOccurrences(
             seriesId: seriesId,
             after: anchor,

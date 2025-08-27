@@ -233,9 +233,6 @@ struct ManualScheduleInputView: View {
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 15, height: 15)
                 .foregroundColor(.wellnestOrange)
         }
     }
@@ -263,9 +260,6 @@ struct ManualScheduleInputView: View {
             }
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
         }
     }
@@ -281,9 +275,6 @@ struct ManualScheduleInputView: View {
             }
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
         }
     }
