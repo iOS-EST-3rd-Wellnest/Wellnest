@@ -20,8 +20,7 @@ struct ManualScheduleInputView: View {
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
-    @State private var showDeleteConfirmationSheet = false
-    @State private var showAlert = false
+    @State private var showMenu = false
 
     init(
         mode: EditorMode,
@@ -153,21 +152,74 @@ struct ManualScheduleInputView: View {
                     )
                     .frame(height: 28)
 
-                    // 버튼
-                    FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
-                        Task {
-                            try await viewModel.saveSchedule()
+                    ZStack(alignment: .bottom) {
+                        // 버튼
+                        FilledButton(title: viewModel.primaryButtonTitle,
+                                     disabled: viewModel.form.isTextEmpty) {
+                            if viewModel.isEditMode{
+                                withAnimation {
+                                    showMenu.toggle()
+                                }
+                            } else {
+                                Task {
+                                    try await viewModel.saveSchedule()
+                                    selectedTab = .plan
+                                    selectedCreationType = nil
+                                    dismiss()
+
+                                }
+                            }
                         }
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                        .background(colorScheme == .dark
+                                    ? Color.black.ignoresSafeArea(edges: .bottom)
+                                    : Color.white.ignoresSafeArea(edges: .bottom))
+
+                        // 버튼 위 메뉴
+                        if showMenu {
+                            VStack(spacing: 0) {
+                                Section(header:
+                                    Text("반복되는 이벤트입니다.")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                        .padding(.vertical, 6)
+
+                                ) {
+                                    Divider()
+                                    Button("이 아이템만 수정") {
+                                        // 단일 수정 로직
+                                        showMenu = false
+                                    }
+                                    .padding()
+
+                                    Divider()
+
+                                    Button("이후 모든 이벤트 수정") {
+                                        // 시리즈 수정 로직
+                                        showMenu = false
+                                    }
+                                    .padding()
+                                }
+                            }
+                            .foregroundColor(.black)
+                            .background(RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemBackground)))
+                            .shadow(radius: 0.5)
+                            .frame(width: 200)
+                            .offset(y: -70)
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.9, anchor: .bottom).combined(with: .opacity),
+                                removal:   .opacity
+                            ))
+                        }
                     }
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity)
-                    .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
+                    .animation(.spring(response: 0.22, dampingFraction: 0.85), value: showMenu)
+
                 }
             }
             .padding(.bottom, 8)
+
 
         }
     }
@@ -240,7 +292,7 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     private var deleteRepeatScheduleTapBarButton: some View {
         Menu {
-            Section("반복 이벤트 삭제 옵션") {
+            Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
                     Task {
                         try await viewModel.delete()

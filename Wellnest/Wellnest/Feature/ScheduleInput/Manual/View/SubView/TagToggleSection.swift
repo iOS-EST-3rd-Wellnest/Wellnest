@@ -93,3 +93,4 @@ protocol TagModel: Identifiable, Hashable, Equatable {
 extension TagModel {
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
 }
+

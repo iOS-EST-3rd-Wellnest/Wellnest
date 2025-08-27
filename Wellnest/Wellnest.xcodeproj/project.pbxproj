@@ -33,9 +33,22 @@
 		B05A1F0B2E3B222900AA8F36 /* WellnestUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WellnestUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B0E9D2752E5F2C0F00EC046C /* Exceptions for "Wellnest" folder in "Wellnest" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Secrets.plist,
+			);
+			target = B05A1EEE2E3B222800AA8F36 /* Wellnest */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B05A1EF12E3B222800AA8F36 /* Wellnest */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B0E9D2752E5F2C0F00EC046C /* Exceptions for "Wellnest" folder in "Wellnest" target */,
+			);
 			path = Wellnest;
 			sourceTree = "<group>";
 		};
