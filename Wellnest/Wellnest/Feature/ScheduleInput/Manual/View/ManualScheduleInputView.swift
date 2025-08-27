@@ -106,9 +106,13 @@ struct ManualScheduleInputView: View {
                     await viewModel.loadIfNeeded()
                 }
                 .onAppear {
-                    viewModel.form.startDate = planVM.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
-                    viewModel.form.endDate   = viewModel.form.startDate.addingTimeInterval(3600).roundedUpToFiveMinutes()
-
+                    if selectedTab == .plan {
+                        viewModel.form.startDate = planVM.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
+                        viewModel.form.endDate   = viewModel.form.startDate.addingTimeInterval(3600).roundedUpToFiveMinutes()
+                    } else {
+                        viewModel.form.startDate = Date().roundedUpToFiveMinutes() 
+                        viewModel.form.endDate   = Date().addingTimeInterval(3600).roundedUpToFiveMinutes()
+                    }
                 }
                 .onDisappear {
                     isKeyboardVisible = false
@@ -129,7 +133,6 @@ struct ManualScheduleInputView: View {
                 }
 
             }
-
             .overlay(alignment: .bottom) {
                 VStack(spacing: 0) {
                     // 버튼 위로 덮일 페이드

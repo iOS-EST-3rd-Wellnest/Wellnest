@@ -25,6 +25,8 @@ final class ScheduleEditorViewModel: ObservableObject {
     init(mode: EditorMode, repository: ScheduleRepository) {
         self.mode = mode
         self.repository = repository
+
+
     }
 
     var navigationBarTitle: String {
