@@ -113,18 +113,18 @@ struct TodayCardView: View {
                         }
                     }
                 
-                let  scheduleWith: CGFloat = isDevicePad && isLandscape ? UIScreen.main.bounds.width / 2 : UIScreen.main.bounds.width / 2
+                let  scheduleWidth: CGFloat = isDevicePad && isLandscape ? UIScreen.main.bounds.width / 2 - (Spacing.layout * 2) : UIScreen.main.bounds.width / 2 - (Spacing.layout * 2)
                 if isDevicePad {
                     if isCompleteSchedules.isEmpty {
                         VStack {
                             EmptyScheduleView(height: cardHeight)
-                                .frame(minWidth: scheduleWith)
+                                .frame(minWidth: scheduleWidth)
                         }
                     } else {
                         ScrollView(.vertical, showsIndicators: false) {
-                            HomeScheduleView(manualScheduleVM: manualScheduleVM, isCompleteSchedules: isCompleteSchedules)
+                            HomeScheduleView(manualScheduleVM: manualScheduleVM, isCompleteSchedules: isCompleteSchedules, scheduleWidth: scheduleWidth)
                         }
-                        .frame(minWidth: scheduleWith)
+                        .frame(minWidth: scheduleWidth)
                         .frame(height: cardHeight)
                     }
                 }

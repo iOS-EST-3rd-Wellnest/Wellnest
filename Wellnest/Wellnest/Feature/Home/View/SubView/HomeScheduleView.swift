@@ -12,6 +12,7 @@ struct HomeScheduleView: View {
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     
     let isCompleteSchedules: [ScheduleItem]
+    var scheduleWidth: CGFloat = .zero
     
     private var isDivicePad: Bool {
         UIDevice.current.userInterfaceIdiom == .pad
@@ -20,9 +21,9 @@ struct HomeScheduleView: View {
     var body: some View {
         VStack(spacing: 0) {
             ForEach(isCompleteSchedules) { schedule in
-                ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule)
-                    .environmentObject(swipe)
-                    .padding(.vertical, Spacing.content)
+                    ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule, scheduleWidth: scheduleWidth)
+                        .environmentObject(swipe)
+                        .padding(.vertical, Spacing.content)
             }
         }
     }

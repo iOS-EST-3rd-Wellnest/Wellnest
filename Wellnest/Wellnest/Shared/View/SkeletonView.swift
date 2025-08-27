@@ -19,7 +19,7 @@ struct SkeletonView<S: Shape>: View {
 
     var body: some View {
         shape
-            .fill(colorScheme == .dark ? Color(.systemGray3) : Color(.systemGray6))
+            .fill(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
             .overlay {
                 GeometryReader {
                     let size = $0.size

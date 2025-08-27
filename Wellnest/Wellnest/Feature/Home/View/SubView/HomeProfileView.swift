@@ -36,8 +36,11 @@ struct HomeProfileView: View {
                     .bold()
                 
                 if homeVM.hashtagList.isEmpty {
-                    SkeletonView(shape: .rect(cornerRadius: CornerRadius.medium))
-                        .frame(width: 200, height: footnoteLineHeight)
+                    if let userInfo = homeVM.userInfo {
+                        Text("#\(userInfo.ageRange ?? "")")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 } else {
                     HStack {
                         ForEach(homeVM.hashtagList, id: \.self) {
