@@ -9,11 +9,12 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
-    
     @StateObject private var homeVM = HomeViewModel()
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
-    
+    @StateObject private var analyticsVM = AnalyticsViewModel()
     @State private var offsetY: CGFloat = .zero
+    
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
     
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
@@ -35,7 +36,7 @@ struct HomeView: View {
                         EmptyScheduleView()
                     } else {
                         HomeScheduleView(manualScheduleVM: manualScheduleVM, isCompleteSchedules: isCompleteSchedules)
-                            .padding(.bottom, Spacing.layout * 2)
+                            .padding(.bottom, isDevicePad ? Spacing.layout * 2 : 0)
                     }
                 }
             }
@@ -47,6 +48,7 @@ struct HomeView: View {
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
         }
+        .environmentObject(analyticsVM)
         .background(Color(.systemBackground))
         .coordinateSpace(name: "homeScroll")
         .safeAreaBlur(offsetY: $offsetY)

@@ -16,7 +16,6 @@ private struct SizePreferenceKey: PreferenceKey {
 
 struct HomeProfileView: View {
     @ObservedObject var homeVM: HomeViewModel
-    
     @State private var profileVstackHeight: CGFloat = .zero
     
     private var imgHeight: CGFloat {

@@ -8,11 +8,9 @@
 import SwiftUI
 import SafariServices
 
-struct VideoCardView: View {
+struct VideoiPhoneCardView: View {
     @Environment(\.colorScheme) var colorScheme
-
     @ObservedObject var homeVM: HomeViewModel
-    
     @State private var isOnVideo = false
     @State private var videoId: String?
     
@@ -33,7 +31,7 @@ struct VideoCardView: View {
         Group {
             if homeVM.videoList.isEmpty {
                 ForEach(0 ..< placeholderCount, id: \.self) { _ in
-                    VideoCardSkeletonView(
+                    VideoiPhoneSkeletonView(
                         thumbWidth: thumbWidth,
                         titleWidth: titleWidth,
                         twoLineHeight: twoLineHeight,
@@ -70,11 +68,9 @@ struct VideoCardView: View {
     }
 }
 
-struct VideoiPadView: View {
+struct VideoiPadCardView: View {
     @Environment(\.colorScheme) var colorScheme
-    
     @ObservedObject var homeVM: HomeViewModel
-    
     @State private var isOnVideo = false
     @State private var videoId: String?
     
@@ -131,9 +127,9 @@ struct VideoiPadView: View {
 
 
 private struct VideoImageView: View {
-    let urlString: String
-
     @State private var image: UIImage?
+    
+    let urlString: String
 
     var body: some View {
         ZStack {

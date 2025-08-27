@@ -9,7 +9,6 @@ import SwiftUI
 
 struct RecommendView: View {
     @Environment(\.colorScheme) var colorScheme
-    
     @ObservedObject var homeVM: HomeViewModel
     
     // .title 한줄 높이
@@ -32,7 +31,7 @@ struct RecommendView: View {
             Group {
                 QuoteWeatherView(homeVM: homeVM)
                 
-                SectionHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
+                RecommendHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
                     .frame(height: oneLineHeight)
                     .padding(.top, Spacing.layout)
             }
@@ -42,14 +41,14 @@ struct RecommendView: View {
                 let columns = [GridItem(.flexible(), spacing: Spacing.layout * 2), GridItem(.flexible(), spacing: Spacing.layout * 2)]
                 
                 LazyVGrid(columns: columns, spacing: Spacing.layout * 2) {
-                    VideoiPadView(homeVM: homeVM)
+                    VideoiPadCardView(homeVM: homeVM)
                 }
                 .padding()
                 
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Spacing.layout * 1.5) {
-                        VideoCardView(homeVM: homeVM)
+                        VideoiPhoneCardView(homeVM: homeVM)
                     }
                     .padding(.horizontal)
                 }

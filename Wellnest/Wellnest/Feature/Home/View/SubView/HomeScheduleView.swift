@@ -8,9 +8,7 @@ import SwiftUI
 
 struct HomeScheduleView: View {
     @Environment(\.colorScheme) var colorScheme
-    
     @StateObject private var swipe = SwipeCoordinator()
-    
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     
     let isCompleteSchedules: [ScheduleItem]

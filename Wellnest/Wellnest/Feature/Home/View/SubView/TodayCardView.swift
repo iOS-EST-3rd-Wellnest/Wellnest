@@ -9,15 +9,18 @@ import SwiftUI
 
 struct TodayCardView: View {
     @Environment(\.colorScheme) var colorScheme
-    
+    @EnvironmentObject var analyticsVM: AnalyticsViewModel
     @ObservedObject var homeVM: HomeViewModel
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
-    
     @State private var isLandscape: Bool = UIScreen.main.bounds.width > UIScreen.main.bounds.height
-    
+
     let isCompleteSchedules: [ScheduleItem]
     
     private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
+    
+    private var planData: PlanCompletionData {
+        analyticsVM.healthData.planCompletion
+    }
     
     private var today: String {
         let df = DateFormatter()
@@ -28,7 +31,7 @@ struct TodayCardView: View {
     }
     
     private var cardHeight: CGFloat {
-        isDevicePad ? 240 : 180
+        isDevicePad ? 230 : 180
     }
     
     var body: some View {
@@ -66,19 +69,21 @@ struct TodayCardView: View {
                             .padding(.top, isDevicePad ? Spacing.layout : 0)
                             .padding(.leading, isDevicePad ? Spacing.layout : 0)
                         }
-                    
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-                        .frame(minHeight: cardHeight)
-                        .roundedBorder(cornerRadius: CornerRadius.large)
-                        .defaultShadow()
-                        .overlay {
+                }
+                
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                    .frame(minHeight: cardHeight)
+                    .roundedBorder(cornerRadius: CornerRadius.large)
+                    .defaultShadow()
+                    .overlay {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 18)
+                            .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
+                        
+                        if planData.totalItems > 0 {
                             Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 18)
-                                .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
-                            
-                            Circle()
-                                .trim(from: 0, to: 0.3)
+                                .trim(from: 0, to: planData.completionRate)
                                 .stroke(
                                     LinearGradient(
                                         colors: [.wellnestOrange],
@@ -91,16 +96,22 @@ struct TodayCardView: View {
                                 .rotationEffect(.degrees(-90))
                             
                             VStack(spacing: Spacing.inline) {
-                                Text("30%")
+                                Text("\(Int(planData.completionRate * 100))%")
                                     .font(.title)
                                     .fontWeight(.bold)
                                 
-                                Text("남은 일정 3개")
+                                Text("남은 일정 \(planData.remainingItems)개")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
+                        } else {
+                            VStack(spacing: Spacing.inline) {
+                                Text("\(Int(planData.completionRate * 100))%")
+                                    .font(.title)
+                                    .bold()
+                            }
                         }
-                }
+                    }
                 
                 let  scheduleWith: CGFloat = isDevicePad && isLandscape ? UIScreen.main.bounds.width / 2 : UIScreen.main.bounds.width / 2
                 if isDevicePad {

@@ -12,13 +12,10 @@ struct GoalSkeletonView: View {
     var body: some View {
         SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
             .frame(minHeight: height)
-        
-        SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
-            .frame(minHeight: height)
     }
 }
 
-struct SectionHeaderView: View {
+struct RecommendHeaderView: View {
     let title: String
     let isLoading: Bool
     let height: CGFloat
@@ -40,7 +37,7 @@ struct SectionHeaderView: View {
     }
 }
 
-struct ContentSkeletonView: View {
+struct RecommendContentSkeletonView: View {
     let category: RecommendCategory
     var body: some View {
         VStack(alignment: .leading ) {
@@ -50,7 +47,7 @@ struct ContentSkeletonView: View {
     }
 }
 
-struct VideoCardSkeletonView: View {
+struct VideoiPhoneSkeletonView: View {
     let thumbWidth: CGFloat
     let titleWidth: CGFloat
     let twoLineHeight: CGFloat

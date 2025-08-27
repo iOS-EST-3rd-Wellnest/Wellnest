@@ -11,7 +11,6 @@ import SwiftUI
 final class HomeViewModel: ObservableObject {
     @Published var userInfo: UserEntity?
     @Published var dailySummaryInfo: DailySummaryEntity?
-
     @Published var goalList = [String]()
     @Published var hashtagList = [String]()
     @Published var quoteOfTheDay: String?

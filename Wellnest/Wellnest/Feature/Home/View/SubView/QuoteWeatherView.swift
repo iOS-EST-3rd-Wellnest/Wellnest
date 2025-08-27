@@ -9,8 +9,9 @@ import SwiftUI
 
 struct QuoteWeatherView: View {
     @Environment(\.colorScheme) var colorScheme
-    
     @ObservedObject var homeVM: HomeViewModel
+    
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
     
     private var oneLineHeight: CGFloat {
         let base = UIFont.preferredFont(forTextStyle: .title2)
@@ -23,9 +24,9 @@ struct QuoteWeatherView: View {
     }
     
     var body: some View {
-        SectionHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
+        RecommendHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
             .frame(height: oneLineHeight, alignment: .leading)
-            .padding(.top, Spacing.layout * 2)
+            .padding(.top, isDevicePad ? Spacing.layout * 2 : Spacing.layout)
         
         if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
             Text(quoteOfTheDay)
@@ -40,10 +41,10 @@ struct QuoteWeatherView: View {
                         .defaultShadow()
                 )
         } else {
-            ContentSkeletonView(category: RecommendCategory.quoteOfTheDay)
+            RecommendContentSkeletonView(category: RecommendCategory.quoteOfTheDay)
         }
         
-        SectionHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
+        RecommendHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
             .frame(height: oneLineHeight, alignment: .leading)
             .padding(.top, Spacing.content)
         
@@ -70,7 +71,7 @@ struct QuoteWeatherView: View {
                     .defaultShadow()
             )
         } else {
-            ContentSkeletonView(category: RecommendCategory.weather)
+            RecommendContentSkeletonView(category: RecommendCategory.weather)
         }
     }
 }

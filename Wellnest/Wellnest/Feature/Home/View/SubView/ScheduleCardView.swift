@@ -7,12 +7,11 @@
 import SwiftUI
 
 struct ScheduleCardView: View {
-    @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @EnvironmentObject var swipe: SwipeCoordinator
-    
+    @EnvironmentObject var analyticsVM: AnalyticsViewModel
+    @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
-    
     @State private var isCompleted = false
     @State private var completedOffset: CGFloat = 0
     
@@ -48,11 +47,14 @@ struct ScheduleCardView: View {
                             Task {
                                 // 애니메이션 효과 이후 업데이트를 위한 sleep
                                 try? await Task.sleep(for: .milliseconds(300))
+                                
                                 await MainActor.run {
                                     withAnimation(.easeInOut) {
                                         manualScheduleVM.updateCompleted(item: schedule)
                                     }
                                 }
+                                
+                                await analyticsVM.refreshData()
                             }
                             
                         } label: {
@@ -92,7 +94,7 @@ struct ScheduleCardView: View {
                 .disabled(isDeleting || isCompleted)
                 
                 ScheduleItemView(schedule: schedule)
-                    .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
+                    .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7), height: 70)
                     .offset(x: animationOffset)
                     .gesture(
                         DragGesture(minimumDistance: 30)
@@ -160,6 +162,8 @@ extension ScheduleCardView {
                         manualScheduleVM.deleteSchedule(item: schedule)
                     }
                 }
+                
+                await analyticsVM.refreshData()
             }
         }
     }
