@@ -12,20 +12,33 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = LocalNotiManager()
     
     /// 알림 설정 권한 확인
-    func requestNotificationAuthorization() {
-        let notificationCenter = UNUserNotificationCenter.current()
-        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-            if let error {
-                print("알람 설정 에러: \(error)")
-            }
-            
-            if granted {
-                print("알람 설정 허용")
-            } else {
-                print("알람 설정 거부")
+//    func requestNotificationAuthorization() {
+//        let notificationCenter = UNUserNotificationCenter.current()
+//        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+//            if let error {
+//                print("알람 설정 에러: \(error)")
+//            }
+//            
+//            if granted {
+//                print("알람 설정 허용")
+//            } else {
+//                print("알람 설정 거부")
+//            }
+//        }
+//    }
+    func requestNotificationAuthorization(completion: @escaping (Bool) -> Void) {
+            let center = UNUserNotificationCenter.current()
+            center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                if let error { print("알람 설정 에러: \(error)") }
+                DispatchQueue.main.async { completion(granted) }
+                
+                if granted {
+                    print("알람 허용")
+                } else {
+                    print("알람 거부")
+                }
             }
         }
-    }
     
     /// 알림 형태 구성
     func scheduleLocalNotification(for schedule: ScheduleEntity) {

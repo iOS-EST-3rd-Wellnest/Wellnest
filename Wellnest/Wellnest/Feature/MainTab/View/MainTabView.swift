@@ -12,6 +12,8 @@ struct MainTabView: View {
     @State private var showScheduleMenu: Bool = false
     @State private var selectedCreationType: ScheduleCreationType? = nil
     
+    @EnvironmentObject private var hiddenTabBar: TabBarState
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
@@ -35,6 +37,10 @@ struct MainTabView: View {
                 }
                 
                 CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
+                    .offset(y: hiddenTabBar.isHidden ? 120 : 0)
+                    .opacity(hiddenTabBar.isHidden ? 0 : 1)
+                    .allowsHitTesting(!hiddenTabBar.isHidden)
+                    .animation(.easeInOut(duration: 0.15), value: hiddenTabBar.isHidden)
             }
             .zIndex(1)
             
