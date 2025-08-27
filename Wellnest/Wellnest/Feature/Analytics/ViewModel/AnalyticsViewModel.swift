@@ -20,10 +20,9 @@ class AnalyticsViewModel: ObservableObject {
     private let coreDataStore = CoreDataStore()
 
     init() {
-        // 초기값은 로딩 상태로 설정
         self.healthData = HealthData(
             userName: "사용자",
-            planCompletion: PlanCompletionData(completedItems: 0, totalItems: 1),
+            planCompletion: PlanCompletionData(completedItems: 0, totalItems: 0),
             aiInsight: AIInsightData(message: "데이터를 불러오는 중..."),
             exercise: ExerciseData(
                 averageSteps: 0,
@@ -31,7 +30,13 @@ class AnalyticsViewModel: ObservableObject {
                 averageCalories: 0,
                 caloriesChange: 0,
                 weeklySteps: Array(repeating: 0, count: 7),
-                monthlySteps: Array(repeating: 0, count: 8)
+                monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0,
+                weeklyStepsChange: 0,
+                monthlyStepsChange: 0,
+                dailyCaloriesChange: 0,
+                weeklyCaloriesChange: 0,
+                monthlyCaloriesChange: 0
             ),
             sleep: SleepData(
                 averageHours: 0,
@@ -39,27 +44,30 @@ class AnalyticsViewModel: ObservableObject {
                 sleepQuality: 0,
                 qualityChange: 0,
                 weeklySleepHours: Array(repeating: 0, count: 7),
-                monthlySleepHours: Array(repeating: 0, count: 8)
+                monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0,
+                weeklySleepTimeChange: 0,
+                monthlySleepTimeChange: 0,
+                dailyQualityChange: 0,
+                weeklyQualityChange: 0,
+                monthlyQualityChange: 0
             ),
             meditation: MeditationData(weeklyCount: 0, changeCount: 0)
         )
 
-        // 실제 데이터 로드 시작
         Task {
             await loadHealthData()
         }
     }
 
-    // MARK: - 데이터 로드
-
     private func loadHealthData() async {
         isLoading = true
         errorMessage = nil
 
-        // 사용자 이름 먼저 설정
+        print("건강 데이터 로드 시작")
+
         let userName = getUserName()
 
-        // 모든 데이터를 병렬로 로드
         async let planData = loadPlanCompletionData()
         async let exerciseData = loadExerciseData()
         async let sleepData = loadSleepData()
@@ -69,7 +77,13 @@ class AnalyticsViewModel: ObservableObject {
             planData, exerciseData, sleepData, meditationData
         )
 
-        // AI 인사이트 생성
+        print("로드된 데이터:")
+        print("- 일정: \(plan.completedItems)/\(plan.totalItems)")
+        print("- 걸음수: \(exercise.averageSteps)")
+        print("- 칼로리: \(exercise.averageCalories)")
+        print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
+        print("- 수면 품질: \(sleep.sleepQuality)%")
+
         let aiInsight = generateAIInsight(
             planCompletion: plan,
             exercise: exercise,
@@ -78,7 +92,6 @@ class AnalyticsViewModel: ObservableObject {
             hasRealData: self.hasRealData
         )
 
-        // 데이터 업데이트
         self.healthData = HealthData(
             userName: userName,
             planCompletion: plan,
@@ -88,52 +101,56 @@ class AnalyticsViewModel: ObservableObject {
             meditation: meditation
         )
 
+        print("건강 데이터 로드 완료 - UI 업데이트됨")
         isLoading = false
     }
 
-    // MARK: - 플랜 완료도 데이터 로드
-
     private func loadPlanCompletionData() async -> PlanCompletionData {
-        // 실제 엔터티 존재 여부 확인
         let coreDataService = CoreDataService.shared
         let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
         let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
 
-        // ScheduleEntity 엔터티 사용
+        print("사용 가능한 CoreData 엔터티: \(entityNames)")
+
         guard entityNames.contains("ScheduleEntity") else {
-            self.hasRealData = true
-            return PlanCompletionData(completedItems: 4, totalItems: 8)
+            print("ScheduleEntity 엔터티가 없음. 기본 데이터 사용")
+            return PlanCompletionData(completedItems: 0, totalItems: 0)
         }
 
         do {
-            // 전체 데이터를 조회해서 속성 구조 파악
             let explorationRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduleEntity")
             explorationRequest.fetchLimit = 5
 
             let sampleActivities = try coreDataService.context.fetch(explorationRequest)
+            print("ScheduleEntity 샘플 개수: \(sampleActivities.count)")
 
-            // 속성 구조 파악
+            if sampleActivities.isEmpty {
+                print("일정이 없음. 0/0 반환")
+                return PlanCompletionData(completedItems: 0, totalItems: 0)
+            }
+
             var dateAttributeName: String?
             var completedAttributeName: String?
 
             if let firstActivity = sampleActivities.first {
                 let entity = firstActivity.entity
                 let attributeNames = entity.attributesByName.keys.sorted()
+                print("ScheduleEntity 속성들: \(attributeNames)")
 
-                // 날짜 관련 속성 찾기
                 let possibleDateFields = ["date", "scheduledDate", "startDate", "createdAt", "dateTime"]
                 for dateField in possibleDateFields {
                     if attributeNames.contains(dateField) {
                         dateAttributeName = dateField
+                        print("날짜 속성 발견: \(dateField)")
                         break
                     }
                 }
 
-                // 완료 상태 속성 찾기
                 let possibleCompletedFields = ["isCompleted", "completed", "isDone", "finished", "status"]
                 for completedField in possibleCompletedFields {
                     if attributeNames.contains(completedField) {
                         completedAttributeName = completedField
+                        print("완료 상태 속성 발견: \(completedField)")
                         break
                     }
                 }
@@ -141,7 +158,6 @@ class AnalyticsViewModel: ObservableObject {
 
             var todayActivities: [NSManagedObject] = []
 
-            // 날짜 속성이 있으면 오늘 일정으로 필터링
             if let dateAttr = dateAttributeName {
                 let calendar = Calendar.current
                 let today = calendar.startOfDay(for: Date())
@@ -156,14 +172,20 @@ class AnalyticsViewModel: ObservableObject {
                 todayRequest.sortDescriptors = [NSSortDescriptor(key: dateAttr, ascending: true)]
 
                 todayActivities = try coreDataService.context.fetch(todayRequest)
+                print("오늘 일정 개수: \(todayActivities.count)")
             } else {
                 todayActivities = sampleActivities
+                print("전체 일정 개수: \(todayActivities.count)")
+            }
+
+            if todayActivities.isEmpty {
+                print("오늘 일정이 없음. 0/0 반환")
+                return PlanCompletionData(completedItems: 0, totalItems: 0)
             }
 
             let totalItems = todayActivities.count
             var completedItems = 0
 
-            // 완료된 일정 계산
             if let completedAttr = completedAttributeName {
                 for activity in todayActivities {
                     if let isCompleted = activity.value(forKey: completedAttr) as? Bool, isCompleted {
@@ -173,11 +195,12 @@ class AnalyticsViewModel: ObservableObject {
                         completedItems += 1
                     }
                 }
+                print("완료된 일정: \(completedItems)/\(totalItems)")
             } else {
-                completedItems = totalItems / 2 // 절반 완료로 가정
+                completedItems = 0
+                print("완료 상태 속성이 없음: 0/\(totalItems)")
             }
 
-            // 실제 일정 데이터가 있으면 hasRealData 설정
             if totalItems > 0 {
                 self.hasRealData = true
             }
@@ -188,59 +211,78 @@ class AnalyticsViewModel: ObservableObject {
             )
 
         } catch {
-            // 에러 시에도 실제 데이터처럼 보이는 값 반환
-            self.hasRealData = true
-            return PlanCompletionData(completedItems: 4, totalItems: 8)
+            print("플랜 데이터 로드 오류: \(error)")
+            return PlanCompletionData(completedItems: 0, totalItems: 0)
         }
     }
 
-    // MARK: - 운동 데이터 로드
-
     private func loadExerciseData() async -> ExerciseData {
-        // HealthKit 사용 가능 여부 확인
+        print("운동 데이터 로드 시작")
+
         guard HKHealthStore.isHealthDataAvailable() else {
-            return MockHealthData.sampleData.exercise
+            print("HealthKit을 사용할 수 없음")
+            return ExerciseData(
+                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
+                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
+                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
+            )
         }
 
-        // 권한 확인
         let authCheck = await healthManager.finalAuthSnapshot()
+        print("HealthKit 권한 상태:")
+        print("- 누락된 권한: \(authCheck.missingCore)")
+
         if !authCheck.missingCore.isEmpty {
-            return MockHealthData.sampleData.exercise
+            print("HealthKit 권한이 없어서 빈 데이터 반환")
+            return ExerciseData(
+                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
+                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
+                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
+                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
+            )
         }
 
-        // 오늘 데이터 가져오기
         let todaySteps: Int
         let todayCalories: Int
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
+            print("오늘 걸음수: \(todaySteps)")
         } catch {
+            print("걸음수 가져오기 실패: \(error)")
             todaySteps = 0
         }
 
         do {
             todayCalories = try await healthManager.fetchCalorieCount()
+            print("오늘 칼로리: \(todayCalories)")
         } catch {
+            print("칼로리 가져오기 실패: \(error)")
             todayCalories = 0
         }
 
-        // 실제 데이터가 있는지 확인
         if todaySteps > 100 || todayCalories > 10 {
             self.hasRealData = true
+            print("실제 운동 데이터 발견")
         }
 
-        // 과거 데이터 가져오기
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
+            print("과거 데이터 개수: \(yearlyData.count)")
         } catch {
+            print("과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
-        // 주간/월간 데이터 계산
         let (weeklySteps, monthlySteps) = calculateStepsData(from: yearlyData)
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
+
+        print("계산된 변화율:")
+        print("- 걸음수 변화: \(stepsChange)%")
+        print("- 칼로리 변화: \(caloriesChange)%")
 
         return ExerciseData(
             averageSteps: todaySteps,
@@ -248,51 +290,73 @@ class AnalyticsViewModel: ObservableObject {
             averageCalories: todayCalories,
             caloriesChange: caloriesChange,
             weeklySteps: weeklySteps,
-            monthlySteps: monthlySteps
+            monthlySteps: monthlySteps,
+            dailyStepsChange: calculateDailyStepsChange(from: yearlyData, current: todaySteps),
+            weeklyStepsChange: calculateWeeklyStepsChange(from: yearlyData),
+            monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
+            dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
+            weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
+            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
         )
     }
 
-    // MARK: - 수면 데이터 로드
-
     private func loadSleepData() async -> SleepData {
+        print("수면 데이터 로드 시작")
+
         guard HKHealthStore.isHealthDataAvailable() else {
-            return MockHealthData.sampleData.sleep
+            print("HealthKit을 사용할 수 없음")
+            return SleepData(
+                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
+                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
+                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
+            )
         }
 
-        // 권한 확인
         let authCheck = await healthManager.finalAuthSnapshot()
         if !authCheck.missingCore.isEmpty {
-            return MockHealthData.sampleData.sleep
+            print("HealthKit 권한이 없어서 빈 데이터 반환")
+            return SleepData(
+                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
+                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
+                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
+                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
+            )
         }
 
-        // 수면 시간 가져오기
         let sleepDuration: TimeInterval
         do {
             sleepDuration = try await healthManager.fetchSleepDuration()
+            print("수면 시간: \(sleepDuration)초 (약 \(sleepDuration/3600)시간)")
         } catch {
+            print("수면 시간 가져오기 실패: \(error)")
             sleepDuration = 0
         }
 
         let hours = sleepDuration / 3600
         let minutes = Int((sleepDuration.truncatingRemainder(dividingBy: 3600)) / 60)
 
-        // 실제 수면 데이터가 있는지 확인
-        if sleepDuration >= 7200 { // 2시간 이상
+        if sleepDuration >= 7200 {
             self.hasRealData = true
+            print("실제 수면 데이터 발견")
         }
 
-        // 과거 데이터 가져오기
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
+            print("수면 과거 데이터 개수: \(yearlyData.count)")
         } catch {
+            print("수면 과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
-        // 주간/월간 수면 데이터 계산
         let (weeklySleep, monthlySleep) = calculateSleepData(from: yearlyData)
         let sleepQuality = calculateSleepQuality(hours: hours)
         let qualityChange = calculateSleepQualityChange(from: yearlyData, currentHours: hours)
+
+        print("계산된 수면 데이터:")
+        print("- 수면 품질: \(sleepQuality)%")
+        print("- 품질 변화: \(qualityChange)%")
 
         return SleepData(
             averageHours: hours,
@@ -300,22 +364,26 @@ class AnalyticsViewModel: ObservableObject {
             sleepQuality: sleepQuality,
             qualityChange: qualityChange,
             weeklySleepHours: weeklySleep,
-            monthlySleepHours: monthlySleep
+            monthlySleepHours: monthlySleep,
+            dailySleepTimeChange: calculateDailySleepTimeChange(from: yearlyData, current: hours),
+            weeklySleepTimeChange: calculateWeeklySleepTimeChange(from: yearlyData),
+            monthlySleepTimeChange: calculateMonthlySleepTimeChange(from: yearlyData),
+            dailyQualityChange: calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality),
+            weeklyQualityChange: calculateWeeklySleepQualityChange(from: yearlyData),
+            monthlyQualityChange: calculateMonthlySleepQualityChange(from: yearlyData)
         )
     }
 
-    // MARK: - 명상 데이터 로드
-
     private func loadMeditationData() async -> MeditationData {
-        // 엔터티 존재 여부를 먼저 확인
+        print("명상 데이터 로드 시작")
+
         let coreDataService = CoreDataService.shared
         let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
         let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
 
         guard entityNames.contains("ScheduledActivity") else {
-            // Mock 데이터지만 실제 데이터처럼 표시
-            self.hasRealData = true
-            return MeditationData(weeklyCount: 3, changeCount: 1)
+            print("ScheduledActivity 엔터티가 없음. 기본 데이터 사용")
+            return MeditationData(weeklyCount: 0, changeCount: 0)
         }
 
         do {
@@ -323,7 +391,6 @@ class AnalyticsViewModel: ObservableObject {
             let now = Date()
             let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
 
-            // 엔터티가 존재하는 경우에만 NSFetchRequest 생성
             let weekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
             weekRequest.predicate = NSPredicate(
                 format: "completedAt >= %@ AND completedAt <= %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
@@ -337,7 +404,8 @@ class AnalyticsViewModel: ObservableObject {
                 return (activity.value(forKey: "isCompleted") as? Bool) ?? false
             }.count
 
-            // 이전 7일간 명상 활동 조회 (변화율 계산용)
+            print("이번 주 명상 횟수: \(weeklyCount)")
+
             let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now)!
             let previousWeekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
             previousWeekRequest.predicate = NSPredicate(
@@ -352,10 +420,11 @@ class AnalyticsViewModel: ObservableObject {
             }.count
 
             let changeCount = weeklyCount - previousWeekCount
+            print("명상 변화량: \(changeCount)")
 
-            // 명상 데이터가 있으면 hasRealData 설정
             if weeklyCount > 0 {
                 self.hasRealData = true
+                print("실제 명상 데이터 발견")
             }
 
             return MeditationData(
@@ -364,13 +433,10 @@ class AnalyticsViewModel: ObservableObject {
             )
 
         } catch {
-            // 에러 시에도 실제 데이터처럼 보이는 값 반환
-            self.hasRealData = true
-            return MeditationData(weeklyCount: 3, changeCount: 1)
+            print("명상 데이터 로드 오류: \(error)")
+            return MeditationData(weeklyCount: 0, changeCount: 0)
         }
     }
-
-    // MARK: - AI 인사이트 생성
 
     private func generateAIInsight(
         planCompletion: PlanCompletionData,
@@ -380,62 +446,98 @@ class AnalyticsViewModel: ObservableObject {
         hasRealData: Bool
     ) -> AIInsightData {
 
-        // 일정이 없는 경우 특별 메시지
+        print("AI 인사이트 생성 중...")
+        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
+        print("- 걸음수: \(exercise.averageSteps)")
+        print("- 수면: \(sleep.averageHours)시간")
+        print("- hasRealData: \(hasRealData)")
+
         if planCompletion.totalItems == 0 {
+            print("일정이 없음 - 일정 추가 권유")
             return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
         }
 
-        // 실제 데이터가 없을 때
         if !hasRealData {
-            return AIInsightData(message: "아직 데이터가 없어요. 활동을 시작하면 분석을 제공할게요!")
+            print("실제 데이터 없음 - 대기 메시지")
+            return AIInsightData(message: "활동을 시작하면 맞춤 분석을 제공해드릴게요!")
         }
 
-        // 실제 데이터 기반 인사이트
         var insights: [String] = []
 
-        // 일정 완료도 기반 인사이트
-        if planCompletion.completionRate >= 0.8 {
-            insights.append("오늘 계획을 \(Int(planCompletion.completionRate * 100))% 달성했어요! 훌륭해요 🎉")
-        } else if planCompletion.completionRate >= 0.5 {
+        let completionRate = planCompletion.completionRate
+        if completionRate >= 0.8 {
+            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
+        } else if completionRate >= 0.5 {
             insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
         } else if planCompletion.totalItems > 0 {
-            insights.append("오늘 \(planCompletion.remainingItems)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
+            let remaining = planCompletion.totalItems - planCompletion.completedItems
+            if remaining == 1 {
+                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
+            } else {
+                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
+            }
         }
 
-        // 운동 인사이트
-        if exercise.averageSteps >= 8000 {
-            insights.append("오늘 \(exercise.averageSteps)보를 걸었어요. 건강한 하루네요!")
+        if exercise.averageSteps >= 10000 {
+            insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 목표 달성!")
+        } else if exercise.averageSteps >= 8000 {
+            insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 건강한 하루네요!")
+        } else if exercise.averageSteps >= 5000 {
+            insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 조금만 더 걸어볼까요?")
+        } else if exercise.averageSteps > 1000 {
+            insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 좋은 시작이에요!")
+        } else if exercise.averageSteps > 0 {
+            insights.append("걸음수를 늘려보세요. 작은 산책도 좋은 시작이에요!")
         }
 
-        // 수면 인사이트
         if sleep.averageHours >= 7 && sleep.averageHours <= 9 {
             insights.append("충분한 수면으로 컨디션이 좋을 것 같아요")
+        } else if sleep.averageHours > 0 && sleep.averageHours < 7 {
+            insights.append("수면이 부족해 보여요. 오늘은 일찍 잠자리에 들어보세요")
+        } else if sleep.averageHours > 9 {
+            insights.append("충분히 잠을 잤네요. 활기찬 하루 되세요!")
         }
 
-        // 명상 인사이트
-        if meditation.weeklyCount >= 3 {
-            insights.append("이번 주 \(meditation.weeklyCount)회 명상으로 마음이 평온해졌을거예요")
+        if meditation.weeklyCount >= 5 {
+            insights.append("이번 주 \(meditation.weeklyCount)회 명상으로 마음이 평온해졌을 거예요")
+        } else if meditation.weeklyCount >= 3 {
+            insights.append("꾸준한 명상이 좋은 습관이 되고 있네요")
+        } else if meditation.weeklyCount > 0 {
+            insights.append("명상을 시작했네요! 꾸준히 이어가 보세요")
         }
 
-        // 복합 인사이트
-        if exercise.stepsChange > 10 && sleep.qualityChange > 0 {
-            insights.append("운동량 증가로 수면 질이 \(sleep.qualityChange)% 향상되었어요")
+        if exercise.stepsChange > 15 && sleep.sleepQuality >= 80 {
+            insights.append("운동량 증가로 수면 질도 좋아졌어요!")
+        } else if exercise.stepsChange > 20 {
+            insights.append("이전보다 \(exercise.stepsChange)% 더 활동적이에요. 멋져요!")
         }
 
-        // 기본 인사이트
         if insights.isEmpty {
             let defaultInsights = [
                 "꾸준한 건강 관리가 중요해요. 오늘도 화이팅!",
                 "작은 변화가 큰 차이를 만들어요",
-                "건강한 습관을 하나씩 만들어가고 있어요"
+                "건강한 습관을 하나씩 만들어가고 있어요",
+                "데이터가 쌓일수록 더 정확한 분석을 제공할게요",
+                "오늘도 건강을 위한 한 걸음을 내디뎌보세요"
             ]
             insights = defaultInsights
         }
 
-        return AIInsightData(message: insights.randomElement() ?? insights[0])
+        let selectedInsight = insights.randomElement() ?? insights[0]
+        print("생성된 AI 인사이트: \(selectedInsight)")
+
+        return AIInsightData(message: selectedInsight)
     }
 
-    // MARK: - 헬퍼 함수들
+    private func formatSteps(_ steps: Int) -> String {
+        if steps >= 10000 {
+            return "\(String(format: "%.1f", Double(steps) / 1000))천보"
+        } else if steps >= 1000 {
+            return "\(String(format: "%.1f", Double(steps) / 1000))천보"
+        } else {
+            return "\(steps)보"
+        }
+    }
 
     private func calculateStepsData(from yearlyData: [HealthManager.DailyMetric]) -> ([Double], [Double]) {
         let recent30Days = Array(yearlyData.suffix(30))
@@ -456,13 +558,13 @@ class AnalyticsViewModel: ObservableObject {
         let recent7Days = Array(yearlyData.suffix(7))
 
         let weeklySleep = recent7Days.map { Double($0.sleepMinutes) / 60.0 }
-        let monthlySteps = stride(from: 0, to: recent30Days.count, by: 4).map { startIndex in
+        let monthlySleep = stride(from: 0, to: recent30Days.count, by: 4).map { startIndex in
             let endIndex = min(startIndex + 4, recent30Days.count)
             let weekData = Array(recent30Days[startIndex..<endIndex])
             return weekData.map { Double($0.sleepMinutes) / 60.0 }.reduce(0, +) / Double(max(weekData.count, 1))
         }
 
-        return (weeklySleep, monthlySteps)
+        return (weeklySleep, monthlySleep)
     }
 
     private func calculateStepsChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
@@ -522,7 +624,141 @@ class AnalyticsViewModel: ObservableObject {
         return currentQuality - previousQuality
     }
 
+    private func calculateDailyStepsChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        guard yesterday.steps > 0 else { return 0 }
+
+        let change = (Double(current - yesterday.steps) / Double(yesterday.steps)) * 100
+        return Int(change)
+    }
+
+    private func calculateWeeklyStepsChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { $0.steps }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { $0.steps }.reduce(0, +) / max(lastWeek.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+
+        let change = (Double(thisAvg - lastAvg) / Double(lastAvg)) * 100
+        return Int(change)
+    }
+
+    private func calculateMonthlyStepsChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { $0.steps }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { $0.steps }.reduce(0, +) / max(lastMonth.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateDailyCaloriesChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        guard yesterday.kcal > 0 else { return 0 }
+        return Int((Double(current - yesterday.kcal) / Double(yesterday.kcal)) * 100)
+    }
+
+    private func calculateWeeklyCaloriesChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { $0.kcal }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { $0.kcal }.reduce(0, +) / max(lastWeek.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateMonthlyCaloriesChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { $0.kcal }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { $0.kcal }.reduce(0, +) / max(lastMonth.count, 1)
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((Double(thisAvg - lastAvg) / Double(lastAvg)) * 100)
+    }
+
+    private func calculateDailySleepTimeChange(from yearlyData: [HealthManager.DailyMetric], current: Double) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        let yesterdayHours = Double(yesterday.sleepMinutes) / 60.0
+        guard yesterdayHours > 0 else { return 0 }
+        return Int((current - yesterdayHours) / yesterdayHours * 100)
+    }
+
+    private func calculateWeeklySleepTimeChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(thisWeek.count, 1)) / 60.0
+        let lastAvg = lastWeek.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(lastWeek.count, 1)) / 60.0
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((thisAvg - lastAvg) / lastAvg * 100)
+    }
+
+    private func calculateMonthlySleepTimeChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(thisMonth.count, 1)) / 60.0
+        let lastAvg = lastMonth.map { Double($0.sleepMinutes) }.reduce(0, +) / Double(max(lastMonth.count, 1)) / 60.0
+
+        guard lastAvg > 0 else { return 0 }
+        return Int((thisAvg - lastAvg) / lastAvg * 100)
+    }
+
+    private func calculateDailySleepQualityChange(from yearlyData: [HealthManager.DailyMetric], current: Int) -> Int {
+        guard let yesterday = yearlyData.last else { return 0 }
+        let yesterdayHours = Double(yesterday.sleepMinutes) / 60.0
+        let yesterdayQuality = calculateSleepQuality(hours: yesterdayHours)
+        guard yesterdayQuality > 0 else { return 0 }
+        return current - yesterdayQuality
+    }
+
+    private func calculateWeeklySleepQualityChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 14 else { return 0 }
+
+        let thisWeek = yearlyData.suffix(7)
+        let lastWeek = yearlyData.dropLast(7).suffix(7)
+
+        let thisAvg = thisWeek.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(thisWeek.count, 1)
+        let lastAvg = lastWeek.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(lastWeek.count, 1)
+
+        return thisAvg - lastAvg
+    }
+
+    private func calculateMonthlySleepQualityChange(from yearlyData: [HealthManager.DailyMetric]) -> Int {
+        guard yearlyData.count >= 60 else { return 0 }
+
+        let thisMonth = yearlyData.suffix(30)
+        let lastMonth = yearlyData.dropLast(30).suffix(30)
+
+        let thisAvg = thisMonth.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(thisMonth.count, 1)
+        let lastAvg = lastMonth.map { calculateSleepQuality(hours: Double($0.sleepMinutes) / 60.0) }.reduce(0, +) / max(lastMonth.count, 1)
+
+        return thisAvg - lastAvg
+    }
+
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
+        print("Mock 연간 데이터 생성")
         let calendar = Calendar.current
         var data: [HealthManager.DailyMetric] = []
 
@@ -559,26 +795,22 @@ class AnalyticsViewModel: ObservableObject {
             if let user = users.first,
                let nickname = user.value(forKey: "nickname") as? String,
                !nickname.isEmpty {
+                print("사용자 이름 발견: \(nickname)")
                 return nickname
             }
         } catch {
-            print("Failed to fetch user nickname from CoreData: \(error)")
+            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
         }
 
-        // CoreData에서 닉네임을 가져올 수 없는 경우 기본값 반환
+        print("기본 사용자 이름 사용")
         return "사용자"
     }
 
-    // MARK: - 새로고침
-
     func refreshData() async {
+        print("수동 새로고침 시작")
         await loadHealthData()
     }
 }
-
-// MARK: - ScheduledActivity 확장 (CoreData 엔터티가 없을 경우를 대비)
-
-import CoreData
 
 @objc(ScheduledActivity)
 public class ScheduledActivity: NSManagedObject {

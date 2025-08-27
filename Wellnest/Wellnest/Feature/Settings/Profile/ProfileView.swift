@@ -16,19 +16,19 @@ struct ProfileView: View {
                 VStack(alignment: .leading) {
                     HStack {
                         Text(userEntity.nickname ?? "홍길동")
-                            .foregroundStyle(.indigo)
-                            .font(.title)
+                            .foregroundStyle(.wellnestOrange)
+                            .font(.title2)
                             .fontWeight(.bold)
                         
                         Text("님")
-                            .foregroundStyle(.primary)
-                            .font(.title)
+                            .foregroundStyle(Color(.label))
+                            .font(.title2)
                             .fontWeight(.semibold)
                     }
                     
                     Text("오늘도 건강하세요!")
-                        .foregroundStyle(.primary)
-                        .font(.title)
+                        .foregroundStyle(Color(.label))
+                        .font(.title2)
                         .fontWeight(.semibold)
                 }
 
@@ -49,7 +49,8 @@ struct ProfileView: View {
                 }
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom)
     }
 }
 

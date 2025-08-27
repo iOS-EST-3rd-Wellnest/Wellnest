@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var isProfileDetailPresented = false
     @State private var currentPage: Int = 0
     @State private var isNicknameValid = true
+    @State private var offsetY: CGFloat = .zero
 
     @Environment(\.dismiss) var dismiss
 
@@ -20,6 +21,8 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
+                    SafeAreaBlurView(offsetY: $offsetY, space: .named("settingScroll"))
+                    
                     if let user = viewModel.userEntity {
                         Button {
                             isProfileDetailPresented = true
@@ -30,6 +33,8 @@ struct SettingsView: View {
                     SettingList()
                 }
             }
+            .coordinateSpace(name: "settingScroll")
+            .safeAreaBlur(offsetY: $offsetY)
             .fullScreenCover(isPresented: $isProfileDetailPresented) {
                 if let user = viewModel.userEntity {
                     NavigationView {

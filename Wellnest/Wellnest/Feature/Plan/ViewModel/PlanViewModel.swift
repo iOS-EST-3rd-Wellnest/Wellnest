@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import CoreData
+import Combine
 
 @MainActor
 final class PlanViewModel: ObservableObject {
@@ -17,6 +18,8 @@ final class PlanViewModel: ObservableObject {
     @Published private(set) var jumpToken: Int = 0
 
     @Published var scheduleStore: ScheduleStore
+
+    private var cancellables: Set<AnyCancellable> = []
 
     struct CachedMonthData {
         let monthStart: Date
@@ -40,12 +43,16 @@ final class PlanViewModel: ObservableObject {
         self.anchorMonth =	normalizedMonth
         self.visibleMonth = normalizedMonth
 
+        bindScheduleStoreChangeForwarding()
+
         prefetchMonthsAroundAnchor()
         trimCacheAroundMonth(normalizedMonth)
     }
 
     deinit {
         for (_, task) in backgroundLoaders { task.cancel() }
+
+        cancellables.removeAll()
     }
 }
 
@@ -180,6 +187,21 @@ extension PlanViewModel {
     func addMonths(to date: Date, count: Int) -> Date {
          calendar.date(byAdding: .month, value: count, to: date.startOfMonth)!.startOfMonth
      }
+}
+extension PlanViewModel {
+    private func rebindScheduleStoreIfNeeded() {
+        cancellables.removeAll()
+        bindScheduleStoreChangeForwarding()
+    }
+
+    private func bindScheduleStoreChangeForwarding() {
+        scheduleStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
 }
 
 extension PlanViewModel {

@@ -22,6 +22,13 @@ struct RoundedBorderModifier: ViewModifier {
     }
 }
 
+struct LayoutWidthModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .frame(width: UIDevice.current.userInterfaceIdiom == .pad ? 600 : nil)
+    }
+}
+
 extension View {
     func defaultShadow() -> some View {
         self.shadow(color: .secondary.opacity(0.2), radius: 8, x: 6, y: 6)
@@ -37,5 +44,9 @@ extension View {
             color: color,
             lineWidth: lineWidth
         ))
+    }
+
+    func layoutWidth() -> some View {
+        self.modifier(LayoutWidthModifier())
     }
 }
