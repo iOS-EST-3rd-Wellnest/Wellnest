@@ -13,7 +13,6 @@ struct TimePickerView: View {
     @Binding var time: Date
     @Binding var isPresented: Bool
 
-    // Dark Mode 감지
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
