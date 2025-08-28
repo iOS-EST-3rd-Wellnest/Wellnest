@@ -96,7 +96,7 @@ struct ManualScheduleInputView: View {
                             isKeyboardVisible = false
                         }
                         HStack {
-                            Text("배경색")
+                            Text("색상")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
@@ -122,7 +122,7 @@ struct ManualScheduleInputView: View {
                     }
                     .padding()
                 }
-                .padding(.bottom, 30)
+                .padding(.bottom, 80)
                 .task {
                     await viewModel.loadIfNeeded()
                     if viewModel.isEditMode {
