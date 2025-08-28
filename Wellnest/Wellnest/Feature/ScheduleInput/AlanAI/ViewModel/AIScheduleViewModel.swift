@@ -425,59 +425,59 @@ final class AIScheduleViewModel: ObservableObject {
         print("Core Data + Calendar 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (idx, scheduleItem) in plan.schedules.enumerated() {
-            // 수정: 올바른 날짜/시간 사용
-            let dates = createCorrectDatesForSchedule(scheduleIndex: idx, totalSchedules: plan.schedules.count)
-            let startDate = dates.startDate
-            let endDate = dates.endDate
+            if plan.planType == "routine" {
+                // 루틴의 경우: 개별 인스턴스 생성 (캘린더 + CoreData)
+                try await createRoutineInstancesWithCalendar(scheduleItem: scheduleItem, index: idx)
+            } else {
+                // 단일/복수 일정: 기존 방식
+                let dates = createCorrectDatesForSchedule(scheduleIndex: idx, totalSchedules: plan.schedules.count)
+                let startDate = dates.startDate
+                let endDate = dates.endDate
 
-            print(dates.startDate)
-            print(dates.endDate)
+                print(dates.startDate)
+                print(dates.endDate)
 
-            var recurrenceRules: [EKRecurrenceRule]? = nil
-            if plan.planType == "routine", !selectedWeekdays.isEmpty {
-                let weekdays = Array(selectedWeekdays).sorted().map { $0 + 1 }
-                let rule = CalendarManager.shared.weeklyRecurrence(weekdays: weekdays, end: routineEndDate)
-                recurrenceRules = [rule]
-            } else if plan.planType == "multiple" {
+                var recurrenceRules: [EKRecurrenceRule]? = nil
+                if plan.planType == "multiple" {
+                    let endRule = EKRecurrenceEnd(end: multipleEndDate)
+                    let rule = EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: endRule)
+                    recurrenceRules = [rule]
+                }
 
-                let endRule = EKRecurrenceEnd(end: multipleEndDate)
-                let rule = EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: endRule)
-                recurrenceRules = [rule]
+                // EventKit에 생성/업데이트
+                let eventId = try await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: nil,
+                    title: scheduleItem.activity,
+                    location: nil,
+                    notes: scheduleItem.notes,
+                    startDate: startDate,
+                    endDate: endDate,
+                    isAllDay: false,
+                    calendar: nil,
+                    recurrenceRules: recurrenceRules,
+                    alarms: nil
+                )
+
+                // Core Data에 저장
+                let entity = CoreDataService.shared.create(ScheduleEntity.self)
+                entity.id = UUID()
+                entity.title = scheduleItem.activity
+                entity.detail = scheduleItem.notes ?? ""
+                entity.startDate = startDate
+                entity.endDate = endDate
+                entity.isAllDay = false
+                entity.isCompleted = false
+                entity.repeatRule = plan.planType == "multiple" ? "매일" : nil
+                entity.hasRepeatEndDate = false
+                entity.repeatEndDate = nil
+                entity.alarm = nil
+                entity.scheduleType = "ai_generated"
+                entity.createdAt = Date()
+                entity.updatedAt = Date()
+                entity.eventIdentifier = eventId // EventKit 식별자 저장
+
+                print("저장 \(idx+1): \(entity.title ?? "제목없음") | \(startDate) ~ \(endDate) | id=\(eventId)")
             }
-
-            // EventKit에 생성/업데이트
-            let eventId = try await CalendarManager.shared.addOrUpdateEvent(
-                existingId: nil,
-                title: scheduleItem.activity,
-                location: nil,
-                notes: scheduleItem.notes,
-                startDate: startDate,
-                endDate: endDate,
-                isAllDay: false,
-                calendar: nil,
-                recurrenceRules: recurrenceRules,
-                alarms: nil
-            )
-
-            // Core Data에 저장
-            let entity = CoreDataService.shared.create(ScheduleEntity.self)
-            entity.id = UUID()
-            entity.title = scheduleItem.activity
-            entity.detail = scheduleItem.notes ?? ""
-            entity.startDate = startDate
-            entity.endDate = endDate
-            entity.isAllDay = false
-            entity.isCompleted = false
-            entity.repeatRule = plan.planType == "routine" ? "매주" : nil
-            entity.hasRepeatEndDate = false
-            entity.repeatEndDate = nil
-            entity.alarm = nil
-            entity.scheduleType = "ai_generated"
-            entity.createdAt = Date()
-            entity.updatedAt = Date()
-            entity.eventIdentifier = eventId // EventKit 식별자 저장
-
-            print("저장 \(idx+1): \(entity.title ?? "제목없음") | \(startDate) ~ \(endDate) | id=\(eventId)")
         }
 
         try CoreDataService.shared.saveContext()
@@ -532,31 +532,180 @@ final class AIScheduleViewModel: ObservableObject {
         print("Core Data 전용 저장 시작 - 스케줄 개수: \(plan.schedules.count)")
 
         for (index, scheduleItem) in plan.schedules.enumerated() {
-            let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
-            newSchedule.id = UUID()
-            newSchedule.title = scheduleItem.activity
-            newSchedule.detail = scheduleItem.notes ?? ""
+            if plan.planType == "routine" {
+                // 루틴의 경우: 반복 기간 동안 개별 인스턴스 생성
+                try await createRoutineInstances(scheduleItem: scheduleItem, index: index)
+            } else {
+                // 단일/복수 일정: 기존 방식
+                let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
+                newSchedule.id = UUID()
+                newSchedule.title = scheduleItem.activity
+                newSchedule.detail = scheduleItem.notes ?? ""
 
-            // 수정: 올바른 날짜/시간 사용
-            let dates = createCorrectDatesForSchedule(scheduleIndex: index, totalSchedules: plan.schedules.count)
-            newSchedule.startDate = dates.startDate
-            newSchedule.endDate = dates.endDate
+                let dates = createCorrectDatesForSchedule(scheduleIndex: index, totalSchedules: plan.schedules.count)
+                newSchedule.startDate = dates.startDate
+                newSchedule.endDate = dates.endDate
 
-            newSchedule.isAllDay = false
-            newSchedule.isCompleted = false
-            newSchedule.repeatRule = plan.planType == "routine" ? "매주" : nil
-            newSchedule.hasRepeatEndDate = false
-            newSchedule.repeatEndDate = nil
-            newSchedule.alarm = nil
-            newSchedule.scheduleType = "ai_generated"
-            newSchedule.createdAt = Date()
-            newSchedule.updatedAt = Date()
+                newSchedule.isAllDay = false
+                newSchedule.isCompleted = false
+                newSchedule.repeatRule = plan.planType == "multiple" ? "매일" : nil
+                newSchedule.hasRepeatEndDate = false
+                newSchedule.repeatEndDate = nil
+                newSchedule.alarm = nil
+                newSchedule.scheduleType = "ai_generated"
+                newSchedule.createdAt = Date()
+                newSchedule.updatedAt = Date()
 
-            print("Core Data 저장 \(index + 1): \(newSchedule.title ?? "제목없음") - \(dates.startDate) ~ \(dates.endDate)")
+                print("Core Data 저장 \(index + 1): \(newSchedule.title ?? "제목없음") - \(dates.startDate) ~ \(dates.endDate)")
+            }
         }
 
         try CoreDataService.shared.saveContext()
         print("Core Data 저장 완료")
+    }
+    
+    // MARK: - 루틴 개별 인스턴스 생성
+    private func createRoutineInstances(scheduleItem: AIScheduleItem, index: Int) async throws {
+        guard let dayString = scheduleItem.day else {
+            print("⚠️ 루틴에 요일 정보가 없음")
+            return
+        }
+        
+        let calendar = Calendar.current
+        let timeComponents = parseTime(from: scheduleItem.time)
+        let endTimeComponents = parseEndTime(from: scheduleItem.time)
+        
+        // 루틴 기간 내의 모든 해당 요일 찾기
+        let weekdayMapping: [String: Int] = [
+            "일요일": 1, "월요일": 2, "화요일": 3, "수요일": 4,
+            "목요일": 5, "금요일": 6, "토요일": 7
+        ]
+        
+        guard let targetWeekday = weekdayMapping[dayString] else {
+            print("⚠️ 알 수 없는 요일: \(dayString)")
+            return
+        }
+        
+        // 루틴 시작일부터 종료일까지 해당 요일의 모든 날짜 찾기
+        var currentDate = routineStartDate
+        var instanceCount = 0
+        
+        while currentDate <= routineEndDate {
+            let weekday = calendar.component(.weekday, from: currentDate)
+            
+            if weekday == targetWeekday {
+                // 해당 요일에 일정 생성
+                let startOfDay = calendar.startOfDay(for: currentDate)
+                let startDateTime = calendar.date(byAdding: .hour, value: timeComponents.hour, to: startOfDay)!
+                    .addingTimeInterval(TimeInterval(timeComponents.minute * 60))
+                let endDateTime = calendar.date(byAdding: .hour, value: endTimeComponents.hour, to: startOfDay)!
+                    .addingTimeInterval(TimeInterval(endTimeComponents.minute * 60))
+                
+                let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
+                newSchedule.id = UUID()
+                newSchedule.title = scheduleItem.activity
+                newSchedule.detail = scheduleItem.notes ?? ""
+                newSchedule.startDate = startDateTime
+                newSchedule.endDate = endDateTime
+                newSchedule.isAllDay = false
+                newSchedule.isCompleted = false
+                newSchedule.repeatRule = nil // 개별 인스턴스이므로 반복 규칙 없음
+                newSchedule.hasRepeatEndDate = false
+                newSchedule.repeatEndDate = nil
+                newSchedule.alarm = nil
+                newSchedule.scheduleType = "ai_generated"
+                newSchedule.createdAt = Date()
+                newSchedule.updatedAt = Date()
+                
+                instanceCount += 1
+                print("루틴 인스턴스 \(instanceCount) 생성: \(scheduleItem.activity) - \(startDateTime)")
+            }
+            
+            // 다음 날로 이동
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        }
+        
+        print("✅ 루틴 '\(scheduleItem.activity)' 총 \(instanceCount)개 인스턴스 생성 완료")
+    }
+    
+    // MARK: - 루틴 개별 인스턴스 생성 (캘린더 연동)
+    private func createRoutineInstancesWithCalendar(scheduleItem: AIScheduleItem, index: Int) async throws {
+        guard let dayString = scheduleItem.day else {
+            print("⚠️ 루틴에 요일 정보가 없음")
+            return
+        }
+        
+        let calendar = Calendar.current
+        let timeComponents = parseTime(from: scheduleItem.time)
+        let endTimeComponents = parseEndTime(from: scheduleItem.time)
+        
+        // 루틴 기간 내의 모든 해당 요일 찾기
+        let weekdayMapping: [String: Int] = [
+            "일요일": 1, "월요일": 2, "화요일": 3, "수요일": 4,
+            "목요일": 5, "금요일": 6, "토요일": 7
+        ]
+        
+        guard let targetWeekday = weekdayMapping[dayString] else {
+            print("⚠️ 알 수 없는 요일: \(dayString)")
+            return
+        }
+        
+        // 루틴 시작일부터 종료일까지 해당 요일의 모든 날짜 찾기
+        var currentDate = routineStartDate
+        var instanceCount = 0
+        
+        while currentDate <= routineEndDate {
+            let weekday = calendar.component(.weekday, from: currentDate)
+            
+            if weekday == targetWeekday {
+                // 해당 요일에 일정 생성
+                let startOfDay = calendar.startOfDay(for: currentDate)
+                let startDateTime = calendar.date(byAdding: .hour, value: timeComponents.hour, to: startOfDay)!
+                    .addingTimeInterval(TimeInterval(timeComponents.minute * 60))
+                let endDateTime = calendar.date(byAdding: .hour, value: endTimeComponents.hour, to: startOfDay)!
+                    .addingTimeInterval(TimeInterval(endTimeComponents.minute * 60))
+                
+                // EventKit에 개별 이벤트 생성
+                let eventId = try await CalendarManager.shared.addOrUpdateEvent(
+                    existingId: nil,
+                    title: scheduleItem.activity,
+                    location: nil,
+                    notes: scheduleItem.notes,
+                    startDate: startDateTime,
+                    endDate: endDateTime,
+                    isAllDay: false,
+                    calendar: nil,
+                    recurrenceRules: nil, // 개별 인스턴스이므로 반복 규칙 없음
+                    alarms: nil
+                )
+                
+                // Core Data에 저장
+                let newSchedule = CoreDataService.shared.create(ScheduleEntity.self)
+                newSchedule.id = UUID()
+                newSchedule.title = scheduleItem.activity
+                newSchedule.detail = scheduleItem.notes ?? ""
+                newSchedule.startDate = startDateTime
+                newSchedule.endDate = endDateTime
+                newSchedule.isAllDay = false
+                newSchedule.isCompleted = false
+                newSchedule.repeatRule = nil // 개별 인스턴스이므로 반복 규칙 없음
+                newSchedule.hasRepeatEndDate = false
+                newSchedule.repeatEndDate = nil
+                newSchedule.alarm = nil
+                newSchedule.scheduleType = "ai_generated"
+                newSchedule.createdAt = Date()
+                newSchedule.updatedAt = Date()
+                newSchedule.eventIdentifier = eventId
+                
+                instanceCount += 1
+                print("루틴 인스턴스 \(instanceCount) 생성 (캘린더+CoreData): \(scheduleItem.activity) - \(startDateTime) | id=\(eventId)")
+            }
+            
+            // 다음 날로 이동
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        }
+        
+        print("✅ 루틴 '\(scheduleItem.activity)' 총 \(instanceCount)개 인스턴스 생성 완료 (캘린더 연동)")
     }
 
     // 저장 후 확인
