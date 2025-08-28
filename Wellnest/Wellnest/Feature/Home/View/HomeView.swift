@@ -189,7 +189,7 @@ struct HomeView: View {
         .coordinateSpace(name: "homeScroll")
         .safeAreaBlur(offsetY: $offsetY)
         .task {
-            await homeVM.fetchDailySummary()
+//            await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()
         }
     }
