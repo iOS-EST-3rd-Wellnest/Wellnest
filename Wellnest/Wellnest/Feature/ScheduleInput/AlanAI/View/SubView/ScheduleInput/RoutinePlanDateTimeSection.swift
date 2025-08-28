@@ -83,6 +83,7 @@ struct RoutinePlanDateTimeSection: View {
                 // 루틴 기간
                 VStack(alignment: .leading, spacing: Spacing.content) {
                     DatePickerView(text: "시작 날짜", date: $routineStartDate, isAllDay: .constant(true), isPresented: $isStartDateOpen)
+                        .tint(.wellnestOrange)
                         .onChange(of: isStartDateOpen) { newValue in
                             if newValue {
                                 isEndDateOpen = false
@@ -92,6 +93,7 @@ struct RoutinePlanDateTimeSection: View {
                         }
 
                     DatePickerView(text: "종료 날짜", date: $routineEndDate, isAllDay: .constant(true), isPresented: $isEndDateOpen)
+                        .tint(.wellnestOrange)
                         .onChangeWithOldValue(of: routineEndDate) { oldValue, newValue in
                             if newValue.timeIntervalSince(routineStartDate) < 0 {
                                 routineEndDate = oldValue

@@ -16,6 +16,15 @@ struct MultiplePlanDateTimeSection: View {
 
     @State private var isStartTimeOpen = false
     @State private var isEndTimeOpen = false
+    
+    private func roundedUpToFiveMinutes(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let minute = components.minute ?? 0
+        let remainder = minute % 5
+        let minutesToAdd = remainder == 0 ? 0 : (5 - remainder)
+        return calendar.date(byAdding: .minute, value: minutesToAdd, to: date) ?? date
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.layout) {
@@ -25,6 +34,7 @@ struct MultiplePlanDateTimeSection: View {
 
             VStack {
                 DatePickerView(text: "시작", date: $multipleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChange(of: multipleStartTime) { newValue in
                         onStartTimeChange(newValue)
                         // 시작 날짜/시간에서 날짜 추출해서 multipleStartDate에 설정
@@ -38,6 +48,7 @@ struct MultiplePlanDateTimeSection: View {
                     }
 
                 DatePickerView(text: "종료", date: $multipleEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChange(of: multipleEndTime) { newValue in
                         // 종료 날짜/시간에서 날짜 추출해서 multipleEndDate에 설정
                         let calendar = Calendar.current
@@ -53,6 +64,25 @@ struct MultiplePlanDateTimeSection: View {
                             isStartTimeOpen = false
                         }
                     }
+            }
+        }
+        .onAppear {
+            let roundedNow = roundedUpToFiveMinutes(Date())
+            let roundedEndTime = roundedUpToFiveMinutes(Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date())
+            
+            // 현재 값이 기본값(과거 시각)인 경우에만 업데이트
+            if multipleStartTime < Date() {
+                multipleStartTime = roundedNow
+                onStartTimeChange(roundedNow)
+                // 시작 날짜도 업데이트
+                let calendar = Calendar.current
+                multipleStartDate = calendar.startOfDay(for: roundedNow)
+            }
+            if multipleEndTime < multipleStartTime {
+                multipleEndTime = roundedEndTime
+                // 종료 날짜도 업데이트
+                let calendar = Calendar.current
+                multipleEndDate = calendar.startOfDay(for: roundedEndTime)
             }
         }
     }
