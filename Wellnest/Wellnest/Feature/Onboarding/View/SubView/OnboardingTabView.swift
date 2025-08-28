@@ -21,12 +21,15 @@ struct OnboardingTabView: View {
             VStack {
                 if let user = viewModel.userEntity {
                     switch currentPage {
-                    /// 동기부여
+                    /// 앱 소개
                     case 0:
                         FirstIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 앱 소개
-                    case 1, 2:
+                    case 1:
                         SecondIntroductionTabView(currentPage: $currentPage, title: $title)
+                    /// 앱 소개
+                    case 2:
+                        ThirdIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 사용자 정보
                     case 3:
                         UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title, isNicknameValid: $isNicknameValid)
@@ -175,6 +178,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                                 .foregroundColor(item.isSelected ? .primary : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
+                        // TODO: 선택하지 않았을 때 카드 배경색 wellnestbackground으로 적용하기, 컬러스킴으로 안나눠도 됨
                         .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))
 
                         .cornerRadius(CornerRadius.large)
