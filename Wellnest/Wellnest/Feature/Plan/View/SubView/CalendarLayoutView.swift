@@ -37,11 +37,11 @@ struct CalendarLayoutView: View {
                 .background {
                     if isSelected {
                         Circle()
-                            .fill(Color.blue)
+                            .fill(.wellnestOrange)
                             .frame(width: 28, height: 28)
                     } else if isToday {
                         Circle()
-                            .stroke(Color.blue)
+                            .stroke(.wellnestOrange)
                             .frame(width: 28, height: 28)
                     }
                 }
@@ -62,7 +62,7 @@ struct CalendarLayoutView: View {
                     ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
                         Circle()
                             .frame(width: 4, height: 4)
-                            .foregroundStyle(Color.scheduleSolid(color: scheduleItems[index].backgroundColor))
+                            .foregroundStyle(Color.scheduleDot(color: scheduleItems[index].backgroundColor))
                     }
                 }
             } else {

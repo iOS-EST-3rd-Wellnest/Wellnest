@@ -9,7 +9,10 @@ import SwiftUI
 import HealthKit
 
 struct HealthKitInterworkView: View {
-    @Environment(\.scenePhase) var scenePhase
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
+    
+    @EnvironmentObject private var hiddenTabBar: TabBarState
     
     @StateObject private var userDefault = UserDefaultsManager.shared
     
@@ -34,15 +37,15 @@ struct HealthKitInterworkView: View {
     let manager = HealthManager()
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(alignment: .center) {
             
             Spacer()
             
             VStack(alignment: .leading, spacing: 40) {
                 HStack {
                     Image(systemName: "shoeprints.fill")
-                        .foregroundStyle(.blue)
-                        .font(.system(size: 40))
+                        .foregroundStyle(.wellnestOrange)
+                        .font(.system(size: 36))
                     
                     VStack(alignment: .leading) {
                         Text("당신의 건강여정을 시작하세요")
@@ -50,14 +53,15 @@ struct HealthKitInterworkView: View {
                             .fontWeight(.bold)
                         
                         Text("Apple 건강앱과 연동하여 걸음수, 수면, 심박수 등 건강데이터를 자동으로 기록합니다.")
+                            .foregroundStyle(.secondary)
                             .font(.footnote)
                     }
                 }
                 
                 HStack {
                     Image(systemName: "iphone")
-                        .foregroundStyle(.blue)
-                        .font(.system(size: 40))
+                        .foregroundStyle(.wellnestOrange)
+                        .font(.system(size: 42))
                     
                     VStack(alignment: .leading) {
                         Text("하루의 건강 리포트를 한눈에")
@@ -65,14 +69,15 @@ struct HealthKitInterworkView: View {
                             .fontWeight(.bold)
                         
                         Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 확인할 수 있습니다.")
+                            .foregroundStyle(.secondary)
                             .font(.footnote)
                     }
                 }
                 
                 HStack {
                     Image(systemName: "chart.xyaxis.line")
-                        .foregroundStyle(.blue)
-                        .font(.system(size: 40))
+                        .foregroundStyle(.wellnestOrange)
+                        .font(.system(size: 34))
                     
                     VStack(alignment: .leading) {
                         Text("목표 달성의 시작")
@@ -80,41 +85,45 @@ struct HealthKitInterworkView: View {
                             .fontWeight(.bold)
                         
                         Text("건강 데이터를 기반으로 매일의 성취를 확인하세요.")
+                            .foregroundStyle(.secondary)
                             .font(.footnote)
                     }
                 }
             }
             
-            if userDefault.isHealthKitEnabled {
-                VStack {
-                    Text("연동 완료")
-                    
-                    Text("걸음수: \(stepCount)")
-                    Text("칼로리: \(caloriesCount)")
-                    Text("수면 시간: \(formattedSleepTime)")
-                    Text("심박수: \(heartRate)")
-                    Text("BMI: \(String(format: "%.1f", bmi))")
-                    Text("체지방률: \(String(format: "%.1f", bodyFatPercentage))%")
-                }
-            }
+//            if userDefault.isHealthKitEnabled {
+//                VStack {
+//                    Text("연동 완료")
+//                    
+//                    Text("걸음수: \(stepCount)")
+//                    Text("칼로리: \(caloriesCount)")
+//                    Text("수면 시간: \(formattedSleepTime)")
+//                    Text("심박수: \(heartRate)")
+//                    Text("BMI: \(String(format: "%.1f", bmi))")
+//                    Text("체지방률: \(String(format: "%.1f", bodyFatPercentage))%")
+//                }
+//            }
             
             Spacer()
             
-            FilledButton(title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"),backgroundColor: userDefault.isHealthKitEnabled ? .gray : .blue) {
+            Text("건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
+                .padding(.top, Spacing.inline)
+                .foregroundStyle(.secondary)
+                .font(.caption2)
+            
+            FilledButton(
+                title: isAuthorizing ? "연동 중..." : (userDefault.isHealthKitEnabled ? "건강 앱 연동 됨" : "건강 앱 연동하기"),
+                disabled: userDefault.isHealthKitEnabled
+            ) {
                 Task {
                     await connectHealthKit()
                 }
             }
-            .disabled(isAuthorizing || userDefault.isHealthKitEnabled)
-            
-            Text("* 설정 > 건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
-                .font(.caption)
-            
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom, Spacing.content)
         .navigationTitle("건강 앱 연동")
         .navigationBarTitleDisplayMode(.inline)
-        .padding(.bottom, 100)
         .onAppear {
             Task {
                 let snap = await manager.finalAuthSnapshot()
@@ -127,11 +136,7 @@ struct HealthKitInterworkView: View {
                     startObserversIfNeeded()
                 }
             }
-            //            if userDefault.isHealthKitEnabled {
-            //                Task { try await fetchHealthData() }
-            ////                Task { await fetchHealthDataSafely() }
-            //                startObserversIfNeeded()
-            //            }
+            hiddenTabBar.isHidden = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .healthDataDidUpdate)) { _ in
             Task { await fetchHealthDataSafely() }
@@ -155,8 +160,20 @@ struct HealthKitInterworkView: View {
                     UIApplication.shared.open(url)
                 }
             }
-            Button("닫기", role: .cancel) { }
+            Button("취소", role: .cancel) { }
         } message: { Text(alertMessage) }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    hiddenTabBar.isHidden = false
+                    withAnimation { dismiss() }
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .foregroundColor(.wellnestOrange)
+                }
+            }
+        }
     }
 }
 

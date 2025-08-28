@@ -8,11 +8,17 @@
 import SwiftUI
 
 struct ScheduleSheetView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @ObservedObject var planVM: PlanViewModel
     @Binding var isSheetExpanded: Bool
 
     @State private var currentDragOffset: CGFloat = 0
     @State private var isDragging: Bool = false
+
+    @State private var selectedItem: ScheduleItem?
+    @Binding var selectedTab: TabBarItem
+    @Binding var selectedCreationType: ScheduleCreationType?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.content) {
@@ -29,7 +35,7 @@ struct ScheduleSheetView: View {
                 .opacity(isDragging ? 0.7 : 1.0)
 
             ScrollView {
-                LazyVStack(spacing: Spacing.layout) {
+                LazyVStack(spacing: 10) {
                     if planVM.selectedDateScheduleItems.isEmpty {
                          emptyStateView
                      } else {
@@ -37,6 +43,9 @@ struct ScheduleSheetView: View {
                              let item = planVM.selectedDateScheduleItems[idx]
 
                              ScheduleItemView(schedule: item, contextDate: planVM.selectedDate)
+                                 .onTapGesture {
+                                     selectedItem = item
+                                 }
                          }
                      }
                 }
@@ -49,10 +58,26 @@ struct ScheduleSheetView: View {
         }
         .padding(.top, Spacing.layout)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.white)
+        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .defaultShadow()
+        .if(colorScheme == .dark) { view in
+            view.overlay(alignment: .top) {
+                Rectangle()
+                    .fill(Color.secondary)
+                    .frame(height: 0.5)
+            }
+        }
+        .if(colorScheme == .light) { view in
+            view.defaultShadow(color: .secondary.opacity(0.4), radius: 4, x: 0, y: 0)
+        }
         .gesture(dragGesture)
+        .sheet(item: $selectedItem) { item in
+            ManualScheduleInputView(
+                mode: .edit(id: item.id),
+                selectedTab: $selectedTab,
+                selectedCreationType: $selectedCreationType, planVM: planVM
+            )
+        }
     }
 
     @ViewBuilder
@@ -99,5 +124,5 @@ struct ScheduleSheetView: View {
 }
 
 #Preview {
-    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false))
+    ScheduleSheetView(planVM: PlanViewModel(), isSheetExpanded: .constant(false), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }

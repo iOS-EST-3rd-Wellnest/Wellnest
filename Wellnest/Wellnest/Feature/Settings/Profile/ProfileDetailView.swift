@@ -15,8 +15,6 @@ struct ProfileDetailView: View {
 
     enum Field {
         case nickname
-        case ageRange
-        case gender
         case height
         case weight
     }
@@ -66,6 +64,7 @@ struct ProfileDetailView: View {
                 Spacer()
             }
             .padding()
+            .padding(.bottom, Spacing.content)
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .sheet(isPresented: $isImagePickerPresented) {
@@ -87,6 +86,7 @@ struct ProfileDetailView: View {
                         .foregroundColor(.red)
                         .padding(.leading, 4)
                         .opacity(isNicknameValid ? 0 : 1)
+                        .animation(.easeInOut, value: isNicknameValid)
 
                     Spacer()
                 }
@@ -96,11 +96,10 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("10글자 이하로 입력해주세요.")
+                        prompt: Text("10글자 이하로 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 10)
                     .focused($isFieldFocused, equals: .nickname)
@@ -122,7 +121,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 연령대
-                UserInfoForm(title: "연령대", isRequired: true, isFocused: isFieldFocused == .ageRange) {
+                UserInfoForm(title: "연령대", isRequired: true) {
                     Menu {
                         ForEach(UserInfoOptions.ageRanges) { age in
                             Button {
@@ -139,7 +138,7 @@ struct ProfileDetailView: View {
                 }
 
                 /// 성별
-                UserInfoForm(title: "성별", isRequired: true, isFocused: isFieldFocused == .gender) {
+                UserInfoForm(title: "성별", isRequired: true) {
                     HStack(spacing: 10) {
                         ForEach(UserInfoOptions.genders) { gender in
                             Button {
@@ -159,12 +158,11 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("cm 단위로 정수만 입력해주세요.")
+                        prompt: Text("cm 단위로 정수만 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 46)
                     .focused($isFieldFocused, equals: .height)
@@ -179,12 +177,11 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("kg 단위로 정수만 입력해주세요.")
+                        prompt: Text("kg 단위로 정수만 입력해주세요")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
                     .keyboardType(.numberPad)
-                    .foregroundColor(.black)
                     .padding(.horizontal)
                     .padding(.leading, 18)
                     .focused($isFieldFocused, equals: .weight)
@@ -194,7 +191,7 @@ struct ProfileDetailView: View {
                     }
                 }
             }
-            .padding(.horizontal, OnboardingCardLayout.spacing)
+            .padding(.horizontal, Spacing.layout)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -223,6 +220,7 @@ struct ProfileDetailView: View {
         .onAppear {
             loadUserEntity()
         }
+        .layoutWidth()
         .navigationTitle("사용자 정보")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -232,6 +230,8 @@ struct ProfileDetailView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .foregroundColor(.wellnestOrange)
+                        .font(.body)
+                        .fontWeight(.regular)
                 }
             }
         }

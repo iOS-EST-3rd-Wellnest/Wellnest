@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct CustomTabBar: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @Binding var selectedTab: TabBarItem
     @Binding var showScheduleMenu: Bool
     
@@ -23,44 +25,42 @@ struct CustomTabBar: View {
             }
             .padding(.vertical, Spacing.content)
             .padding(.horizontal)
-            //            .background(.ultraThinMaterial)
             .background {
                 GeometryReader { geo in
                     ZStack {
                         Capsule()
-                            .fill(.ultraThinMaterial)
-                        
+                            .fill(.wellnestTabBar)
+
                         Circle()
-                            .frame(width: 80, height: 80)
+                            .frame(width: 70, height: 70)
                             .position(x: geo.size.width / 2, y: 0)
                             .blendMode(.destinationOut)
                     }
                     .compositingGroup()
-                    .defaultShadow()
                 }
             }
             .clipShape(Capsule())
-            .defaultShadow()
+            .if(colorScheme == .light) { view in
+                    view.defaultShadow(color: .secondary.opacity(0.5), radius: 4 , x: 2, y: 2)
+            }
             .padding(.horizontal)
-            
+
             Button {
-                
                 showScheduleMenu.toggle()
-                
             } label: {
                 Image(systemName: "plus")
                     .resizable()
                     .fontWeight(.semibold)
-                    .frame(width: 40, height: 40)
-                //                    .font(.system(size: 40, weight: .bold))
+                    .frame(width: 32, height: 32)
                     .padding(12)
                     .background {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(.wellnestOrange)
                     }
                     .foregroundStyle(.white)
-                    .defaultShadow()
+
             }
+            .defaultShadow(color: .wellnestOrange.opacity(0.4), radius: 4)
             .offset(y: -(20 + Spacing.content))
         }
     }
@@ -78,9 +78,11 @@ struct CustomTabBar: View {
                     .frame(width: 24, height: 24)
                 
                 Text(tab.title)
-                    .font(.caption2)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+
             }
-            .foregroundStyle(selectedTab == tab ? Color.accentColor : .black)
+            .foregroundStyle(selectedTab == tab ? .wellnestSelected : .wellnestTabItem)
         }
         .frame(maxWidth: .infinity)
     }
