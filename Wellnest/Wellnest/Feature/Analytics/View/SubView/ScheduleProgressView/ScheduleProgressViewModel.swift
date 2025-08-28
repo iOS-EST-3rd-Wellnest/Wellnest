@@ -22,8 +22,8 @@ final class ScheduleProgressViewModel: NSObject, ObservableObject {
     private let fetchResultController: NSFetchedResultsController<ScheduleEntity>
     private var dayChangeObserver: NSObjectProtocol?
 
-    init(context: NSManagedObjectContext) {
-        self.context = context
+    override init() {
+        self.context = CoreDataService.shared.context
         
         let request: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
@@ -111,6 +111,14 @@ extension ScheduleProgressViewModel {
     
     var progressTitle: String {
         hasToday ? "오늘 달성률" : "오늘 일정"
+    }
+    
+    var remainScheduleCountText: String {
+        return "남은 일정 \(todayRemainCount)개"
+    }
+    
+    var todayCompletionRateText: String {
+        return "\(todayCompletionRate)%"
     }
 }
 

@@ -58,8 +58,7 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-//            ScheduleProgressView(planData: viewModel.healthData.planCompletion)
-            ScheduleProgressView(context: context)
+            ScheduleProgressView()
 //            AIInsightCardView(insight: viewModel.healthData.aiInsight)
             AIInsightView()
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
@@ -77,8 +76,7 @@ struct AnalyticsView: View {
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-//                    ScheduleProgressView(planData: viewModel.healthData.planCompletion)
-                    ScheduleProgressView(context: context)
+                    ScheduleProgressView()
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {

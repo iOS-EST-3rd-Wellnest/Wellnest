@@ -10,11 +10,7 @@ import CoreData
 
 struct ScheduleProgressView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @StateObject private var viewModel: ScheduleProgressViewModel
-    
-    init(context: NSManagedObjectContext) {
-        _viewModel = StateObject(wrappedValue: ScheduleProgressViewModel(context: context))
-    }
+    @EnvironmentObject var viewModel: ScheduleProgressViewModel
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
