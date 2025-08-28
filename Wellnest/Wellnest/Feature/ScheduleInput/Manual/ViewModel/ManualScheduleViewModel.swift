@@ -23,6 +23,7 @@ final class ManualScheduleViewModel: ObservableObject {
         Task { await loadTodaySchedules() } // async 버전 재사용
     }
 
+    @MainActor
     private func loadTodaySchedules() async {
         let (now, startOfTomorrow) = Self.todayBounds()
 
@@ -62,7 +63,6 @@ final class ManualScheduleViewModel: ObservableObject {
                     alarm: e.alarm
                 )
             }
-
             self.todaySchedules = items
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
