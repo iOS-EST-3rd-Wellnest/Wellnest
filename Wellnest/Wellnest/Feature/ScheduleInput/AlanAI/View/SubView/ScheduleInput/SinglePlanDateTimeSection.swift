@@ -25,6 +25,7 @@ struct SinglePlanDateTimeSection: View {
 
             VStack {
                 DatePickerView(text: "시작", date: $singleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChange(of: singleStartTime) { newValue in
                         onStartTimeChange(newValue)
                     }
@@ -36,6 +37,7 @@ struct SinglePlanDateTimeSection: View {
                     }
 
                 DatePickerView(text: "종료", date: $singleEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChangeWithOldValue(of: singleEndTime) { oldValue, newValue in
                         if newValue.timeIntervalSince(singleStartTime) < 0 {
                             singleEndTime = oldValue

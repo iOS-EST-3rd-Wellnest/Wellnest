@@ -25,6 +25,7 @@ struct MultiplePlanDateTimeSection: View {
 
             VStack {
                 DatePickerView(text: "시작", date: $multipleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChange(of: multipleStartTime) { newValue in
                         onStartTimeChange(newValue)
                         // 시작 날짜/시간에서 날짜 추출해서 multipleStartDate에 설정
@@ -38,6 +39,7 @@ struct MultiplePlanDateTimeSection: View {
                     }
 
                 DatePickerView(text: "종료", date: $multipleEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                    .tint(.wellnestOrange)
                     .onChange(of: multipleEndTime) { newValue in
                         // 종료 날짜/시간에서 날짜 추출해서 multipleEndDate에 설정
                         let calendar = Calendar.current
