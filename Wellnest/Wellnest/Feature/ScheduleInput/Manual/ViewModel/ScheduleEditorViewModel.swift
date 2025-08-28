@@ -131,7 +131,6 @@ final class ScheduleEditorViewModel: ObservableObject {
             isAlarmOn: form.isAlarmOn,
             isCompleted: false,
         )
-        print(input)
 
         switch mode {
         case .create:
