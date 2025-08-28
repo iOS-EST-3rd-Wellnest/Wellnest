@@ -23,6 +23,7 @@ final class ManualScheduleViewModel: ObservableObject {
         Task { await loadTodaySchedules() } // async 버전 재사용
     }
 
+    @MainActor
     private func loadTodaySchedules() async {
         let (now, startOfTomorrow) = Self.todayBounds()
 

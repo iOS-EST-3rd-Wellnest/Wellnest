@@ -70,6 +70,7 @@ struct ManualScheduleInputView: View {
                         }
                         .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
                             if viewModel.isEditMode && viewModel.form.isRepeated {
+                                print("isChangedRepeatRule")
                                 isChangedRepeatRule = true
                             }
                         }

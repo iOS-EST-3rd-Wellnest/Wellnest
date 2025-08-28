@@ -13,6 +13,7 @@ enum EditorMode: Equatable {
     case edit(id: UUID)
 }
 
+@MainActor
 final class ScheduleEditorViewModel: ObservableObject {
     @Published var form = ScheduleFormState()
     @Published var previewColor: Color = .wellnestBlue
@@ -152,7 +153,7 @@ final class ScheduleEditorViewModel: ObservableObject {
     }
 
     func updateRepeatRule() async throws {
-        guard case let .edit(id) = mode else { return }
+        try await deleteFollowingInSeries()
         let input = ScheduleInput(
             title: form.title,
             location: form.location,
@@ -168,17 +169,7 @@ final class ScheduleEditorViewModel: ObservableObject {
             isAlarmOn: form.isAlarmOn,
             isCompleted: false,
         )
-
-        do {
-            // 1) 기존 아이탬 삭제
-            try await repository.delete(id: id)
-
-            // 2) 현재 form 기준으로 다시 저장
-            try await repository.create(with: input)
-
-        } catch {
-            print("반복 규칙 업데이트 실패: \(error)")
-        }
+        try await repository.create(with: input)
     }
 
     func updateRepeatSeries() async throws {
@@ -280,6 +271,7 @@ final class ScheduleEditorViewModel: ObservableObject {
 }
 
 enum ScheduleEditorFactory {
+    @MainActor
     static func make(mode: EditorMode) -> ScheduleEditorViewModel {
         let service = CoreDataService.shared
         let notifier: LocalNotifying = LocalNotiManager.shared
