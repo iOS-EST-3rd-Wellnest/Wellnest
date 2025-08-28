@@ -17,12 +17,12 @@ struct WeekdayChip: View {
         Button(action: action) {
             Text(weekday)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isSelected ? .white : .primary)
+                .foregroundColor(isSelected ? .wellnestOrange : .primary)
                 .frame(width: 32, height: 32)
-                .background(isSelected ? Color.wellnestOrange : Color(.systemGray6))
+                .background(isSelected ? Color.wellnestOrange.opacity(0.2) : Color.gray.opacity(0.1))
                 .overlay(
                     Circle()
-                        .stroke(isSelected ? Color.wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(isSelected ? .wellnestOrange : Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .clipShape(Circle())
         }
