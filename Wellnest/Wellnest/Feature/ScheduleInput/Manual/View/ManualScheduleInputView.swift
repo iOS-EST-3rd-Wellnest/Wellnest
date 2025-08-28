@@ -23,6 +23,8 @@ struct ManualScheduleInputView: View {
     @State private var showOnlySeriesItemEditMenu = false
     @State private var isChangedRepeatRule = false
     @State private var showMenu = false
+    @State private var showDeleteAlert = false
+    @State private var showDeleteSeriesAlert = false
 
     init(
         mode: EditorMode,
@@ -334,25 +336,42 @@ struct ManualScheduleInputView: View {
         Menu {
             Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
-                    Task {
-                        try await viewModel.delete()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteAlert = true
                 }
+
                 Button("이후 모든 이벤트 삭제") {
-                    Task {
-                        try await viewModel.deleteFollowingInSeries()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteSeriesAlert = true
                 }
             }
         } label: {
             Image(systemName: "trash")
                 .foregroundColor(.red)
+        }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
+            Button("삭제", role: .destructive) {
+                Task {
+                    try await viewModel.deleteFollowingInSeries()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
         }
     }
 
