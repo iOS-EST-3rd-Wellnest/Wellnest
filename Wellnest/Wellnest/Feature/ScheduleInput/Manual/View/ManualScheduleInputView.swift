@@ -115,6 +115,9 @@ struct ManualScheduleInputView: View {
                 .padding(.bottom, 30)
                 .task {
                     await viewModel.loadIfNeeded()
+                    if viewModel.isEditMode {
+                        isKeyboardVisible = false
+                    }
                 }
                 .onAppear {
                     if selectedTab == .plan {
@@ -125,6 +128,8 @@ struct ManualScheduleInputView: View {
                     } else {
                         viewModel.setDefaultDate(for: Date())
                     }
+
+
                 }
                 .onDisappear {
                     isKeyboardVisible = false
@@ -190,6 +195,7 @@ struct ManualScheduleInputView: View {
                                     Task {
                                         // 단순 스케줄 업데이트
                                         try await viewModel.saveSchedule()
+                                        isKeyboardVisible = false
                                         selectedTab = .plan
                                         selectedCreationType = nil
                                         dismiss()
@@ -199,6 +205,7 @@ struct ManualScheduleInputView: View {
                             } else {
                                 Task {
                                     try await viewModel.saveSchedule()
+                                    isKeyboardVisible = false
                                     selectedTab = .plan
                                     selectedCreationType = nil
                                     dismiss()
@@ -238,6 +245,7 @@ struct ManualScheduleInputView: View {
                                         showOnlySeriesItemEditMenu = false
                                         selectedTab = .plan
                                         selectedCreationType = nil
+                                        isKeyboardVisible = false
                                         dismiss()
 
                                     }
@@ -323,6 +331,7 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     private var closeTapBarButton: some View {
         Button {
+            isKeyboardVisible = false
             selectedCreationType = nil
             dismiss()
         } label: {
@@ -337,10 +346,14 @@ struct ManualScheduleInputView: View {
             Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
                     showDeleteAlert = true
+                    isKeyboardVisible = false
+
                 }
 
                 Button("이후 모든 이벤트 삭제") {
                     showDeleteSeriesAlert = true
+                    isKeyboardVisible = false
+
                 }
             }
         } label: {
@@ -350,9 +363,12 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteSeriesAlert = false
+                isKeyboardVisible = false
+
 
                 Task {
                     try await viewModel.deleteFollowingInSeries()
+                    isKeyboardVisible = false
                     selectedTab = .plan
                     selectedCreationType = nil
                     dismiss()
@@ -365,11 +381,14 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteAlert = false
+                isKeyboardVisible = false
+
 
                 Task {
                     try await viewModel.delete()
                     selectedTab = .plan
                     selectedCreationType = nil
+                    isKeyboardVisible = false
                     dismiss()
                 }
             }
@@ -383,6 +402,8 @@ struct ManualScheduleInputView: View {
     var deleteTapBarButton: some View {
         Button {
             showDeleteAlert = true
+            isKeyboardVisible = false
+
         } label: {
             Image(systemName: "trash")
                 .foregroundColor(.red)
@@ -390,11 +411,13 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteAlert = false
+                isKeyboardVisible = false
 
                 Task {
                     try await viewModel.delete()
                     selectedTab = .plan
                     selectedCreationType = nil
+                    isKeyboardVisible = false
                     dismiss()
                 }
             }
@@ -413,6 +436,7 @@ extension ManualScheduleInputView {
         Task {
             let id = try await viewModel.saveSchedule()
         }
+        isKeyboardVisible = false
         selectedTab = .plan
         selectedCreationType = nil
         dismiss()
