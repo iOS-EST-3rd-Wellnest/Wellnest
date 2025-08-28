@@ -349,6 +349,8 @@ struct ManualScheduleInputView: View {
         }
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
             Button("삭제", role: .destructive) {
+                showDeleteSeriesAlert = false
+
                 Task {
                     try await viewModel.deleteFollowingInSeries()
                     selectedTab = .plan
@@ -362,6 +364,8 @@ struct ManualScheduleInputView: View {
         }
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
             Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+
                 Task {
                     try await viewModel.delete()
                     selectedTab = .plan
@@ -378,16 +382,27 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     var deleteTapBarButton: some View {
         Button {
-            Task {
-                try await viewModel.delete()
-                selectedTab = .plan
-                selectedCreationType = nil
-                dismiss()
-            }
+            showDeleteAlert = true
         } label: {
             Image(systemName: "trash")
                 .foregroundColor(.red)
         }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
+
     }
 
 }
