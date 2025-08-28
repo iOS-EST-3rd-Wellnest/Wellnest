@@ -104,7 +104,7 @@ struct TodayCardView: View {
                             }
                         } else {
                             VStack(spacing: Spacing.inline) {
-                                Text(scheduleProgressVM.todayCompletionRateText)
+                                Text("0%")
                                     .font(.title)
                                     .bold()
                             }

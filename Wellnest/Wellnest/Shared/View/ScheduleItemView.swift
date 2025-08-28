@@ -60,7 +60,7 @@ struct ScheduleItemView: View {
 
                 Text(schedule.title)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color(.label))
                     .lineLimit(1)
                     .multilineTextAlignment(.leading)
 

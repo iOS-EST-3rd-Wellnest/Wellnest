@@ -56,15 +56,10 @@ struct ScheduleCardView: View {
                             // 애니메이션 효과 이후 업데이트를 위한 sleep
                             try? await Task.sleep(for: .milliseconds(300))
                             
-                            await MainActor.run {
-                                withAnimation(.easeInOut) {
-                                    manualScheduleVM.updateCompleted(item: schedule)
-                                }
+                            withAnimation(.easeInOut) {
+                                manualScheduleVM.updateCompleted(item: schedule)
                             }
-                            
-                            await analyticsVM.refreshData()
                         }
-                        
                     } label: {
                         Image(systemName: "checkmark")
                             .foregroundStyle(.black)
@@ -93,13 +88,9 @@ struct ScheduleCardView: View {
                             try? await Task.sleep(for: .milliseconds(300))
                             
                             // Core Data에서 일정 삭제
-                            await MainActor.run {
-                                withAnimation(.easeInOut) {
-                                    manualScheduleVM.deleteSchedule(item: schedule)
-                                }
+                            withAnimation(.easeInOut) {
+                                manualScheduleVM.deleteSchedule(item: schedule)
                             }
-                            
-                            await analyticsVM.refreshData()
                         }
                     } label: {
                         Image(systemName: "trash.fill")

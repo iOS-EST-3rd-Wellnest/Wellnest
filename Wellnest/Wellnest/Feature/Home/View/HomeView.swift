@@ -11,7 +11,6 @@ struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var homeVM = HomeViewModel()
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
-    @StateObject private var analyticsVM = AnalyticsViewModel()
     @State private var offsetY: CGFloat = .zero
     
     private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
@@ -48,7 +47,6 @@ struct HomeView: View {
             RecommendView(homeVM: homeVM)
                 .padding(.bottom, 100)
         }
-        .environmentObject(analyticsVM)
         .background(Color(.systemBackground))
         .coordinateSpace(name: "homeScroll")
         .safeAreaBlur(offsetY: $offsetY)
@@ -56,7 +54,7 @@ struct HomeView: View {
             homeVM.fetchUserInfo()
         }
         .task {
-//            await homeVM.fetchDailySummary()
+            await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()
         }
     }
