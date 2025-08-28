@@ -21,7 +21,7 @@ final class AIScheduleViewModel: ObservableObject {
     @Published var singleEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
 
     @Published var multipleStartDate = Date()
-    @Published var multipleEndDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    @Published var multipleEndDate = Date()  // 기본값을 같은 날로 설정
     @Published var multipleStartTime = Date()
     @Published var multipleEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
 
@@ -133,7 +133,7 @@ final class AIScheduleViewModel: ObservableObject {
         singleEndTime = oneHourLater
 
         multipleStartDate = now
-        multipleEndDate = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
+        multipleEndDate = now  // 기본값을 같은 날로 설정
         multipleStartTime = now
         multipleEndTime = oneHourLater
 
@@ -258,30 +258,46 @@ final class AIScheduleViewModel: ObservableObject {
                 
                 return (startDateTime, endDateTime)
             } else {
-                let targetDate = multipleStartDate
-
-                let totalMinutes = Int(multipleEndTime.timeIntervalSince(multipleStartTime) / 60)
-                let minutesPerSchedule = max(30, totalMinutes / totalSchedules)
+                // 여러 날에 걸친 경우: 각 스케줄마다 다른 날짜 사용
+                let targetDate = calendar.date(byAdding: .day, value: scheduleIndex, to: multipleStartDate) ?? multipleStartDate
                 
-                let timeOffset = minutesPerSchedule * scheduleIndex
-                let adjustedStartTime = calendar.date(byAdding: .minute, value: timeOffset, to: multipleStartTime) ?? multipleStartTime
-                let adjustedEndTime = calendar.date(byAdding: .minute, value: minutesPerSchedule, to: adjustedStartTime) ?? adjustedStartTime
-                
-                let startDateTime = calendar.date(
-                    bySettingHour: calendar.component(.hour, from: adjustedStartTime),
-                    minute: calendar.component(.minute, from: adjustedStartTime),
-                    second: 0,
-                    of: targetDate
-                ) ?? targetDate
-                
-                let endDateTime = calendar.date(
-                    bySettingHour: calendar.component(.hour, from: adjustedEndTime),
-                    minute: calendar.component(.minute, from: adjustedEndTime),
-                    second: 0,
-                    of: targetDate
-                ) ?? targetDate.addingTimeInterval(3600)
-                
-                return (startDateTime, endDateTime)
+                // endDate를 넘지 않도록 체크
+                if targetDate > multipleEndDate {
+                    // 범위를 벗어나면 마지막 날에 생성
+                    let finalTargetDate = multipleEndDate
+                    
+                    let startDateTime = calendar.date(
+                        bySettingHour: calendar.component(.hour, from: multipleStartTime),
+                        minute: calendar.component(.minute, from: multipleStartTime),
+                        second: 0,
+                        of: finalTargetDate
+                    ) ?? finalTargetDate
+                    
+                    let endDateTime = calendar.date(
+                        bySettingHour: calendar.component(.hour, from: multipleEndTime),
+                        minute: calendar.component(.minute, from: multipleEndTime),
+                        second: 0,
+                        of: finalTargetDate
+                    ) ?? finalTargetDate.addingTimeInterval(3600)
+                    
+                    return (startDateTime, endDateTime)
+                } else {
+                    let startDateTime = calendar.date(
+                        bySettingHour: calendar.component(.hour, from: multipleStartTime),
+                        minute: calendar.component(.minute, from: multipleStartTime),
+                        second: 0,
+                        of: targetDate
+                    ) ?? targetDate
+                    
+                    let endDateTime = calendar.date(
+                        bySettingHour: calendar.component(.hour, from: multipleEndTime),
+                        minute: calendar.component(.minute, from: multipleEndTime),
+                        second: 0,
+                        of: targetDate
+                    ) ?? targetDate.addingTimeInterval(3600)
+                    
+                    return (startDateTime, endDateTime)
+                }
             }
 
         case .routine:
