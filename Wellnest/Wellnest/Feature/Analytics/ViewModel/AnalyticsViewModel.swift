@@ -21,7 +21,6 @@ class AnalyticsViewModel: ObservableObject {
     init() {
         self.healthData = HealthData(
             userName: "사용자",
-            planCompletion: PlanCompletionData(completedItems: 0, totalItems: 0),
             aiInsight: AIInsightData(message: "데이터를 불러오는 중..."),
             exercise: ExerciseData(
                 averageSteps: 0,
@@ -51,7 +50,6 @@ class AnalyticsViewModel: ObservableObject {
                 weeklyQualityChange: 0,
                 monthlyQualityChange: 0
             ),
-            meditation: MeditationData(weeklyCount: 0, changeCount: 0)
         )
 
         Task {
@@ -67,152 +65,36 @@ class AnalyticsViewModel: ObservableObject {
 
         let userName = getUserName()
 
-        async let planData = loadPlanCompletionData()
         async let exerciseData = loadExerciseData()
         async let sleepData = loadSleepData()
-        async let meditationData = loadMeditationData()
 
-        let (plan, exercise, sleep, meditation) = await (
-            planData, exerciseData, sleepData, meditationData
+        let (exercise, sleep) = await (
+            exerciseData, sleepData
         )
 
         print("로드된 데이터:")
-        print("- 일정: \(plan.completedItems)/\(plan.totalItems)")
         print("- 걸음수: \(exercise.averageSteps)")
         print("- 칼로리: \(exercise.averageCalories)")
         print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
         print("- 수면 품질: \(sleep.sleepQuality)%")
 
         let aiInsight = generateAIInsight(
-            planCompletion: plan,
+//            planCompletion: plan,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation,
             hasRealData: self.hasRealData
         )
 
         self.healthData = HealthData(
             userName: userName,
-            planCompletion: plan,
+//            planCompletion: plan,
             aiInsight: aiInsight,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation
         )
 
         print("건강 데이터 로드 완료 - UI 업데이트됨")
         isLoading = false
-    }
-
-    private func loadPlanCompletionData() async -> PlanCompletionData {
-        let coreDataService = CoreDataService.shared
-        let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
-        let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
-
-        print("사용 가능한 CoreData 엔터티: \(entityNames)")
-
-        guard entityNames.contains("ScheduleEntity") else {
-            print("ScheduleEntity 엔터티가 없음. 기본 데이터 사용")
-            return PlanCompletionData(completedItems: 0, totalItems: 0)
-        }
-
-        do {
-            let explorationRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduleEntity")
-            explorationRequest.fetchLimit = 5
-
-            let sampleActivities = try coreDataService.context.fetch(explorationRequest)
-            print("ScheduleEntity 샘플 개수: \(sampleActivities.count)")
-
-            if sampleActivities.isEmpty {
-                print("일정이 없음. 0/0 반환")
-                return PlanCompletionData(completedItems: 0, totalItems: 0)
-            }
-
-            var dateAttributeName: String?
-            var completedAttributeName: String?
-
-            if let firstActivity = sampleActivities.first {
-                let entity = firstActivity.entity
-                let attributeNames = entity.attributesByName.keys.sorted()
-                print("ScheduleEntity 속성들: \(attributeNames)")
-
-                let possibleDateFields = ["date", "scheduledDate", "startDate", "createdAt", "dateTime"]
-                for dateField in possibleDateFields {
-                    if attributeNames.contains(dateField) {
-                        dateAttributeName = dateField
-                        print("날짜 속성 발견: \(dateField)")
-                        break
-                    }
-                }
-
-                let possibleCompletedFields = ["isCompleted", "completed", "isDone", "finished", "status"]
-                for completedField in possibleCompletedFields {
-                    if attributeNames.contains(completedField) {
-                        completedAttributeName = completedField
-                        print("완료 상태 속성 발견: \(completedField)")
-                        break
-                    }
-                }
-            }
-
-            var todayActivities: [NSManagedObject] = []
-
-            if let dateAttr = dateAttributeName {
-                let calendar = Calendar.current
-                let today = calendar.startOfDay(for: Date())
-                let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-
-                let todayRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduleEntity")
-                todayRequest.predicate = NSPredicate(
-                    format: "%K >= %@ AND %K < %@",
-                    dateAttr, today as NSDate,
-                    dateAttr, tomorrow as NSDate
-                )
-                todayRequest.sortDescriptors = [NSSortDescriptor(key: dateAttr, ascending: true)]
-
-                todayActivities = try coreDataService.context.fetch(todayRequest)
-                print("오늘 일정 개수: \(todayActivities.count)")
-            } else {
-                todayActivities = sampleActivities
-                print("전체 일정 개수: \(todayActivities.count)")
-            }
-
-            if todayActivities.isEmpty {
-                print("오늘 일정이 없음. 0/0 반환")
-                return PlanCompletionData(completedItems: 0, totalItems: 0)
-            }
-
-            let totalItems = todayActivities.count
-            var completedItems = 0
-
-            if let completedAttr = completedAttributeName {
-                for activity in todayActivities {
-                    if let isCompleted = activity.value(forKey: completedAttr) as? Bool, isCompleted {
-                        completedItems += 1
-                    } else if let status = activity.value(forKey: completedAttr) as? String,
-                              status.lowercased().contains("complete") || status.lowercased().contains("done") {
-                        completedItems += 1
-                    }
-                }
-                print("완료된 일정: \(completedItems)/\(totalItems)")
-            } else {
-                completedItems = 0
-                print("완료 상태 속성이 없음: 0/\(totalItems)")
-            }
-
-            if totalItems > 0 {
-                self.hasRealData = true
-            }
-
-            return PlanCompletionData(
-                completedItems: completedItems,
-                totalItems: totalItems
-            )
-
-        } catch {
-            print("플랜 데이터 로드 오류: \(error)")
-            return PlanCompletionData(completedItems: 0, totalItems: 0)
-        }
     }
 
     private func loadExerciseData() async -> ExerciseData {
@@ -373,88 +255,23 @@ class AnalyticsViewModel: ObservableObject {
         )
     }
 
-    private func loadMeditationData() async -> MeditationData {
-        print("명상 데이터 로드 시작")
-
-        let coreDataService = CoreDataService.shared
-        let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
-        let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
-
-        guard entityNames.contains("ScheduledActivity") else {
-            print("ScheduledActivity 엔터티가 없음. 기본 데이터 사용")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-
-        do {
-            let calendar = Calendar.current
-            let now = Date()
-            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
-
-            let weekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            weekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt <= %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                weekAgo as NSDate,
-                now as NSDate
-            )
-            weekRequest.sortDescriptors = [NSSortDescriptor(key: "completedAt", ascending: false)]
-
-            let weekActivities = try coreDataService.context.fetch(weekRequest)
-            let weeklyCount = weekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            print("이번 주 명상 횟수: \(weeklyCount)")
-
-            let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now)!
-            let previousWeekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            previousWeekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt < %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                twoWeeksAgo as NSDate,
-                weekAgo as NSDate
-            )
-
-            let previousWeekActivities = try coreDataService.context.fetch(previousWeekRequest)
-            let previousWeekCount = previousWeekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            let changeCount = weeklyCount - previousWeekCount
-            print("명상 변화량: \(changeCount)")
-
-            if weeklyCount > 0 {
-                self.hasRealData = true
-                print("실제 명상 데이터 발견")
-            }
-
-            return MeditationData(
-                weeklyCount: weeklyCount,
-                changeCount: changeCount
-            )
-
-        } catch {
-            print("명상 데이터 로드 오류: \(error)")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-    }
-
     private func generateAIInsight(
-        planCompletion: PlanCompletionData,
+//        planCompletion: PlanCompletionData,
         exercise: ExerciseData,
         sleep: SleepData,
-        meditation: MeditationData,
         hasRealData: Bool
     ) -> AIInsightData {
 
         print("AI 인사이트 생성 중...")
-        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
+//        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
         print("- 걸음수: \(exercise.averageSteps)")
         print("- 수면: \(sleep.averageHours)시간")
         print("- hasRealData: \(hasRealData)")
 
-        if planCompletion.totalItems == 0 {
-            print("일정이 없음 - 일정 추가 권유")
-            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
-        }
+//        if planCompletion.totalItems == 0 {
+//            print("일정이 없음 - 일정 추가 권유")
+//            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
+//        }
 
         if !hasRealData {
             print("실제 데이터 없음 - 대기 메시지")
@@ -463,19 +280,19 @@ class AnalyticsViewModel: ObservableObject {
 
         var insights: [String] = []
 
-        let completionRate = planCompletion.completionRate
-        if completionRate >= 0.8 {
-            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
-        } else if completionRate >= 0.5 {
-            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
-        } else if planCompletion.totalItems > 0 {
-            let remaining = planCompletion.totalItems - planCompletion.completedItems
-            if remaining == 1 {
-                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
-            } else {
-                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
-            }
-        }
+//        let completionRate = planCompletion.completionRate
+//        if completionRate >= 0.8 {
+//            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
+//        } else if completionRate >= 0.5 {
+//            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
+//        } else if planCompletion.totalItems > 0 {
+//            let remaining = planCompletion.totalItems - planCompletion.completedItems
+//            if remaining == 1 {
+//                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
+//            } else {
+//                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
+//            }
+//        }
 
         if exercise.averageSteps >= 10000 {
             insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 목표 달성!")
@@ -495,14 +312,6 @@ class AnalyticsViewModel: ObservableObject {
             insights.append("수면이 부족해 보여요. 오늘은 일찍 잠자리에 들어보세요")
         } else if sleep.averageHours > 9 {
             insights.append("충분히 잠을 잤네요. 활기찬 하루 되세요!")
-        }
-
-        if meditation.weeklyCount >= 5 {
-            insights.append("이번 주 \(meditation.weeklyCount)회 명상으로 마음이 평온해졌을 거예요")
-        } else if meditation.weeklyCount >= 3 {
-            insights.append("꾸준한 명상이 좋은 습관이 되고 있네요")
-        } else if meditation.weeklyCount > 0 {
-            insights.append("명상을 시작했네요! 꾸준히 이어가 보세요")
         }
 
         if exercise.stepsChange > 15 && sleep.sleepQuality >= 80 {
@@ -783,25 +592,25 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func getUserName() -> String {
-        let coreDataService = CoreDataService.shared
-
-        do {
-            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
-            userRequest.fetchLimit = 1
-
-            let users = try coreDataService.context.fetch(userRequest)
-
-            if let user = users.first,
-               let nickname = user.value(forKey: "nickname") as? String,
-               !nickname.isEmpty {
-                print("사용자 이름 발견: \(nickname)")
-                return nickname
-            }
-        } catch {
-            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
-        }
-
-        print("기본 사용자 이름 사용")
+//        let coreDataService = CoreDataService.shared
+//
+//        do {
+//            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
+//            userRequest.fetchLimit = 1
+//
+//            let users = try coreDataService.context.fetch(userRequest)
+//
+//            if let user = users.first,
+//               let nickname = user.value(forKey: "nickname") as? String,
+//               !nickname.isEmpty {
+//                print("사용자 이름 발견: \(nickname)")
+//                return nickname
+//            }
+//        } catch {
+//            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
+//        }
+//
+//        print("기본 사용자 이름 사용")
         return "사용자"
     }
 
@@ -809,13 +618,4 @@ class AnalyticsViewModel: ObservableObject {
         print("수동 새로고침 시작")
         await loadHealthData()
     }
-}
-
-@objc(ScheduledActivity)
-public class ScheduledActivity: NSManagedObject {
-    @NSManaged public var date: Date?
-    @NSManaged public var title: String?
-    @NSManaged public var category: String?
-    @NSManaged public var isCompleted: Bool
-    @NSManaged public var completedAt: Date?
 }
