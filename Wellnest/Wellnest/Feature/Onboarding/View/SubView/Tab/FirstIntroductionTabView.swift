@@ -15,6 +15,8 @@ struct FirstIntroductionTabView: View {
 
     var body: some View {
         VStack {
+            Spacer()
+
             VStack {
                 Text("Wellnest")
                     .font(isIPad ? .system(size: 65) : .system(size: 45))
@@ -27,14 +29,17 @@ struct FirstIntroductionTabView: View {
                     Text("AI 라이프스타일 플래너")
                 }
                 .font(isIPad ? .title2 : .body)
-                .padding(.bottom, 30)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .padding(.bottom, isIPad ? 50 : 30)
 
                 Image("firstIntro")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: isIPad ? 700 : 430)
+                    .frame(height: isIPad ? 400 : 300)
             }
-            .padding(.top, isIPad ? 180 : 70)
+
+            Spacer()
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Color(.systemBackground))

@@ -17,37 +17,40 @@ struct ThirdIntroductionTabView: View {
 
     var body: some View {
         VStack {
+            Spacer()
+
             VStack {
-                VStack {
-                    Text("당신의 하루,")
-                    HStack {
-                        Text("Wellnest")
-                            .foregroundColor(.wellnestOrange)
-                            .fontWeight(.bold)
-                            .rotationEffect(.degrees(isShaking ? -2 : 2), anchor: .bottom)
-                            .offset(x: isShaking ? -1.5 : 1.5)
-                            .onAppear {
-                                withAnimation(
-                                    .easeInOut(duration: 0.5)
-                                    .repeatForever(autoreverses: true)
-                                ) {
-                                    isShaking.toggle()
-                                }
+                Text("당신의 하루,")
+                HStack {
+                    Text("Wellnest")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.wellnestAccentPeach, .wellnestOrange],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .fontWeight(.bold)
+                        .rotationEffect(.degrees(isShaking ? -2 : 2), anchor: .bottom)
+                        .offset(x: isShaking ? -1.5 : 1.5)
+                        .onAppear {
+                            withAnimation(
+                                .easeInOut(duration: 0.5)
+                                .repeatForever(autoreverses: true)
+                            ) {
+                                isShaking.toggle()
                             }
+                        }
 
-                        Text("와 함께 ")
-                    }
-
-                    Text("시작해볼까요?")
+                    Text("와 함께 ")
                 }
-                .font(isIPad ? .system(size: 47) : .title)
 
-                Image("thirdIntro")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: isIPad ? 700 : 430)
+                Text("시작해볼까요?")
             }
-            .padding(.top, isIPad ? 180 : 70)
+            .font(isIPad ? .system(size: 42) : .title)
+            .fontWeight(.semibold)
+
+            Spacer()
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Color(.systemBackground))
