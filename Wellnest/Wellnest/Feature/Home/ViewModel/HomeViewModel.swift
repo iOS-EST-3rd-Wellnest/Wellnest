@@ -218,11 +218,11 @@ final class HomeViewModel: ObservableObject {
             let decodeHashtag = await hashtagAISevice.extractJSONFromResponse(hashtagResponse.content)
             let hashtagModel: ResponseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
 
-            guard let hashtag = hashtagModel, hashtag.category == RecommendCategory.hashtag.rawValue else { return ResponseArrayModel.hashtag.contents }
+            guard let hashtag = hashtagModel, hashtag.category == RecommendCategory.hashtag.rawValue else { return [] }
             return hashtag.contents
         } catch {
             print("해시태그 요청 실패:", error.localizedDescription)
-            return ["#\(userInfo?.ageRange ?? "")"]
+            return []
         }
     }
     
@@ -238,11 +238,11 @@ final class HomeViewModel: ObservableObject {
             let decodeGoal = await goalAISevice.extractJSONFromResponse(goalResponse.content)
             let goalModel: ResponseArrayModel? = decodeJSON(from: decodeGoal ?? "")
             
-            guard let goal = goalModel, goal.category == RecommendCategory.goal.rawValue else { return ResponseArrayModel.goal.contents }
+            guard let goal = goalModel, goal.category == RecommendCategory.goal.rawValue else { return [] }
             return goal.contents
         } catch {
             print("목표 요청 실패:", error.localizedDescription)
-            return ResponseArrayModel.goal.contents
+            return []
         }
     }
     
@@ -258,11 +258,11 @@ final class HomeViewModel: ObservableObject {
             let decodeQuoteOfTheDay = await quoteOfTheDayAISevice.extractJSONFromResponse(quoteOfTheDayResponse.content)
             let quoteOfTheDayModel: ResponseStringModel? = decodeJSON(from: decodeQuoteOfTheDay ?? "")
             
-            guard let quoteOfTheDay = quoteOfTheDayModel, quoteOfTheDay.category == RecommendCategory.quoteOfTheDay.rawValue else { return ResponseStringModel.quoteOfTheDay.content }
+            guard let quoteOfTheDay = quoteOfTheDayModel, quoteOfTheDay.category == RecommendCategory.quoteOfTheDay.rawValue else { return "" }
             return quoteOfTheDay.content
         } catch {
             print("오늘의 한마디 요청 실패:", error.localizedDescription)
-            return ResponseStringModel.quoteOfTheDay.content
+            return ""
         }
     }
     
@@ -280,11 +280,11 @@ final class HomeViewModel: ObservableObject {
             let decodeWeather = await weatherAISevice.extractJSONFromResponse(weatherResponse.content)
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             
-            guard let weather = weatherModel, weather.category == RecommendCategory.weather.rawValue else { return WeatherRecommendModel.weather }
+            guard let weather = weatherModel, weather.category == RecommendCategory.weather.rawValue else { return nil }
             return weather
         } catch {
             print("weather 요청 실패:", error.localizedDescription)
-            return WeatherRecommendModel.weather
+            return nil
         }
     }
     
@@ -300,8 +300,8 @@ final class HomeViewModel: ObservableObject {
             let decodeVideo = await videoAISevice.extractJSONFromResponse(videoResponse.content)
             let videoModel: ResponseStringModel? = decodeJSON(from: decodeVideo ?? "")
             
-            guard let video = videoModel, video.category == RecommendCategory.video.rawValue else { return VideoRecommendModel.videoList }
-            guard let items = try await fetchVideoList(keywords: video.content) else { return VideoRecommendModel.videoList }
+            guard let video = videoModel, video.category == RecommendCategory.video.rawValue else { return [] }
+            guard let items = try await fetchVideoList(keywords: video.content) else { return [] }
             
             let models = items.map {
                 VideoRecommendModel(
@@ -317,7 +317,7 @@ final class HomeViewModel: ObservableObject {
             return models
         } catch {
             print("동영상 불러오기 실패:", error.localizedDescription)
-            return VideoRecommendModel.videoList
+            return []
         }
     }
     

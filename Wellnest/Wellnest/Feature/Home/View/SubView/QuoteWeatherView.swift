@@ -24,12 +24,9 @@ struct QuoteWeatherView: View {
     }
     
     var body: some View {
-        VStack(spacing: Spacing.layout * 1.5) {
-            VStack(spacing: Spacing.layout) {
-                HStack {
-                    RecommendHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
-                        .frame(height: oneLineHeight, alignment: .leading)
-                }
+        VStack {
+            VStack(spacing: Spacing.content) {
+                RecommendHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
                 
                 if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
                     Text(quoteOfTheDay)
@@ -49,11 +46,8 @@ struct QuoteWeatherView: View {
             }
             .padding(.top, isDevicePad ? Spacing.layout * 2 : Spacing.layout)
             
-            VStack(spacing: Spacing.layout) {
-                HStack {
-                    RecommendHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
-                        .frame(height: oneLineHeight, alignment: .leading)
-                }
+            VStack(spacing: Spacing.content) {
+                RecommendHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
                 
                 if let weatherResponse = homeVM.weatherResponse {
                     VStack(alignment: .leading, spacing: Spacing.content) {

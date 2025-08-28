@@ -27,16 +27,13 @@ struct RecommendView: View {
     }
     
     var body: some View {
-        VStack(spacing: Spacing.layout) {
+        VStack {
             QuoteWeatherView(homeVM: homeVM)
                 .padding(.horizontal)
             
-            VStack(spacing: Spacing.layout) {
-                HStack {
-                    RecommendHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
-                        .frame(height: oneLineHeight)
+            VStack(spacing: Spacing.content) {
+                RecommendHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
                         .padding(.horizontal)
-                }
                 
                 if isDevicePad {
                     let columns = [GridItem(.flexible(), spacing: Spacing.layout * 2), GridItem(.flexible(), spacing: Spacing.layout * 2)]
@@ -44,7 +41,10 @@ struct RecommendView: View {
                     LazyVGrid(columns: columns, spacing: Spacing.layout * 2) {
                         VideoiPadCardView(homeVM: homeVM)
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .if(homeVM.videoList.isEmpty) {
+                        $0.padding(.top, Spacing.layout)
+                    }
                     
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -55,7 +55,7 @@ struct RecommendView: View {
                     }
                 }
             }
-            .padding(.top, Spacing.layout)
+            .padding(.top, Spacing.content)
         }
     }
 }

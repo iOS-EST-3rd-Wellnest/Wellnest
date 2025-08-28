@@ -59,16 +59,18 @@ struct TodayCardView: View {
                                     .font(isDevicePad ? .title2 : .title3)
                                     .fontWeight(.semibold)
                                     .padding(.vertical, Spacing.inline)
+                                    .padding(.bottom, Spacing.inline)
                                 
                                 ForEach(homeVM.goalList, id: \.self) {
                                     Text("\($0)")
-                                        .font(isDevicePad ? .headline : .subheadline)
+                                        .font(isDevicePad ? .body : .subheadline)
                                 }
                             }
                             .padding()
                             .padding(.top, isDevicePad ? Spacing.layout : 0)
                             .padding(.leading, isDevicePad ? Spacing.layout : 0)
                         }
+                        .dynamicTypeSize(.xSmall ... .xxxLarge)
                 }
                 
                 RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -112,6 +114,7 @@ struct TodayCardView: View {
                             }
                         }
                     }
+                    .dynamicTypeSize(.xSmall ... .xxxLarge)
                 
                 let  scheduleWidth: CGFloat = isDevicePad && isLandscape ? UIScreen.main.bounds.width / 2 - (Spacing.layout * 2) : UIScreen.main.bounds.width / 2 - (Spacing.layout * 2)
                 if isDevicePad {

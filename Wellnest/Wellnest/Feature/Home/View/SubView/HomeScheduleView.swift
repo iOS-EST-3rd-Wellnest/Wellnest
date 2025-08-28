@@ -23,7 +23,7 @@ struct HomeScheduleView: View {
             ForEach(isCompleteSchedules) { schedule in
                     ScheduleCardView(manualScheduleVM: manualScheduleVM, schedule: schedule, scheduleWidth: scheduleWidth)
                         .environmentObject(swipe)
-                        .padding(.vertical, Spacing.content)
+                        .padding(.vertical, Spacing.inline)
             }
         }
     }

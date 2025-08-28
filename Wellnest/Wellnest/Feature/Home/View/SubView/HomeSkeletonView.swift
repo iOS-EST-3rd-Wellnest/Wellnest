@@ -26,12 +26,11 @@ struct RecommendHeaderView: View {
             if isLoading {
                 SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                     .frame(width: 150, height: height, alignment: .topLeading)
-                    .roundedBorder(cornerRadius: CornerRadius.large)
+                    .roundedBorder(cornerRadius: CornerRadius.medium)
             } else {
                 Text(title)
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .frame(height: height, alignment: .topLeading)
             }
             
             Spacer()
@@ -64,8 +63,8 @@ struct VideoiPhoneSkeletonView: View {
             
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .frame(width: titleWidth, height: twoLineHeight - 10, alignment: .topLeading)
+                .roundedBorder(cornerRadius: CornerRadius.medium)
                 .padding(.vertical, Spacing.inline)
-                .roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }
@@ -84,9 +83,9 @@ struct VideoiPadSkeletonView: View {
             
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .frame(maxWidth: titleWidth, maxHeight: twoLineHeight - 10, alignment: .topLeading)
+                .roundedBorder(cornerRadius: CornerRadius.medium)
                 .padding(.vertical, Spacing.inline)
                 .padding(.trailing, Spacing.layout * 8)
-                .roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }

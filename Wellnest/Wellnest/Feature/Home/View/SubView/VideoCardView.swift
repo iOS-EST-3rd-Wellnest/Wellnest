@@ -79,7 +79,7 @@ struct VideoiPadCardView: View {
     private var twoLineHeight: CGFloat {
         let base = UIFont.preferredFont(forTextStyle: .callout)
         let scaled = UIFontMetrics(forTextStyle: .callout).scaledFont(for: base)
-        return ceil(scaled.lineHeight * 2)
+        return ceil(scaled.lineHeight * 2.5)
     }
 
     var body: some View {
@@ -88,11 +88,8 @@ struct VideoiPadCardView: View {
         Group {
             if isLoading {
                 ForEach(0 ..< placeholderCount, id: \.self) { _ in
-                    VideoiPadSkeletonView(
-                        thumbWidth: .infinity,
-                        titleWidth: .infinity,
-                        twoLineHeight: twoLineHeight,
-                    )
+                    VideoiPadSkeletonView(thumbWidth: .infinity, titleWidth: .infinity, twoLineHeight: twoLineHeight)
+                        .padding(.bottom)
                 }
             } else {
                 ForEach(homeVM.videoList) { video in
