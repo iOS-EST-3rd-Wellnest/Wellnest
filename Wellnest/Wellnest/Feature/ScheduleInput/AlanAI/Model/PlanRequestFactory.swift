@@ -61,7 +61,15 @@ struct PlanRequestFactory {
             userGoal: "온보딩에서 설정한 목표",
             timeframe: timeframe,
             preferences: Array(selectedPreferences),
-            selectedWeekdays: selectedWeekdays
+            selectedWeekdays: selectedWeekdays,
+            routineStartTime: routineStartTime,
+            routineEndTime: routineEndTime,
+            singleStartTime: singleStartTime,
+            singleEndTime: singleEndTime,
+            multipleStartTime: multipleStartTime,
+            multipleEndTime: multipleEndTime,
+            multipleStartDate: multipleStartDate,
+            multipleEndDate: multipleEndDate
         )
     }
 }

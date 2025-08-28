@@ -237,25 +237,61 @@ final class AIScheduleViewModel: ObservableObject {
             return (startDateTime, endDateTime)
 
         case .multiple:
-            // 여러 일정을 날짜별로 분산
-            let dayOffset = scheduleIndex % Int(multipleEndDate.timeIntervalSince(multipleStartDate) / (24 * 3600)) + 1
-            let targetDate = calendar.date(byAdding: .day, value: dayOffset - 1, to: multipleStartDate) ?? multipleStartDate
-
-            let startDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: multipleStartTime),
-                minute: calendar.component(.minute, from: multipleStartTime),
-                second: 0,
-                of: targetDate
-            ) ?? targetDate
-
-            let endDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: multipleEndTime),
-                minute: calendar.component(.minute, from: multipleEndTime),
-                second: 0,
-                of: targetDate
-            ) ?? targetDate.addingTimeInterval(3600)
-
-            return (startDateTime, endDateTime)
+            // 여러 일정을 날짜 범위에 분배
+            let totalDays = Int(multipleEndDate.timeIntervalSince(multipleStartDate) / (24 * 3600)) + 1
+            
+            if totalDays == 1 {
+                // 같은 날이면 시간대별로 분배
+                let totalMinutes = Int(multipleEndTime.timeIntervalSince(multipleStartTime) / 60)
+                let minutesPerSchedule = max(30, totalMinutes / totalSchedules)
+                
+                let timeOffset = minutesPerSchedule * scheduleIndex
+                let adjustedStartTime = calendar.date(byAdding: .minute, value: timeOffset, to: multipleStartTime) ?? multipleStartTime
+                let adjustedEndTime = calendar.date(byAdding: .minute, value: minutesPerSchedule, to: adjustedStartTime) ?? adjustedStartTime
+                
+                let startDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: adjustedStartTime),
+                    minute: calendar.component(.minute, from: adjustedStartTime),
+                    second: 0,
+                    of: multipleStartDate
+                ) ?? multipleStartDate
+                
+                let endDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: adjustedEndTime),
+                    minute: calendar.component(.minute, from: adjustedEndTime),
+                    second: 0,
+                    of: multipleStartDate
+                ) ?? multipleStartDate.addingTimeInterval(3600)
+                
+                return (startDateTime, endDateTime)
+            } else {
+                // 다른 날이면 모든 일정을 시작날짜에 배치하되 시간대별로 분배
+                let targetDate = multipleStartDate
+                
+                // 시간대별로 분배 로직 추가
+                let totalMinutes = Int(multipleEndTime.timeIntervalSince(multipleStartTime) / 60)
+                let minutesPerSchedule = max(30, totalMinutes / totalSchedules)
+                
+                let timeOffset = minutesPerSchedule * scheduleIndex
+                let adjustedStartTime = calendar.date(byAdding: .minute, value: timeOffset, to: multipleStartTime) ?? multipleStartTime
+                let adjustedEndTime = calendar.date(byAdding: .minute, value: minutesPerSchedule, to: adjustedStartTime) ?? adjustedStartTime
+                
+                let startDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: adjustedStartTime),
+                    minute: calendar.component(.minute, from: adjustedStartTime),
+                    second: 0,
+                    of: targetDate
+                ) ?? targetDate
+                
+                let endDateTime = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: adjustedEndTime),
+                    minute: calendar.component(.minute, from: adjustedEndTime),
+                    second: 0,
+                    of: targetDate
+                ) ?? targetDate.addingTimeInterval(3600)
+                
+                return (startDateTime, endDateTime)
+            }
 
         case .routine:
             // 루틴의 경우: AI 응답의 실제 요일과 시간을 사용
@@ -469,7 +505,7 @@ final class AIScheduleViewModel: ObservableObject {
 
                 newSchedule.isAllDay = false
                 newSchedule.isCompleted = false
-                newSchedule.repeatRule = plan.planType == "multiple" ? "매일" : nil
+                newSchedule.repeatRule = nil
                 newSchedule.hasRepeatEndDate = false
                 newSchedule.repeatEndDate = nil
                 newSchedule.alarm = nil
@@ -508,6 +544,9 @@ final class AIScheduleViewModel: ObservableObject {
             return
         }
         
+        // 같은 루틴 시리즈에 대한 공통 seriesId 생성
+        let seriesId = UUID()
+        
         // 루틴 시작일부터 종료일까지 해당 요일의 모든 날짜 찾기
         var currentDate = routineStartDate
         var instanceCount = 0
@@ -531,24 +570,28 @@ final class AIScheduleViewModel: ObservableObject {
                 newSchedule.endDate = endDateTime
                 newSchedule.isAllDay = false
                 newSchedule.isCompleted = false
-                newSchedule.repeatRule = nil // 개별 인스턴스이므로 반복 규칙 없음
-                newSchedule.hasRepeatEndDate = false
-                newSchedule.repeatEndDate = nil
+                newSchedule.repeatRule = "매주" // 루틴임을 표시
+                newSchedule.hasRepeatEndDate = true
+                newSchedule.repeatEndDate = routineEndDate
                 newSchedule.alarm = nil
                 newSchedule.scheduleType = "ai_generated"
                 newSchedule.createdAt = Date()
                 newSchedule.updatedAt = Date()
                 newSchedule.eventIdentifier = nil
                 
+                // 중요: seriesId와 occurrenceIndex 설정
+                newSchedule.seriesId = seriesId
+                newSchedule.occurrenceIndex = Int64(instanceCount)
+                
                 instanceCount += 1
-                print("루틴 인스턴스 \(instanceCount) 생성: \(scheduleItem.activity) - \(startDateTime)")
+                print("루틴 인스턴스 \(instanceCount) 생성: \(scheduleItem.activity) - \(startDateTime) (seriesId: \(seriesId))")
             }
             
             // 다음 날로 이동
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
         }
         
-        print("✅ 루틴 '\(scheduleItem.activity)' 총 \(instanceCount)개 인스턴스 생성 완료")
+        print("✅ 루틴 '\(scheduleItem.activity)' 총 \(instanceCount)개 인스턴스 생성 완료 (seriesId: \(seriesId))")
     }
     
 

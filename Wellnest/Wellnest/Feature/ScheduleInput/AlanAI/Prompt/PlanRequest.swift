@@ -13,6 +13,16 @@ struct PlanRequest {
     let timeframe: String?
     let preferences: [String]
     let selectedWeekdays: Set<Int> // 추가된 필드
+    
+    // 시간 정보 추가
+    let routineStartTime: Date?
+    let routineEndTime: Date?
+    let singleStartTime: Date?
+    let singleEndTime: Date?
+    let multipleStartTime: Date?
+    let multipleEndTime: Date?
+    let multipleStartDate: Date?
+    let multipleEndDate: Date?
 
     func toPrompt(userProfile: UserProfile) -> String {
         // Core Data에서 최신 사용자 정보 가져오기
