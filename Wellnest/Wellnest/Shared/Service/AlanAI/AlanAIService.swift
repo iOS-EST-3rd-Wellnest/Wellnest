@@ -30,7 +30,6 @@ final class AlanAIService: ObservableObject {
     }
 
     func requestString(prompt: String) async throws -> String {
-        // UI 상태 업데이트는 메인 스레드에서
         await MainActor.run {
             isLoading = true
             resetState()
@@ -44,7 +43,6 @@ final class AlanAIService: ObservableObject {
         }
 
         do {
-            // 네트워크 작업은 백그라운드에서 실행
             let content = try await networkManager.requestString(
                 url: "https://kdt-api-function.azurewebsites.net/api/v1/question",
                 parameters: [
@@ -53,7 +51,6 @@ final class AlanAIService: ObservableObject {
                 ]
             )
 
-            // UI 상태 업데이트는 메인 스레드에서
             await MainActor.run {
                 isLoading = false
                 rawResponse = content
