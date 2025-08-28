@@ -1,5 +1,5 @@
 //
-//  CalendarLayoutView.swift
+//  CalendarMonthView.swift
 //  Wellnest
 //
 //  Created by 박동언 on 8/5/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CalendarLayoutView: View {
+struct CalendarMonthView: View {
     @ObservedObject var planVM: PlanViewModel
     let calendar = Calendar.current
 
@@ -27,7 +27,7 @@ struct CalendarLayoutView: View {
         let isSelected = isCurrentMonth && isSameDay
         let isToday = date.isToday
 
-        let scheduleItems = planVM.scheduleStore.scheduleItems(for: date)
+        let scheduleItems = planVM.items(for: date)
         let scheduleCount = scheduleItems.count
 
         VStack(spacing: 6) {
@@ -76,5 +76,5 @@ struct CalendarLayoutView: View {
 }
 
 #Preview {
-    CalendarLayoutView(planVM: PlanViewModel(), month: Date().startOfMonth)
+    CalendarMonthView(planVM: PlanViewModel(), month: Date().startOfMonth)
 }
