@@ -38,7 +38,7 @@ struct CalendarPagingView: View {
 
             TabView(selection: $selection) {
                 ForEach(pages.indices, id: \.self) { idx in
-                    CalendarLayoutView(planVM: planVM, month: pages[idx])
+                    CalendarMonthView(planVM: planVM, month: pages[idx])
                         .padding(.horizontal)
                         .tag(idx)
                         .onDisappear {
@@ -79,7 +79,7 @@ struct CalendarPagingView: View {
 
                 if isJumping { return }
 
-                planVM.updateVisibleMonthOnly(pages[new])
+                planVM.recenterVisibleMonth(to: pages[new])
 
                 if new == 5 {
                     planVM.stagePrefetch(direction: +1)

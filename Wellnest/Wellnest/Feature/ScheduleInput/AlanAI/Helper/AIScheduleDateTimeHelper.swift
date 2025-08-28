@@ -103,7 +103,7 @@ struct AIScheduleDateTimeHelper {
         let currentWeekday = calendar.component(.weekday, from: today)
         var daysToAdd = targetWeekday - currentWeekday
         
-        if daysToAdd <= 0 {
+        if daysToAdd < 0 {
             daysToAdd += 7
         }
         

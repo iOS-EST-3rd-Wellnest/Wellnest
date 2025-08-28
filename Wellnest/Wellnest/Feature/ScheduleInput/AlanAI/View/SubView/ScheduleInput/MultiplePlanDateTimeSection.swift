@@ -14,8 +14,6 @@ struct MultiplePlanDateTimeSection: View {
     @Binding var multipleEndTime: Date
     let onStartTimeChange: (Date) -> Void
 
-    @State private var isStartDateOpen = false
-    @State private var isEndDateOpen = false
     @State private var isStartTimeOpen = false
     @State private var isEndTimeOpen = false
 
@@ -29,16 +27,22 @@ struct MultiplePlanDateTimeSection: View {
                 DatePickerView(text: "시작", date: $multipleStartTime, isAllDay: .constant(false), isPresented: $isStartTimeOpen)
                     .onChange(of: multipleStartTime) { newValue in
                         onStartTimeChange(newValue)
+                        // 시작 날짜/시간에서 날짜 추출해서 multipleStartDate에 설정
+                        let calendar = Calendar.current
+                        multipleStartDate = calendar.startOfDay(for: newValue)
                     }
                     .onChange(of: isStartTimeOpen) { newValue in
                         if newValue {
-                            isStartDateOpen = false
-                            isEndDateOpen = false
                             isEndTimeOpen = false
                         }
                     }
 
                 DatePickerView(text: "종료", date: $multipleEndTime, isAllDay: .constant(false), isPresented: $isEndTimeOpen)
+                    .onChange(of: multipleEndTime) { newValue in
+                        // 종료 날짜/시간에서 날짜 추출해서 multipleEndDate에 설정
+                        let calendar = Calendar.current
+                        multipleEndDate = calendar.startOfDay(for: newValue)
+                    }
                     .onChangeWithOldValue(of: multipleEndTime) { oldValue, newValue in
                         if newValue.timeIntervalSince(multipleStartTime) < 0 {
                             multipleEndTime = oldValue
@@ -46,8 +50,6 @@ struct MultiplePlanDateTimeSection: View {
                     }
                     .onChange(of: isEndTimeOpen) { newValue in
                         if newValue {
-                            isStartDateOpen = false
-                            isEndDateOpen = false
                             isStartTimeOpen = false
                         }
                     }
