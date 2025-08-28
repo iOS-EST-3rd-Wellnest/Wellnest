@@ -68,10 +68,8 @@ final class ScheduleEditorViewModel: ObservableObject {
     }
 
     var isEditMode: Bool {
-        switch mode {
-        case .create: return false
-        case .edit: return true
-        }
+        guard case let .edit(id) = mode else { return false }
+        return true
     }
 
     func updateColorName(_ name: String) {
