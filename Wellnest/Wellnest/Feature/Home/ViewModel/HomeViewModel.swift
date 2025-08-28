@@ -11,7 +11,6 @@ import SwiftUI
 final class HomeViewModel: ObservableObject {
     @Published var userInfo: UserEntity?
     @Published var dailySummaryInfo: DailySummaryEntity?
-
     @Published var goalList = [String]()
     @Published var hashtagList = [String]()
     @Published var quoteOfTheDay: String?
@@ -26,14 +25,21 @@ final class HomeViewModel: ObservableObject {
     // 프리패치 작업 취소를 위해 핸들 보관
     private var prefetchTasks = [Task<Void, Never>]()
     
+    func fetchUserInfo() {
+        // 사용자 정보 조회
+        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
+            self.userInfo = result
+        }
+    }
+    
     // MARK: - DailySummaryEntity 조회/생성/수정
     /// DailySummaryEntity를 조회하여 Alan을 활용한 컨텐츠 데이터 세팅
     @MainActor
     func fetchDailySummary() async {
         // 사용자 정보 조회
-        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
-            self.userInfo = result
-        }
+//        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
+//            self.userInfo = result
+//        }
         
         // 오늘 엔티티 확보(없으면 생성, 있으면 재사용)
         let entity = ensureTodayEntity()
@@ -65,7 +71,8 @@ final class HomeViewModel: ObservableObject {
             
             // 2) 날씨 기반 컨텐츠 생성 (요청당 프록시 생성)
             let aiService = AIServiceProxy()
-            let res = try await aiService.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
+            let weatherPrompt =  prompt.weatherPrompt(entity: userInfo, currentWeather: current, category: RecommendCategory.weather.rawValue)
+            let res = try await aiService.request(prompt: weatherPrompt)
             guard let json = await aiService.extractJSONFromResponse(res.content),
                   let model: WeatherRecommendModel = decodeJSON(from: json) else { return }
             
@@ -78,7 +85,6 @@ final class HomeViewModel: ObservableObject {
             print("refreshWeatherContenty 실패:", error.localizedDescription)
         }
     }
-    
     
     /// entity 데이터  조회 및 생성
     /// 기존 entity 데이터 조회 후 없으면 생성
@@ -95,7 +101,6 @@ final class HomeViewModel: ObservableObject {
             return entity
         }
     }
-    
     
     /// 컨텐츠 개별 fetch 및 저장
     /// - Parameters:
@@ -206,12 +211,15 @@ final class HomeViewModel: ObservableObject {
     private func fetchHashtag() async -> [String] {
         do {
             guard let userInfo else { return [] }
-            let hashtagAISevice = AIServiceProxy()
-            let hashtagResponse = try await hashtagAISevice.request(prompt: prompt.hashtagPrompt(entity: userInfo))
-            let decodeHashtag = await hashtagAISevice.extractJSONFromResponse(hashtagResponse.content)
-            let hashtagModel: RespnseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
 
-            return hashtagModel?.contents ?? []
+            let hashtagAISevice = AIServiceProxy()
+            let hashtagPrompt = prompt.hashtagPrompt(entity: userInfo, category: RecommendCategory.hashtag.rawValue)
+            let hashtagResponse = try await hashtagAISevice.request(prompt: hashtagPrompt)
+            let decodeHashtag = await hashtagAISevice.extractJSONFromResponse(hashtagResponse.content)
+            let hashtagModel: ResponseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
+
+            guard let hashtag = hashtagModel, hashtag.category == RecommendCategory.hashtag.rawValue else { return [] }
+            return hashtag.contents
         } catch {
             print("해시태그 요청 실패:", error.localizedDescription)
             return []
@@ -223,12 +231,15 @@ final class HomeViewModel: ObservableObject {
     private func fetchGoals() async -> [String] {
         do {
             guard let userInfo else { return [] }
-            let goalAISevice = AIServiceProxy()
-            let goalResponse = try await goalAISevice.request(prompt: prompt.goalPrompt(entity: userInfo))
-            let decodeGoal = await goalAISevice.extractJSONFromResponse(goalResponse.content)
-            let goalModel: RespnseArrayModel? = decodeJSON(from: decodeGoal ?? "")
             
-            return goalModel?.contents ?? []
+            let goalAISevice = AIServiceProxy()
+            let goalPrompt = prompt.goalPrompt(entity: userInfo, category: RecommendCategory.goal.rawValue)
+            let goalResponse = try await goalAISevice.request(prompt: goalPrompt)
+            let decodeGoal = await goalAISevice.extractJSONFromResponse(goalResponse.content)
+            let goalModel: ResponseArrayModel? = decodeJSON(from: decodeGoal ?? "")
+            
+            guard let goal = goalModel, goal.category == RecommendCategory.goal.rawValue else { return [] }
+            return goal.contents
         } catch {
             print("목표 요청 실패:", error.localizedDescription)
             return []
@@ -240,10 +251,15 @@ final class HomeViewModel: ObservableObject {
     private func fetchQuoteOfTheDay() async -> String {
         do {
             guard let userInfo else { return "" }
+            
             let quoteOfTheDayAISevice = AIServiceProxy()
-            let quoteOfTheDayResponse = try await quoteOfTheDayAISevice.request(prompt: prompt.quoteOfTheDayPrompt(entity: userInfo))
-
-            return quoteOfTheDayResponse.content
+            let quoteOfTheDayPrompt = prompt.quoteOfTheDayPrompt(entity: userInfo, category: RecommendCategory.quoteOfTheDay.rawValue)
+            let quoteOfTheDayResponse = try await quoteOfTheDayAISevice.request(prompt: quoteOfTheDayPrompt)
+            let decodeQuoteOfTheDay = await quoteOfTheDayAISevice.extractJSONFromResponse(quoteOfTheDayResponse.content)
+            let quoteOfTheDayModel: ResponseStringModel? = decodeJSON(from: decodeQuoteOfTheDay ?? "")
+            
+            guard let quoteOfTheDay = quoteOfTheDayModel, quoteOfTheDay.category == RecommendCategory.quoteOfTheDay.rawValue else { return "" }
+            return quoteOfTheDay.content
         } catch {
             print("오늘의 한마디 요청 실패:", error.localizedDescription)
             return ""
@@ -259,11 +275,13 @@ final class HomeViewModel: ObservableObject {
             guard let userInfo, let current = forecast.first  else { return nil }
             
             let weatherAISevice = AIServiceProxy()
-            let weatherResponse = try await weatherAISevice.request(prompt: prompt.weatherPrompt(entity: userInfo, currentWeather: current))
+            let weatherPrompt =  prompt.weatherPrompt(entity: userInfo, currentWeather: current, category: RecommendCategory.weather.rawValue)
+            let weatherResponse = try await weatherAISevice.request(prompt:weatherPrompt)
             let decodeWeather = await weatherAISevice.extractJSONFromResponse(weatherResponse.content)
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             
-            return weatherModel
+            guard let weather = weatherModel, weather.category == RecommendCategory.weather.rawValue else { return nil }
+            return weather
         } catch {
             print("weather 요청 실패:", error.localizedDescription)
             return nil
@@ -276,10 +294,14 @@ final class HomeViewModel: ObservableObject {
         do {
             guard let userInfo else { return [] }
             
-            let aiSevice = AIServiceProxy()
-            let videoResponse = try await aiSevice.request(prompt: prompt.videoPrompt(entity: userInfo))
-
-            guard let items = try await fetchVideoList(keywords: videoResponse.content) else { return [] }
+            let videoAISevice = AIServiceProxy()
+            let videoPrompt = prompt.videoPrompt(entity: userInfo, category: RecommendCategory.video.rawValue)
+            let videoResponse = try await videoAISevice.request(prompt: videoPrompt)
+            let decodeVideo = await videoAISevice.extractJSONFromResponse(videoResponse.content)
+            let videoModel: ResponseStringModel? = decodeJSON(from: decodeVideo ?? "")
+            
+            guard let video = videoModel, video.category == RecommendCategory.video.rawValue else { return [] }
+            guard let items = try await fetchVideoList(keywords: video.content) else { return [] }
             
             let models = items.map {
                 VideoRecommendModel(
@@ -314,9 +336,9 @@ final class HomeViewModel: ObservableObject {
             key = ""
             print("YOUTUBE_KEY를 Secrets.plist에서 찾을 수 없습니다.")
         }
-
+        
         guard let keywords else { return nil }
-        let url = "https://www.googleapis.com/youtube/v3/search?part=snippet&relevanceLanguage=ko&type=video&videoEmbeddable=true&videoDuration=medium&key=\(key)&q=\(keywords)"
+        let url = "https://www.googleapis.com/youtube/v3/search?part=snippet&relevanceLanguage=ko&type=video&videoEmbeddable=true&videoDuration=medium&maxResults=10&key=\(key)&q=\(keywords)"
         
         do {
             let videoModel: VideoModel = try await NetworkManager.shared.request(url: url)

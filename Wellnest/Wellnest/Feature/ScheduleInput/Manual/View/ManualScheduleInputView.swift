@@ -20,8 +20,11 @@ struct ManualScheduleInputView: View {
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
-    @State private var showDeleteConfirmationSheet = false
-    @State private var showAlert = false
+    @State private var showOnlySeriesItemEditMenu = false
+    @State private var isChangedRepeatRule = false
+    @State private var showMenu = false
+    @State private var showDeleteAlert = false
+    @State private var showDeleteSeriesAlert = false
 
     init(
         mode: EditorMode,
@@ -58,11 +61,19 @@ struct ManualScheduleInputView: View {
                             showDetail: viewModel.form.selectedRepeatRule != nil,
                             onTagTap: { _ in isKeyboardVisible = false }
                         ) {
-                            EndDateSelectorView(mode: $viewModel.form.repeatEndMode, endDate: $viewModel.form.repeatEndDate)
+                            EndDateSelectorView(
+                                mode: $viewModel.form.repeatEndMode,
+                                endDate: $viewModel.form.repeatEndDate
+                            )
                         }
                         .padding(.bottom, 5)
                         .onChange(of: viewModel.form.isRepeated) { newValue in
                             isKeyboardVisible = false
+                        }
+                        .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
+                            if viewModel.isEditMode && viewModel.form.isRepeated {
+                                isChangedRepeatRule = true
+                            }
                         }
                         TagToggleSection(
                             title: "알람",
@@ -104,6 +115,9 @@ struct ManualScheduleInputView: View {
                 .padding(.bottom, 30)
                 .task {
                     await viewModel.loadIfNeeded()
+                    if viewModel.isEditMode {
+                        isKeyboardVisible = false
+                    }
                 }
                 .onAppear {
                     if selectedTab == .plan {
@@ -114,6 +128,8 @@ struct ManualScheduleInputView: View {
                     } else {
                         viewModel.setDefaultDate(for: Date())
                     }
+
+
                 }
                 .onDisappear {
                     isKeyboardVisible = false
@@ -153,21 +169,107 @@ struct ManualScheduleInputView: View {
                     )
                     .frame(height: 28)
 
-                    // 버튼
-                    FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
-                        Task {
-                            try await viewModel.saveSchedule()
+                    ZStack(alignment: .bottom) {
+                        // 버튼
+                        FilledButton(title: viewModel.primaryButtonTitle,
+                                     disabled: viewModel.form.isTextEmpty) {
+                            // 편집 모드일 때
+                            if viewModel.isEditMode {
+
+                                // 반복 아이탬일 경우
+                                if viewModel.form.isRepeated {
+                                    withAnimation {
+                                        // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                        showOnlySeriesItemEditMenu.toggle()
+                                    }
+                                }
+                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
+                                else if isChangedRepeatRule {
+                                    // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                    withAnimation {
+                                        showOnlySeriesItemEditMenu.toggle()
+                                    }
+                                }
+                                // 반복 아이탬이 아니며, 수정된 내용이 반복 규칙이 아닌 경우
+                                else {
+                                    Task {
+                                        // 단순 스케줄 업데이트
+                                        try await viewModel.saveSchedule()
+                                        isKeyboardVisible = false
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        dismiss()
+
+                                    }
+                                }
+                            } else {
+                                Task {
+                                    try await viewModel.saveSchedule()
+                                    isKeyboardVisible = false
+                                    selectedTab = .plan
+                                    selectedCreationType = nil
+                                    dismiss()
+
+                                }
+                            }
                         }
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                        .background(colorScheme == .dark
+                                    ? Color.black.ignoresSafeArea(edges: .bottom)
+                                    : Color.white.ignoresSafeArea(edges: .bottom))
+
+                        if showOnlySeriesItemEditMenu {
+                            VStack(spacing: 0) {
+                                Section(header:
+                                    Text("반복되는 이벤트입니다.")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                        .padding(.vertical, 6)
+
+                                ) {
+                                    Divider()
+
+                                    Button("이후 이벤트에 대해 저장") {
+                                        // 반복 이벤트로 바뀜
+                                        if isChangedRepeatRule {
+                                            Task {
+                                                try await viewModel.updateRepeatRule()
+                                            }
+                                        } else {
+                                            // 반복 이벤트에 대해서 전부 수정
+                                            Task {
+                                                try await viewModel.updateRepeatSeries()
+                                            }
+                                        }
+                                        showOnlySeriesItemEditMenu = false
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        isKeyboardVisible = false
+                                        dismiss()
+
+                                    }
+                                    .padding()
+                                }
+                            }
+                            .foregroundColor(.black)
+                            .background(RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemBackground)))
+                            .shadow(radius: 0.5)
+                            .frame(width: 200)
+                            .offset(y: -70)
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.9, anchor: .bottom).combined(with: .opacity),
+                                removal:   .opacity
+                            ))
+                        }
                     }
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity)
-                    .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
+                    .animation(.spring(response: 0.22, dampingFraction: 0.85), value: showMenu)
+
                 }
             }
             .padding(.bottom, 8)
+
 
         }
     }
@@ -229,13 +331,11 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     private var closeTapBarButton: some View {
         Button {
+            isKeyboardVisible = false
             selectedCreationType = nil
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 15, height: 15)
                 .foregroundColor(.wellnestOrange)
         }
     }
@@ -243,49 +343,89 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     private var deleteRepeatScheduleTapBarButton: some View {
         Menu {
-            Section("반복 이벤트 삭제 옵션") {
+            Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
-                    Task {
-                        try await viewModel.delete()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteAlert = true
+                    isKeyboardVisible = false
+
                 }
+
                 Button("이후 모든 이벤트 삭제") {
-                    Task {
-                        try await viewModel.deleteFollowingInSeries()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteSeriesAlert = true
+                    isKeyboardVisible = false
+
                 }
             }
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
+        }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteSeriesAlert = false
+                isKeyboardVisible = false
+
+
+                Task {
+                    try await viewModel.deleteFollowingInSeries()
+                    isKeyboardVisible = false
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+                isKeyboardVisible = false
+
+
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    isKeyboardVisible = false
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
         }
     }
 
     @ViewBuilder
     var deleteTapBarButton: some View {
         Button {
-            Task {
-                try await viewModel.delete()
-                selectedTab = .plan
-                selectedCreationType = nil
-                dismiss()
-            }
+            showDeleteAlert = true
+            isKeyboardVisible = false
+
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
         }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+                isKeyboardVisible = false
+
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    isKeyboardVisible = false
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
+
     }
 
 }
@@ -296,6 +436,7 @@ extension ManualScheduleInputView {
         Task {
             let id = try await viewModel.saveSchedule()
         }
+        isKeyboardVisible = false
         selectedTab = .plan
         selectedCreationType = nil
         dismiss()

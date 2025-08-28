@@ -7,17 +7,19 @@
 import SwiftUI
 
 struct ScheduleCardView: View {
-    @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @EnvironmentObject var swipe: SwipeCoordinator
-    
+    @EnvironmentObject var analyticsVM: AnalyticsViewModel
+    @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
-    
     @State private var isCompleted = false
     @State private var completedOffset: CGFloat = 0
     
     let schedule: ScheduleItem
-    let maxSwipeDistance: CGFloat = 27
+    let scheduleWidth: CGFloat
+    
+    let maxSwipeDistance: CGFloat = 30
+    let isDevice = UIDevice.current.userInterfaceIdiom == .pad
     
     private let calManager = CalendarManager.shared
     
@@ -32,134 +34,129 @@ struct ScheduleCardView: View {
         return currentOffset
     }
     
+    private var  currentWidth: CGFloat {
+        isDevice ? scheduleWidth : UIScreen.main.bounds.width - (Spacing.layout * 2)
+    }
+    
+    private var reveal: CGFloat { abs(currentOffset) }
+    
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                HStack(spacing: 0) {
-                    if currentOffset > 0 {
-                        Button {
-                            withAnimation(.easeIn(duration: 0.3)) {
-                                isDeleting = false
-                                isCompleted = true
-                                completedOffset = geo.size.width + 30
-                                swipe.offSwipe()
-                            }
-                            
-                            Task {
-                                // 애니메이션 효과 이후 업데이트를 위한 sleep
-                                try? await Task.sleep(for: .milliseconds(300))
-                                await MainActor.run {
-                                    withAnimation(.easeInOut) {
-                                        manualScheduleVM.updateCompleted(item: schedule)
-                                    }
-                                }
-                            }
-                            
-                        } label: {
-                            Image(systemName: "checkmark")
-                                .frame(width: 45, height: 70)
-                                .foregroundStyle(.black)
-                        }
-                        .background(
-                            Capsule()
-                                .fill(Color(.systemGray6))
-                        )
-                        
-                        Spacer()
-                    } else if currentOffset < 0 {
-                        Spacer()
-                        
-                        Button {
-                            withAnimation(.easeIn(duration: 0.3)) {
-                                isDeleting = true
-                                isCompleted = false
-                                deleteOffset = -geo.size.width - 30
-                                swipe.offSwipe()
-                            }
-                            
-                            performDeleteFlow()
-                        } label: {
-                            Image(systemName: "trash.fill")
-                                .foregroundColor(.white)
-                                .frame(width: 45, height: 70)
-                        }
-                        .background(
-                            Capsule()
-                                .fill(.red)
-                        )
-                    }
-                }
-                .disabled(isDeleting || isCompleted)
-                
-                ScheduleItemView(schedule: schedule)
-                    .frame(width: geo.size.width - abs(currentOffset) - (currentOffset == 0 ? 0 : Spacing.layout * 1.7))
-                    .offset(x: animationOffset)
-                    .gesture(
-                        DragGesture(minimumDistance: 30)
-                            .onChanged { value in
-                                let horizontal = value.translation.width
-                                let vertical = value.translation.height
-                                
-                                guard abs(horizontal) > abs(vertical) else { return }
-                                
-                                let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                                if swipe.openId != schedule.id || swipe.direction != direction {
-                                    swipe.onSwipe(id: schedule.id, direction: direction)
-                                }
-                            }
-                            .onEnded { value in
-                                let horizontal = value.translation.width
-                                let vertical = value.translation.height
-                                
-                                guard abs(horizontal) > abs(vertical) else {
-                                    swipe.offSwipe()
-                                    return
-                                }
-                                
-                                if abs(horizontal) > maxSwipeDistance / 2 {
-                                    let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
-                                    swipe.onSwipe(id: schedule.id, direction: direction)
-                                } else {
-                                    swipe.offSwipe()
-                                }
-                            },
-                        including: .gesture
-                    )
-                    .simultaneousGesture(
-                        TapGesture().onEnded {
+        ZStack {
+            HStack(spacing: 0) {
+                if currentOffset > 0 {
+                    Button {
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            isDeleting = false
+                            isCompleted = true
+                            completedOffset = currentWidth + 30
                             swipe.offSwipe()
                         }
-                    )
-            }
-        }
-        .animation(.easeInOut, value: animationOffset)
-        .frame(height: 70)
-    }
-}
-
-extension ScheduleCardView {
-    private func performDeleteFlow() {
-            Task {
-                // 애니메이션 효과 이후 삭제를 위한 sleep
-                try? await Task.sleep(for: .milliseconds(300))
-
-                // 캘린더 삭제
-                _ = await CalendarManager.shared.deleteEventOrBackfill(
-                    identifier: schedule.eventIdentifier,
-                    title: schedule.title,
-                    location: nil,
-                    isAllDay: schedule.isAllDay,
-                    startDate: schedule.startDate,
-                    endDate: schedule.endDate,
-                    in: nil
-                )
-
-                // Core Data에서 일정 삭제
-                await MainActor.run {
-                    withAnimation(.easeInOut) {
-                        manualScheduleVM.deleteSchedule(item: schedule)
+                        
+                        Task {
+                            // 애니메이션 효과 이후 업데이트를 위한 sleep
+                            try? await Task.sleep(for: .milliseconds(300))
+                            
+                            await MainActor.run {
+                                withAnimation(.easeInOut) {
+                                    manualScheduleVM.updateCompleted(item: schedule)
+                                }
+                            }
+                            
+                            await analyticsVM.refreshData()
+                        }
+                        
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.black)
+                            .frame(maxHeight: .infinity)
+                            .frame(width: 50)
                     }
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(Color.scheduleBackground(color: schedule.backgroundColor))
+                    )
+                    
+                    Spacer()
+                } else if currentOffset < 0 {
+                    Spacer()
+                    
+                    Button {
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            isDeleting = true
+                            isCompleted = false
+                            deleteOffset = -currentWidth - 30
+                            swipe.offSwipe()
+                        }
+                        
+                        Task {
+                            // 애니메이션 효과 이후 삭제를 위한 sleep
+                            try? await Task.sleep(for: .milliseconds(300))
+                            
+                            // Core Data에서 일정 삭제
+                            await MainActor.run {
+                                withAnimation(.easeInOut) {
+                                    manualScheduleVM.deleteSchedule(item: schedule)
+                                }
+                            }
+                            
+                            await analyticsVM.refreshData()
+                        }
+                    } label: {
+                        Image(systemName: "trash.fill")
+                            .foregroundColor(.white)
+                            .frame(maxHeight: .infinity)
+                            .frame(width: 50)
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(.red)
+                    )
                 }
             }
+            .frame(width: currentWidth)
+            .disabled(isDeleting || isCompleted)
+            
+            ScheduleItemView(schedule: schedule, showMemo: false)
+                .frame(width: currentWidth - abs(currentOffset) - (currentOffset == 0  ? 0 : (isDevice ? Spacing.layout * 1.9 : Spacing.layout * 1.8)))
+                .offset(x: animationOffset)
+                .gesture(
+                    DragGesture(minimumDistance: 35)
+                        .onChanged { value in
+                            let horizontal = value.translation.width
+                            let vertical = value.translation.height
+                            
+                            guard abs(horizontal) > abs(vertical) else { return }
+                            
+                            let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
+                            if swipe.openId != schedule.id || swipe.direction != direction {
+                                swipe.onSwipe(id: schedule.id, direction: direction)
+                            }
+                        }
+                        .onEnded { value in
+                            let horizontal = value.translation.width
+                            let vertical = value.translation.height
+                            
+                            guard abs(horizontal) > abs(vertical) else {
+                                swipe.offSwipe()
+                                return
+                            }
+                            
+                            if abs(horizontal) > maxSwipeDistance / 2 {
+                                let direction = horizontal > 0 ? SwipeDirection.right : SwipeDirection.left
+                                swipe.onSwipe(id: schedule.id, direction: direction)
+                            } else {
+                                swipe.offSwipe()
+                            }
+                        },
+                    including: .gesture
+                )
+                .simultaneousGesture(
+                    TapGesture().onEnded {
+                        swipe.offSwipe()
+                    }
+                )
+                .animation(.easeInOut, value: currentOffset)
+                .animation(.easeInOut, value: animationOffset)
         }
     }
+}

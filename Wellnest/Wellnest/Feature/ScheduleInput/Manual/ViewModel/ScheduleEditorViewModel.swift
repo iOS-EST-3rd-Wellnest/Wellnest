@@ -13,6 +13,7 @@ enum EditorMode: Equatable {
     case edit(id: UUID)
 }
 
+@MainActor
 final class ScheduleEditorViewModel: ObservableObject {
     @Published var form = ScheduleFormState()
     @Published var previewColor: Color = .wellnestBlue
@@ -67,10 +68,8 @@ final class ScheduleEditorViewModel: ObservableObject {
     }
 
     var isEditMode: Bool {
-        switch mode {
-        case .create: return false
-        case .edit: return true
-        }
+        guard case let .edit(id) = mode else { return false }
+        return true
     }
 
     func updateColorName(_ name: String) {
@@ -130,7 +129,6 @@ final class ScheduleEditorViewModel: ObservableObject {
             isAlarmOn: form.isAlarmOn,
             isCompleted: false,
         )
-        print(input)
 
         switch mode {
         case .create:
@@ -149,6 +147,66 @@ final class ScheduleEditorViewModel: ObservableObject {
             }
             return updated
         }
+    }
+
+    func updateRepeatRule() async throws {
+        try await deleteFollowingInSeries()
+        let input = ScheduleInput(
+            title: form.title,
+            location: form.location,
+            detail: form.detail,
+            startDate: form.startDate,
+            endDate: form.endDate,
+            isAllDay: form.isAllDay,
+            backgroundColorName: form.selectedColorName,
+            repeatRuleName: form.isRepeated ? form.selectedRepeatRule?.name : nil,
+            hasRepeatEndDate: form.hasRepeatEndDate,
+            repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
+            alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
+            isAlarmOn: form.isAlarmOn,
+            isCompleted: false,
+        )
+        try await repository.create(with: input)
+    }
+
+    func updateRepeatSeries() async throws {
+        guard case let .edit(id) = mode else { return }
+        let current = try await repository.fetch(by: id)
+        guard let seriesId = current.seriesId else { return }
+
+        let anchor = current.startDate
+        try await repository.deleteSeriesOccurrences(
+            seriesId: seriesId,
+            after: anchor,
+            includeAnchor: true
+        )
+
+        // (선택) 인덱스 이어붙이기: 앵커 이전 개수 계산
+//        let startIndex = try repository.countOccurrencesBefore(seriesId: seriesId, anchor: anchor)
+
+        try CoreDataService.shared.saveContext()
+        CoreDataService.shared.context.processPendingChanges()
+        await Task.yield() // 한 틱 양보로 경합 제거
+
+        // 3) 새 전개 입력은 seed-first(앵커부터)
+        let duration = form.endDate.timeIntervalSince(form.startDate)
+        var input = ScheduleInput(
+            title: form.title,
+            location: form.location,
+            detail: form.detail,
+            startDate: anchor,
+            endDate: anchor.addingTimeInterval(duration),
+            isAllDay: form.isAllDay,
+            backgroundColorName: form.selectedColorName,
+            repeatRuleName: form.isRepeated ? form.selectedRepeatRule?.name : nil,
+            hasRepeatEndDate: form.hasRepeatEndDate,
+            repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
+            alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
+            isAlarmOn: form.isAlarmOn,
+            isCompleted: false
+        )
+
+        _ = try await repository.create(with: input)
     }
 
     @MainActor
@@ -201,7 +259,6 @@ final class ScheduleEditorViewModel: ObservableObject {
         guard let seriesId = snapshot.seriesId else { return }
         let anchor = snapshot.startDate
 
-        // 기준 아이템보다 "늦은 것만" 삭제 ⇒ startDate > anchor
         try await repository.deleteSeriesOccurrences(
             seriesId: seriesId,
             after: anchor,
@@ -211,10 +268,52 @@ final class ScheduleEditorViewModel: ObservableObject {
 }
 
 enum ScheduleEditorFactory {
+    @MainActor
     static func make(mode: EditorMode) -> ScheduleEditorViewModel {
         let service = CoreDataService.shared
         let notifier: LocalNotifying = LocalNotiManager.shared
         let repository = CoreDataScheduleRepository(service: service, notifier: notifier)
         return ScheduleEditorViewModel(mode: mode, repository: repository)
+    }
+}
+
+
+
+enum Frequency {
+    case daily(Int), weekly(Int), monthly(Int) // interval 포함
+    var component: Calendar.Component {
+        switch self {
+        case .daily:   return .day
+        case .weekly:  return .weekOfYear
+        case .monthly: return .month
+        }
+    }
+    var interval: Int {
+        switch self {
+        case .daily(let n), .weekly(let n), .monthly(let n): return n
+        }
+    }
+}
+
+struct RepeatRuleParser2 {
+    static func frequency(from ruleName: String?) -> Frequency? {
+        // 예: "weekly" -> .weekly(1), "biweekly" -> .weekly(2) 등
+        // 프로젝트 규칙에 맞춰 매핑
+        return .weekly(1) // 예시
+    }
+
+    /// ✅ seed-first: 앵커(start)를 **먼저 append**하고, 그 다음 주기로 전진
+    static func generateOccurrences(start: Date, end: Date?, frequency: Frequency) -> [Date] {
+        var out: [Date] = []
+        var current = start
+        let cal = Calendar.current
+        while end == nil || current <= end! {
+            out.append(current)
+            guard let next = cal.date(byAdding: frequency.component,
+                                      value: frequency.interval,
+                                      to: current) else { break }
+            current = next
+        }
+        return out
     }
 }
