@@ -99,7 +99,9 @@ final class ScheduleStore: ObservableObject {
                       hasRepeatEndDate: e.hasRepeatEndDate,
                       repeatEndDate: e.repeatEndDate,
                       isCompleted: e.isCompleted?.boolValue ?? false,
-                      eventIdentifier: e.eventIdentifier
+                      eventIdentifier: e.eventIdentifier,
+                      location: e.location ?? "",
+                      alarm: e.alarm ?? nil
                   )
               }
           } catch {

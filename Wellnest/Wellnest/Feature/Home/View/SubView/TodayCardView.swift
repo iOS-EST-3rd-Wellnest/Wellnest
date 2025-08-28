@@ -49,7 +49,7 @@ struct TodayCardView: View {
                     GoalSkeletonView(height: cardHeight)
                 } else {
                     RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                        .fill(.wellnestBackgroundCard)
                         .frame(minHeight: cardHeight)
                         .roundedBorder(cornerRadius: CornerRadius.large)
                         .defaultShadow()
@@ -72,7 +72,7 @@ struct TodayCardView: View {
                 }
                 
                 RoundedRectangle(cornerRadius: CornerRadius.large)
-                    .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+                    .fill(.wellnestBackgroundCard)
                     .frame(minHeight: cardHeight)
                     .roundedBorder(cornerRadius: CornerRadius.large)
                     .defaultShadow()

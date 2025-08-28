@@ -36,13 +36,13 @@ struct HomeView: View {
                         EmptyScheduleView()
                     } else {
                         HomeScheduleView(manualScheduleVM: manualScheduleVM, isCompleteSchedules: isCompleteSchedules)
-                            .padding(.bottom, isDevicePad ? Spacing.layout * 2 : 0)
+                            .padding(.bottom, 0)
                     }
                 }
             }
             .padding(.horizontal)
             .task {
-                manualScheduleVM.loadTodaySchedules()
+                manualScheduleVM.loadTodaySchedules()      
             }
             
             RecommendView(homeVM: homeVM)
@@ -52,6 +52,9 @@ struct HomeView: View {
         .background(Color(.systemBackground))
         .coordinateSpace(name: "homeScroll")
         .safeAreaBlur(offsetY: $offsetY)
+        .onAppear  {
+            homeVM.fetchUserInfo()
+        }
         .task {
             await homeVM.fetchDailySummary()
             //await homeVM.refreshWeatherContent()

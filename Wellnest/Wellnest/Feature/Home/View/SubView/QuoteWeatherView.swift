@@ -24,54 +24,64 @@ struct QuoteWeatherView: View {
     }
     
     var body: some View {
-        RecommendHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
-            .frame(height: oneLineHeight, alignment: .leading)
-            .padding(.top, isDevicePad ? Spacing.layout * 2 : Spacing.layout)
-        
-        if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
-            Text(quoteOfTheDay)
-                .font(.callout)
-                .padding(.horizontal, Spacing.layout * 1.5)
-                .padding(.vertical, Spacing.layout)
-                .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-                        .roundedBorder(cornerRadius: CornerRadius.large)
-                        .defaultShadow()
-                )
-        } else {
-            RecommendContentSkeletonView(category: RecommendCategory.quoteOfTheDay)
-        }
-        
-        RecommendHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
-            .frame(height: oneLineHeight, alignment: .leading)
-            .padding(.top, Spacing.content)
-        
-        if let weatherResponse = homeVM.weatherResponse {
-            VStack(alignment: .leading, spacing: Spacing.content) {
-                Text("\(weatherResponse.description)")
-                    .font(.callout)
-                
+        VStack(spacing: Spacing.layout * 1.5) {
+            VStack(spacing: Spacing.layout) {
                 HStack {
-                    ForEach(weatherResponse.schedules, id:\.self) {
-                        Text("\($0)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                    RecommendHeaderView(title: "오늘의 한마디", isLoading: isQuoteOfTheDay, height: oneLineHeight)
+                        .frame(height: oneLineHeight, alignment: .leading)
+                }
+                
+                if let quoteOfTheDay = homeVM.quoteOfTheDay, quoteOfTheDay != "" {
+                    Text(quoteOfTheDay)
+                        .font(.callout)
+                        .padding(.horizontal, Spacing.layout * 1.5)
+                        .padding(.vertical, Spacing.layout)
+                        .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: CornerRadius.large)
+                                .fill(.wellnestBackgroundCard)
+                                .roundedBorder(cornerRadius: CornerRadius.large)
+                                .defaultShadow()
+                        )
+                } else {
+                    RecommendContentSkeletonView(category: RecommendCategory.quoteOfTheDay)
                 }
             }
-            .padding(.horizontal, Spacing.layout * 1.5)
-            .padding(.vertical, Spacing.layout)
-            .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: CornerRadius.large)
-                    .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-                    .roundedBorder(cornerRadius: CornerRadius.large)
-                    .defaultShadow()
-            )
-        } else {
-            RecommendContentSkeletonView(category: RecommendCategory.weather)
+            .padding(.top, isDevicePad ? Spacing.layout * 2 : Spacing.layout)
+            
+            VStack(spacing: Spacing.layout) {
+                HStack {
+                    RecommendHeaderView(title: "날씨", isLoading: homeVM.weatherResponse == nil, height: oneLineHeight)
+                        .frame(height: oneLineHeight, alignment: .leading)
+                }
+                
+                if let weatherResponse = homeVM.weatherResponse {
+                    VStack(alignment: .leading, spacing: Spacing.content) {
+                        Text("\(weatherResponse.description)")
+                            .font(.callout)
+                        
+                        HStack {
+                            ForEach(weatherResponse.schedules, id:\.self) {
+                                Text("\($0)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Spacing.layout * 1.5)
+                    .padding(.vertical, Spacing.layout)
+                    .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(.wellnestBackgroundCard)
+                            .roundedBorder(cornerRadius: CornerRadius.large)
+                            .defaultShadow()
+                    )
+                } else {
+                    RecommendContentSkeletonView(category: RecommendCategory.weather)
+                }
+            }
+            .padding(.top, Spacing.content)
         }
     }
 }

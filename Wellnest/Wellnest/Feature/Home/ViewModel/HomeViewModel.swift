@@ -25,14 +25,21 @@ final class HomeViewModel: ObservableObject {
     // 프리패치 작업 취소를 위해 핸들 보관
     private var prefetchTasks = [Task<Void, Never>]()
     
+    func fetchUserInfo() {
+        // 사용자 정보 조회
+        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
+            self.userInfo = result
+        }
+    }
+    
     // MARK: - DailySummaryEntity 조회/생성/수정
     /// DailySummaryEntity를 조회하여 Alan을 활용한 컨텐츠 데이터 세팅
     @MainActor
     func fetchDailySummary() async {
         // 사용자 정보 조회
-        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
-            self.userInfo = result
-        }
+//        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
+//            self.userInfo = result
+//        }
         
         // 오늘 엔티티 확보(없으면 생성, 있으면 재사용)
         let entity = ensureTodayEntity()
@@ -211,11 +218,11 @@ final class HomeViewModel: ObservableObject {
             let decodeHashtag = await hashtagAISevice.extractJSONFromResponse(hashtagResponse.content)
             let hashtagModel: ResponseArrayModel? = decodeJSON(from: decodeHashtag ?? "")
 
-            guard let hashtag = hashtagModel, hashtag.category == RecommendCategory.hashtag.rawValue else { return [] }
+            guard let hashtag = hashtagModel, hashtag.category == RecommendCategory.hashtag.rawValue else { return ResponseArrayModel.hashtag.contents }
             return hashtag.contents
         } catch {
             print("해시태그 요청 실패:", error.localizedDescription)
-            return []
+            return ["#\(userInfo?.ageRange ?? "")"]
         }
     }
     
@@ -231,11 +238,11 @@ final class HomeViewModel: ObservableObject {
             let decodeGoal = await goalAISevice.extractJSONFromResponse(goalResponse.content)
             let goalModel: ResponseArrayModel? = decodeJSON(from: decodeGoal ?? "")
             
-            guard let goal = goalModel, goal.category == RecommendCategory.goal.rawValue else { return [] }
+            guard let goal = goalModel, goal.category == RecommendCategory.goal.rawValue else { return ResponseArrayModel.goal.contents }
             return goal.contents
         } catch {
             print("목표 요청 실패:", error.localizedDescription)
-            return []
+            return ResponseArrayModel.goal.contents
         }
     }
     
@@ -251,11 +258,11 @@ final class HomeViewModel: ObservableObject {
             let decodeQuoteOfTheDay = await quoteOfTheDayAISevice.extractJSONFromResponse(quoteOfTheDayResponse.content)
             let quoteOfTheDayModel: ResponseStringModel? = decodeJSON(from: decodeQuoteOfTheDay ?? "")
             
-            guard let quoteOfTheDay = quoteOfTheDayModel, quoteOfTheDay.category == RecommendCategory.quoteOfTheDay.rawValue else { return "" }
+            guard let quoteOfTheDay = quoteOfTheDayModel, quoteOfTheDay.category == RecommendCategory.quoteOfTheDay.rawValue else { return ResponseStringModel.quoteOfTheDay.content }
             return quoteOfTheDay.content
         } catch {
             print("오늘의 한마디 요청 실패:", error.localizedDescription)
-            return ""
+            return ResponseStringModel.quoteOfTheDay.content
         }
     }
     
@@ -273,11 +280,11 @@ final class HomeViewModel: ObservableObject {
             let decodeWeather = await weatherAISevice.extractJSONFromResponse(weatherResponse.content)
             let weatherModel: WeatherRecommendModel? = decodeJSON(from: decodeWeather ?? "")
             
-            guard let weather = weatherModel, weather.category == RecommendCategory.weather.rawValue else { return nil }
+            guard let weather = weatherModel, weather.category == RecommendCategory.weather.rawValue else { return WeatherRecommendModel.weather }
             return weather
         } catch {
             print("weather 요청 실패:", error.localizedDescription)
-            return nil
+            return WeatherRecommendModel.weather
         }
     }
     
@@ -293,8 +300,8 @@ final class HomeViewModel: ObservableObject {
             let decodeVideo = await videoAISevice.extractJSONFromResponse(videoResponse.content)
             let videoModel: ResponseStringModel? = decodeJSON(from: decodeVideo ?? "")
             
-            guard let video = videoModel, video.category == RecommendCategory.video.rawValue else { return []}
-            guard let items = try await fetchVideoList(keywords: video.content) else { return [] }
+            guard let video = videoModel, video.category == RecommendCategory.video.rawValue else { return VideoRecommendModel.videoList }
+            guard let items = try await fetchVideoList(keywords: video.content) else { return VideoRecommendModel.videoList }
             
             let models = items.map {
                 VideoRecommendModel(
@@ -310,7 +317,7 @@ final class HomeViewModel: ObservableObject {
             return models
         } catch {
             print("동영상 불러오기 실패:", error.localizedDescription)
-            return []
+            return VideoRecommendModel.videoList
         }
     }
     

@@ -36,7 +36,7 @@ struct EmptyScheduleView: View {
     
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+            .fill(.wellnestBackgroundCard)
             .frame(height: height)
             .roundedBorder(cornerRadius: CornerRadius.large)
             .defaultShadow()

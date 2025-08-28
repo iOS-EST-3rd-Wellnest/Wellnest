@@ -12,6 +12,7 @@ struct GoalSkeletonView: View {
     var body: some View {
         SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
             .frame(minHeight: height)
+            .roundedBorder(cornerRadius: CornerRadius.large)
     }
 }
 
@@ -25,6 +26,7 @@ struct RecommendHeaderView: View {
             if isLoading {
                 SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                     .frame(width: 150, height: height, alignment: .topLeading)
+                    .roundedBorder(cornerRadius: CornerRadius.large)
             } else {
                 Text(title)
                     .font(.title3)
@@ -43,6 +45,7 @@ struct RecommendContentSkeletonView: View {
         VStack(alignment: .leading ) {
             SkeletonView(shape: .rect(cornerRadius: CornerRadius.large))
                 .frame(maxWidth: .infinity, minHeight: category == RecommendCategory.weather ? 100 : 60, alignment: .leading)
+                .roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }
@@ -57,10 +60,12 @@ struct VideoiPhoneSkeletonView: View {
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
                 .aspectRatio(16/9, contentMode: .fill)
                 .frame(width: thumbWidth)
+                .roundedBorder(cornerRadius: CornerRadius.large)
             
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .frame(width: titleWidth, height: twoLineHeight - 10, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
+                .roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }
@@ -75,11 +80,13 @@ struct VideoiPadSkeletonView: View {
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
                 .aspectRatio(16/9, contentMode: .fill)
                 .frame(maxWidth: thumbWidth)
+                .roundedBorder(cornerRadius: CornerRadius.large)
             
             SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .frame(maxWidth: titleWidth, maxHeight: twoLineHeight - 10, alignment: .topLeading)
                 .padding(.vertical, Spacing.inline)
                 .padding(.trailing, Spacing.layout * 8)
+                .roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }

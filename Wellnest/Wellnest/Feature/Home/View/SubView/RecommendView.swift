@@ -27,32 +27,35 @@ struct RecommendView: View {
     }
     
     var body: some View {
-        VStack {
-            Group {
-                QuoteWeatherView(homeVM: homeVM)
-                
-                RecommendHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
-                    .frame(height: oneLineHeight)
-                    .padding(.top, Spacing.layout)
-            }
-            .padding(.horizontal)
+        VStack(spacing: Spacing.layout) {
+            QuoteWeatherView(homeVM: homeVM)
+                .padding(.horizontal)
             
-            if isDevicePad {
-                let columns = [GridItem(.flexible(), spacing: Spacing.layout * 2), GridItem(.flexible(), spacing: Spacing.layout * 2)]
-                
-                LazyVGrid(columns: columns, spacing: Spacing.layout * 2) {
-                    VideoiPadCardView(homeVM: homeVM)
+            VStack(spacing: Spacing.layout) {
+                HStack {
+                    RecommendHeaderView(title: "추천 영상", isLoading: homeVM.videoList.isEmpty, height: oneLineHeight)
+                        .frame(height: oneLineHeight)
+                        .padding(.horizontal)
                 }
-                .padding()
                 
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Spacing.layout * 1.5) {
-                        VideoiPhoneCardView(homeVM: homeVM)
+                if isDevicePad {
+                    let columns = [GridItem(.flexible(), spacing: Spacing.layout * 2), GridItem(.flexible(), spacing: Spacing.layout * 2)]
+                    
+                    LazyVGrid(columns: columns, spacing: Spacing.layout * 2) {
+                        VideoiPadCardView(homeVM: homeVM)
                     }
-                    .padding(.horizontal)
+                    .padding()
+                    
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: Spacing.layout * 1.5) {
+                            VideoiPhoneCardView(homeVM: homeVM)
+                        }
+                        .padding(.horizontal)
+                    }
                 }
             }
+            .padding(.top, Spacing.layout)
         }
     }
 }
