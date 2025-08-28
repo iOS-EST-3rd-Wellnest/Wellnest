@@ -70,26 +70,6 @@ extension PlanViewModel {
         selectedDate = date.startOfDay
     }
 
-    func combine(date: Date, time: Date = Date()) -> Date? {
-        let calendar = Calendar.current
-
-        // 날짜에서 연월일 추출
-        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
-        // 시간에서 시분초 추출
-        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: time)
-
-        // 합쳐서 새로운 DateComponents 생성
-        var mergedComponents = DateComponents()
-        mergedComponents.year = dateComponents.year
-        mergedComponents.month = dateComponents.month
-        mergedComponents.day = dateComponents.day
-        mergedComponents.hour = timeComponents.hour
-        mergedComponents.minute = timeComponents.minute
-        mergedComponents.second = timeComponents.second
-
-        return calendar.date(from: mergedComponents)
-    }
-
     func updateVisibleMonth(_ month: Date) {
         let startOfMonth = month.startOfMonth
         visibleMonth = startOfMonth

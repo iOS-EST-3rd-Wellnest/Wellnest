@@ -26,6 +26,8 @@ struct ManualScheduleInputView: View {
     @State private var showDeleteAlert = false
     @State private var showDeleteSeriesAlert = false
 
+    @State private var didInit = false
+
     init(
         mode: EditorMode,
         selectedTab: Binding<TabBarItem>,
@@ -50,8 +52,14 @@ struct ManualScheduleInputView: View {
                         PeriodPickerView(
                             startDate: $viewModel.form.startDate,
                             endDate: $viewModel.form.endDate,
-                            isAllDay: $viewModel.form.isAllDay
+                            isAllDay: $viewModel.form.isAllDay,
+                            onButtonTap: {
+                                isKeyboardVisible = false
+                            }
                         )
+                        .onChange(of: viewModel.form.isAllDay) { _ in
+                            isKeyboardVisible = false
+                        }
                         .padding(.bottom, 5)
                         TagToggleSection(
                             title: "반복",
@@ -59,7 +67,9 @@ struct ManualScheduleInputView: View {
                             isOn: $viewModel.form.isRepeated,
                             selectedTag: $viewModel.form.selectedRepeatRule,
                             showDetail: viewModel.form.selectedRepeatRule != nil,
-                            onTagTap: { _ in isKeyboardVisible = false }
+                            onTagTap: { _ in
+                                isKeyboardVisible = false
+                            }
                         ) {
                             EndDateSelectorView(
                                 mode: $viewModel.form.repeatEndMode,
@@ -120,18 +130,23 @@ struct ManualScheduleInputView: View {
                     }
                 }
                 .onAppear {
+                    guard !didInit else { return }
+
                     if selectedTab == .plan {
-                        let selectedDate = planVM.combine(
-                            date: planVM.selectedDate
-                        )?.roundedUpToFiveMinutes() ?? Date()
+                        // 플랜탭일 때.
+                        let selectedDate = viewModel.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
                         viewModel.setDefaultDate(for: selectedDate)
-                    } else {
-                        viewModel.setDefaultDate(for: Date())
                     }
 
-
+                    didInit = true
                 }
                 .onDisappear {
+                    isKeyboardVisible = false
+                }
+                .onChange(of: viewModel.form.startDate) { _ in
+                    isKeyboardVisible = false
+                }
+                .onChange(of: viewModel.form.endDate) { _ in
                     isKeyboardVisible = false
                 }
                 .navigationTitle(viewModel.navigationBarTitle)
@@ -269,6 +284,7 @@ struct ManualScheduleInputView: View {
                 }
             }
             .padding(.bottom, 8)
+
 
 
         }
