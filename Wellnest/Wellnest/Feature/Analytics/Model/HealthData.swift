@@ -9,7 +9,7 @@ import Foundation
 
 struct HealthData {
     let userName: String
-    let planCompletion: PlanCompletionData
+//    let planCompletion: PlanCompletionData
     let aiInsight: AIInsightData
     let exercise: ExerciseData
     let sleep: SleepData

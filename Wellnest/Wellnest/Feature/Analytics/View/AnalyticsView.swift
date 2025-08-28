@@ -14,6 +14,8 @@ struct AnalyticsView: View {
     @State private var showDivider = false
     @State private var offsetY: CGFloat = .zero
     
+    @Environment(\.managedObjectContext) private var context
+    
     var body: some View {
         ScrollView {
             VStack {
@@ -56,7 +58,8 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
+//            ScheduleProgressView(planData: viewModel.healthData.planCompletion)
+            ScheduleProgressView(context: context)
             AIInsightCardView(insight: viewModel.healthData.aiInsight)
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
             SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
@@ -73,7 +76,8 @@ struct AnalyticsView: View {
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
+//                    ScheduleProgressView(planData: viewModel.healthData.planCompletion)
+                    ScheduleProgressView(context: context)
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {
