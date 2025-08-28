@@ -62,7 +62,6 @@ final class ManualScheduleViewModel: ObservableObject {
                     alarm: e.alarm
                 )
             }
-
             self.todaySchedules = items
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)

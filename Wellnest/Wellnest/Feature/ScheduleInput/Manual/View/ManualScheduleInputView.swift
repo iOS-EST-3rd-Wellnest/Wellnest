@@ -20,6 +20,8 @@ struct ManualScheduleInputView: View {
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
+    @State private var showOnlySeriesItemEditMenu = false
+    @State private var isChangedRepeatRule = false
     @State private var showMenu = false
 
     init(
@@ -57,11 +59,19 @@ struct ManualScheduleInputView: View {
                             showDetail: viewModel.form.selectedRepeatRule != nil,
                             onTagTap: { _ in isKeyboardVisible = false }
                         ) {
-                            EndDateSelectorView(mode: $viewModel.form.repeatEndMode, endDate: $viewModel.form.repeatEndDate)
+                            EndDateSelectorView(
+                                mode: $viewModel.form.repeatEndMode,
+                                endDate: $viewModel.form.repeatEndDate
+                            )
                         }
                         .padding(.bottom, 5)
                         .onChange(of: viewModel.form.isRepeated) { newValue in
                             isKeyboardVisible = false
+                        }
+                        .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
+                            if viewModel.isEditMode && viewModel.form.isRepeated {
+                                isChangedRepeatRule = true
+                            }
                         }
                         TagToggleSection(
                             title: "알람",
@@ -156,9 +166,33 @@ struct ManualScheduleInputView: View {
                         // 버튼
                         FilledButton(title: viewModel.primaryButtonTitle,
                                      disabled: viewModel.form.isTextEmpty) {
-                            if viewModel.isEditMode{
-                                withAnimation {
-                                    showMenu.toggle()
+                            // 편집 모드일 때
+                            if viewModel.isEditMode {
+
+                                // 반복 아이탬일 경우
+                                if viewModel.form.isRepeated {
+                                    withAnimation {
+                                        // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                        showOnlySeriesItemEditMenu.toggle()
+                                    }
+                                }
+                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
+                                else if isChangedRepeatRule {
+                                    // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                    withAnimation {
+                                        showOnlySeriesItemEditMenu.toggle()
+                                    }
+                                }
+                                // 반복 아이탬이 아니며, 수정된 내용이 반복 규칙이 아닌 경우
+                                else {
+                                    Task {
+                                        // 단순 스케줄 업데이트
+                                        try await viewModel.saveSchedule()
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        dismiss()
+
+                                    }
                                 }
                             } else {
                                 Task {
@@ -176,8 +210,7 @@ struct ManualScheduleInputView: View {
                                     ? Color.black.ignoresSafeArea(edges: .bottom)
                                     : Color.white.ignoresSafeArea(edges: .bottom))
 
-                        // 버튼 위 메뉴
-                        if showMenu {
+                        if showOnlySeriesItemEditMenu {
                             VStack(spacing: 0) {
                                 Section(header:
                                     Text("반복되는 이벤트입니다.")
@@ -187,17 +220,24 @@ struct ManualScheduleInputView: View {
 
                                 ) {
                                     Divider()
-                                    Button("이 아이템만 수정") {
-                                        // 단일 수정 로직
-                                        showMenu = false
-                                    }
-                                    .padding()
 
-                                    Divider()
+                                    Button("이후 이벤트에 대해 저장") {
+                                        // 반복 이벤트로 바뀜
+                                        if isChangedRepeatRule {
+                                            Task {
+                                                try await viewModel.updateRepeatRule()
+                                            }
+                                        } else {
+                                            // 반복 이벤트에 대해서 전부 수정
+                                            Task {
+                                                try await viewModel.updateRepeatSeries()
+                                            }
+                                        }
+                                        showOnlySeriesItemEditMenu = false
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        dismiss()
 
-                                    Button("이후 모든 이벤트 수정") {
-                                        // 시리즈 수정 로직
-                                        showMenu = false
                                     }
                                     .padding()
                                 }
