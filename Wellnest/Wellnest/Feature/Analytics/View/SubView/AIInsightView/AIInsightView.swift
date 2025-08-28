@@ -7,9 +7,17 @@
 
 import SwiftUI
 
-struct AIInsightCardView: View {
+struct AIInsightView: View {
     @Environment(\.colorScheme) private var colorScheme
-    let insight: AIInsightData
+//    let insight: AIInsightData
+    @StateObject private var viewModel: AIInsightViewModel
+    
+//    @StateObject private var viewModel: ScheduleProgressViewModel
+    
+    //init(context: NSManagedObjectContext) {
+    init() {
+        _viewModel = StateObject(wrappedValue: AIInsightViewModel())
+    }
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -27,7 +35,7 @@ struct AIInsightCardView: View {
                         Text("AI 인사이트")
                             .font(.footnote)
                             .foregroundColor(.secondary)
-                        Text(insight.message)
+                        Text(viewModel.insightText ?? "")
                             .font(.caption)
                             .fontWeight(.medium)
                             .fixedSize(horizontal: false, vertical: true)

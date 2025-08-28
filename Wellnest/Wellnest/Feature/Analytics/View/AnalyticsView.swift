@@ -60,7 +60,8 @@ struct AnalyticsView: View {
         VStack(spacing: Spacing.layout) {
 //            ScheduleProgressView(planData: viewModel.healthData.planCompletion)
             ScheduleProgressView(context: context)
-            AIInsightCardView(insight: viewModel.healthData.aiInsight)
+//            AIInsightCardView(insight: viewModel.healthData.aiInsight)
+            AIInsightView()
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
             SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
         }
@@ -81,7 +82,8 @@ struct AnalyticsView: View {
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    AIInsightCardView(insight: viewModel.healthData.aiInsight)
+//                    AIInsightCardView(insight: viewModel.healthData.aiInsight)
+                    AIInsightView()
                     SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
                 }
             }

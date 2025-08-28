@@ -280,19 +280,19 @@ class AnalyticsViewModel: ObservableObject {
 
         var insights: [String] = []
 
-        let completionRate = planCompletion.completionRate
-        if completionRate >= 0.8 {
-            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
-        } else if completionRate >= 0.5 {
-            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
-        } else if planCompletion.totalItems > 0 {
-            let remaining = planCompletion.totalItems - planCompletion.completedItems
-            if remaining == 1 {
-                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
-            } else {
-                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
-            }
-        }
+//        let completionRate = planCompletion.completionRate
+//        if completionRate >= 0.8 {
+//            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
+//        } else if completionRate >= 0.5 {
+//            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
+//        } else if planCompletion.totalItems > 0 {
+//            let remaining = planCompletion.totalItems - planCompletion.completedItems
+//            if remaining == 1 {
+//                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
+//            } else {
+//                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
+//            }
+//        }
 
         if exercise.averageSteps >= 10000 {
             insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 목표 달성!")
@@ -592,25 +592,25 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func getUserName() -> String {
-        let coreDataService = CoreDataService.shared
-
-        do {
-            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
-            userRequest.fetchLimit = 1
-
-            let users = try coreDataService.context.fetch(userRequest)
-
-            if let user = users.first,
-               let nickname = user.value(forKey: "nickname") as? String,
-               !nickname.isEmpty {
-                print("사용자 이름 발견: \(nickname)")
-                return nickname
-            }
-        } catch {
-            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
-        }
-
-        print("기본 사용자 이름 사용")
+//        let coreDataService = CoreDataService.shared
+//
+//        do {
+//            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
+//            userRequest.fetchLimit = 1
+//
+//            let users = try coreDataService.context.fetch(userRequest)
+//
+//            if let user = users.first,
+//               let nickname = user.value(forKey: "nickname") as? String,
+//               !nickname.isEmpty {
+//                print("사용자 이름 발견: \(nickname)")
+//                return nickname
+//            }
+//        } catch {
+//            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
+//        }
+//
+//        print("기본 사용자 이름 사용")
         return "사용자"
     }
 
