@@ -19,13 +19,7 @@ struct HomeProfileView: View {
     @State private var profileVstackHeight: CGFloat = .zero
     
     private var imgHeight: CGFloat {
-        return max(50, profileVstackHeight)
-    }
-    
-    private var footnoteLineHeight: CGFloat {
-        let base = UIFont.preferredFont(forTextStyle: .footnote)
-        let scaled = UIFontMetrics(forTextStyle: .footnote).scaledFont(for: base)
-        return ceil(scaled.lineHeight * 1.5)
+        return max(50, profileVstackHeight * (UIDevice.current.userInterfaceIdiom == .pad ? 1.5 : 1))
     }
     
     var body: some View {
@@ -60,7 +54,6 @@ struct HomeProfileView: View {
             .onPreferenceChange(SizePreferenceKey.self) { newValue in
                 guard abs(newValue - profileVstackHeight) > 0.5 else { return }
                 DispatchQueue.main.async {
-                    
                     profileVstackHeight = newValue
                 }
             }
@@ -71,13 +64,13 @@ struct HomeProfileView: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(1, contentMode: .fit)
-                    .frame(width: imgHeight, height: imgHeight)
+                    .frame(height: imgHeight)
                     .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
             } else {
                 Image("img_profile")
                     .resizable()
                     .aspectRatio(1, contentMode: .fit)
-                    .frame(width: imgHeight, height: imgHeight)
+                    .frame( height: imgHeight)
                     .clipShape(RoundedRectangle(cornerRadius: imgHeight / 2))
             }
         }
