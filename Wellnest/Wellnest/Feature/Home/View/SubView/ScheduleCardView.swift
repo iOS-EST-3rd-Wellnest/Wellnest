@@ -8,7 +8,6 @@ import SwiftUI
 
 struct ScheduleCardView: View {
     @EnvironmentObject var swipe: SwipeCoordinator
-    @EnvironmentObject var analyticsVM: AnalyticsViewModel
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @State private var isDeleting = false
     @State private var deleteOffset: CGFloat = 0
