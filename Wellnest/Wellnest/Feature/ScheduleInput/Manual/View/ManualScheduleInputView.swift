@@ -17,6 +17,12 @@ struct ManualScheduleInputView: View {
     @StateObject private var viewModel: ScheduleEditorViewModel
     @ObservedObject var planVM: PlanViewModel
 
+    enum InputField: Hashable {
+        case title
+        case note
+    }
+    @State private var currentFocus: InputField? = .title
+
     @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
@@ -26,6 +32,7 @@ struct ManualScheduleInputView: View {
     @State private var showDeleteAlert = false
     @State private var showDeleteSeriesAlert = false
 
+    @State private var showNote = false
     @State private var didInit = false
 
     init(
@@ -54,11 +61,11 @@ struct ManualScheduleInputView: View {
                             endDate: $viewModel.form.endDate,
                             isAllDay: $viewModel.form.isAllDay,
                             onButtonTap: {
-                                isKeyboardVisible = false
+                                currentFocus = nil
                             }
                         )
                         .onChange(of: viewModel.form.isAllDay) { _ in
-                            isKeyboardVisible = false
+                            currentFocus = nil
                         }
                         .padding(.bottom, 5)
                         TagToggleSection(
@@ -68,7 +75,7 @@ struct ManualScheduleInputView: View {
                             selectedTag: $viewModel.form.selectedRepeatRule,
                             showDetail: viewModel.form.selectedRepeatRule != nil,
                             onTagTap: { _ in
-                                isKeyboardVisible = false
+                                currentFocus = nil
                             }
                         ) {
                             EndDateSelectorView(
@@ -77,8 +84,8 @@ struct ManualScheduleInputView: View {
                             )
                         }
                         .padding(.bottom, 5)
-                        .onChange(of: viewModel.form.isRepeated) { newValue in
-                            isKeyboardVisible = false
+                        .onChange(of: viewModel.form.isRepeated) { _ in
+                            currentFocus = nil
                         }
                         .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
                             if viewModel.isEditMode && viewModel.form.isRepeated {
@@ -92,8 +99,8 @@ struct ManualScheduleInputView: View {
                             selectedTag: $viewModel.form.alarmRule
                         )
                         .padding(.bottom, 5)
-                        .onChange(of: viewModel.form.isAlarmOn) { newValue in
-                            isKeyboardVisible = false
+                        .onChange(of: viewModel.form.isAlarmOn) { _ in
+                            currentFocus = nil
                         }
                         HStack {
                             Text("색상")
@@ -103,21 +110,41 @@ struct ManualScheduleInputView: View {
 
                             Button {
                                 showColorPickerSheet = true
-                                isKeyboardVisible = false
+                                currentFocus = nil
                             } label: {
                                 ColorPicker("배경 색상 선택", selection: $viewModel.previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }
                         }
+                        .padding(.bottom, 5)
                         .sheet(isPresented: $showColorPickerSheet) {
                             ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
                                 .presentationDetents([.fraction(0.3)])
-
                         }
                         .onChange(of: viewModel.form.selectedColorName) { newName in
                             viewModel.updateColorName(newName)
                         }
+                        DisclosureGroup {
+                            noteTextField
+                        } label: {
+                            Text("메모")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+                        .tint(.black)
+                        .onTapGesture {
+                            withAnimation { showNote.toggle() }
+                        }
+//                        .onChange(of: showNote) { open in
+//                            if open {
+//                                DispatchQueue.main.async {
+//                                    FocusableTextField = .note
+//                                }
+//                            } else if focusField == .note {
+//                                focusField = nil
+//                            }
+//                        }
                         Spacer()
                     }
                     .padding()
@@ -126,29 +153,31 @@ struct ManualScheduleInputView: View {
                 .task {
                     await viewModel.loadIfNeeded()
                     if viewModel.isEditMode {
-                        isKeyboardVisible = false
+                        currentFocus = nil
                     }
                 }
                 .onAppear {
-                    guard !didInit else { return }
 
+                    guard !didInit else { return }
                     if selectedTab == .plan {
                         // 플랜탭일 때.
                         let selectedDate = viewModel.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
                         viewModel.setDefaultDate(for: selectedDate)
                     }
-
                     didInit = true
                 }
                 .onDisappear {
-                    isKeyboardVisible = false
+                    currentFocus = nil
                 }
                 .onChange(of: viewModel.form.startDate) { _ in
-                    isKeyboardVisible = false
+                    currentFocus = nil
                 }
                 .onChange(of: viewModel.form.endDate) { _ in
-                    isKeyboardVisible = false
+                    currentFocus = nil
                 }
+//                .onChange(of: focusField) { f in
+//                    isKeyboardVisible = (f != nil)
+//                }
                 .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
@@ -187,21 +216,17 @@ struct ManualScheduleInputView: View {
                     ZStack(alignment: .bottom) {
                         // 버튼
                         FilledButton(title: viewModel.primaryButtonTitle,
-                                     disabled: viewModel.form.isTextEmpty) {
+                                     disabled: viewModel.form.isTextEmpty
+                        ) {
                             // 편집 모드일 때
                             if viewModel.isEditMode {
 
                                 // 반복 아이탬일 경우
-                                if viewModel.form.isRepeated {
+                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
+
+                                if viewModel.form.isRepeated || isChangedRepeatRule {
                                     withAnimation {
                                         // 이후 아이탬에 대해 수정 메뉴 띄우기
-                                        showOnlySeriesItemEditMenu.toggle()
-                                    }
-                                }
-                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
-                                else if isChangedRepeatRule {
-                                    // 이후 아이탬에 대해 수정 메뉴 띄우기
-                                    withAnimation {
                                         showOnlySeriesItemEditMenu.toggle()
                                     }
                                 }
@@ -210,21 +235,19 @@ struct ManualScheduleInputView: View {
                                     Task {
                                         // 단순 스케줄 업데이트
                                         try await viewModel.saveSchedule()
-                                        isKeyboardVisible = false
+                                        currentFocus = nil
                                         selectedTab = .plan
                                         selectedCreationType = nil
                                         dismiss()
-
                                     }
                                 }
                             } else {
                                 Task {
                                     try await viewModel.saveSchedule()
-                                    isKeyboardVisible = false
+                                    currentFocus = nil
                                     selectedTab = .plan
                                     selectedCreationType = nil
                                     dismiss()
-
                                 }
                             }
                         }
@@ -244,7 +267,6 @@ struct ManualScheduleInputView: View {
 
                                 ) {
                                     Divider()
-
                                     Button("이후 이벤트에 대해 저장") {
                                         // 반복 이벤트로 바뀜
                                         if isChangedRepeatRule {
@@ -260,9 +282,8 @@ struct ManualScheduleInputView: View {
                                         showOnlySeriesItemEditMenu = false
                                         selectedTab = .plan
                                         selectedCreationType = nil
-                                        isKeyboardVisible = false
+                                        currentFocus = nil
                                         dismiss()
-
                                     }
                                     .padding()
                                 }
@@ -296,16 +317,16 @@ struct ManualScheduleInputView: View {
             FocusableTextField(
                 text: $viewModel.form.title,
                 placeholder: "일정을 입력하세요.",
-                isFirstResponder: isKeyboardVisible,
+                isFirstResponder: currentFocus == .title,
                 returnKeyType: .next,
                 keyboardType: .default,
                 onReturn: {
                     showLocationSearchSheet = true
-                    isKeyboardVisible = false
+                    currentFocus = nil
                 },
                 onEditing: {
-                    if !isKeyboardVisible {
-                        isKeyboardVisible = true
+                    if currentFocus != .title {
+                        currentFocus = .title
                     }
                 }
             )
@@ -318,7 +339,7 @@ struct ManualScheduleInputView: View {
         HStack {
             Button {
                 showLocationSearchSheet = true
-                isKeyboardVisible = false
+                currentFocus = nil
             } label: {
                 HStack {
                     Text(viewModel.form.location.isEmpty ? "장소" : viewModel.form.location)
@@ -345,9 +366,31 @@ struct ManualScheduleInputView: View {
     }
 
     @ViewBuilder
+    private var noteTextField: some View {
+        HStack {
+            FocusableTextField(
+                text: $viewModel.form.detail,
+                placeholder: "메모를 입력하세요.",
+                isFirstResponder: currentFocus == .note,
+                returnKeyType: .done,
+                keyboardType: .default,
+                onReturn: {
+                    currentFocus = nil
+                },
+                onEditing: {
+                    if currentFocus != .note {
+                        currentFocus = .note
+                    }
+                }
+            )
+            .padding(.top, 8)
+        }
+        Divider()
+    }
+    @ViewBuilder
     private var closeTapBarButton: some View {
         Button {
-            isKeyboardVisible = false
+            currentFocus = nil
             selectedCreationType = nil
             dismiss()
         } label: {
@@ -362,14 +405,13 @@ struct ManualScheduleInputView: View {
             Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
                     showDeleteAlert = true
-                    isKeyboardVisible = false
+                    currentFocus = nil
 
                 }
 
                 Button("이후 모든 이벤트 삭제") {
                     showDeleteSeriesAlert = true
-                    isKeyboardVisible = false
-
+                    currentFocus = nil
                 }
             }
         } label: {
@@ -379,12 +421,9 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteSeriesAlert = false
-                isKeyboardVisible = false
-
-
+                currentFocus = nil
                 Task {
                     try await viewModel.deleteFollowingInSeries()
-                    isKeyboardVisible = false
                     selectedTab = .plan
                     selectedCreationType = nil
                     dismiss()
@@ -397,14 +436,11 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteAlert = false
-                isKeyboardVisible = false
-
-
+                currentFocus = nil
                 Task {
                     try await viewModel.delete()
                     selectedTab = .plan
                     selectedCreationType = nil
-                    isKeyboardVisible = false
                     dismiss()
                 }
             }
@@ -418,8 +454,7 @@ struct ManualScheduleInputView: View {
     var deleteTapBarButton: some View {
         Button {
             showDeleteAlert = true
-            isKeyboardVisible = false
-
+            currentFocus = nil
         } label: {
             Image(systemName: "trash")
                 .foregroundColor(.red)
@@ -427,13 +462,11 @@ struct ManualScheduleInputView: View {
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteAlert = false
-                isKeyboardVisible = false
-
+                currentFocus = nil
                 Task {
                     try await viewModel.delete()
                     selectedTab = .plan
                     selectedCreationType = nil
-                    isKeyboardVisible = false
                     dismiss()
                 }
             }
@@ -441,18 +474,16 @@ struct ManualScheduleInputView: View {
         } message: {
             Text("이 작업은 되돌릴 수 없습니다.")
         }
-
     }
-
 }
 
 extension ManualScheduleInputView {
     @MainActor
     func saveSchedule() {
         Task {
-            let id = try await viewModel.saveSchedule()
+            let _ = try await viewModel.saveSchedule()
         }
-        isKeyboardVisible = false
+        currentFocus = nil
         selectedTab = .plan
         selectedCreationType = nil
         dismiss()
