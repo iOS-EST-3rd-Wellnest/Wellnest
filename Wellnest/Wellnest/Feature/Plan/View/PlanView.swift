@@ -11,75 +11,124 @@ struct PlanView: View {
     @ObservedObject var planVM: PlanViewModel
 
     @State private var isSheetExpanded: Bool = false
-    @State private var showDatePicker: Bool = false
     @State private var headerHeight: CGFloat = 0
 
+    @Binding  var showDatePicker: Bool
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
     var body: some View {
         GeometryReader { geo in
-            ZStack {
-                VStack(spacing: 0) {
-                    if isSheetExpanded {
-                        CalendarWeekView(planVM: planVM)
-                    } else {
-                        CalendarPagingView(planVM: planVM, screenWidth: geo.size.width)
+            let isLandscape = geo.size.width > geo.size.height
+
+            if isLandscape {
+                ZStack {
+                    HStack(spacing: 0) {
+                        VStack(spacing: 0) {
+                            CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
+                                .padding(.vertical, Spacing.content)
+                                .padding(.bottom, Spacing.content)
+                                .padding(.horizontal)
+
+                            CalendarPagingView(planVM: planVM)
+                        }
+
+                        Divider()
+
+                        ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType, asSidePanel: true)
+                            .frame(maxHeight: .infinity)
                     }
 
-                    ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
-                        .frame(maxHeight: .infinity)
-                        .padding(.top)
-                }
-                .padding(.top, headerHeight)
-                .zIndex(0)
-
-                if showDatePicker {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea(.all)
-                        .onTapGesture {
-                            withAnimation(.spring) {
-                                showDatePicker = false
+                    if showDatePicker {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .ignoresSafeArea(.all)
+                            .onTapGesture {
+                                withAnimation(.spring) {
+                                    showDatePicker = false
+                                }
                             }
-                        }
-                        .zIndex(1)
-                }
+                            .zIndex(1)
+                    }
 
-                if showDatePicker {
-                    DatePickerSheetView(
-                        planVM: planVM,
-                        showDatePicker: $showDatePicker,
-                        headerHeight: headerHeight
-                    )
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .zIndex(2)
+                    if showDatePicker {
+                        DatePickerSheetView(
+                            planVM: planVM,
+                            showDatePicker: $showDatePicker,
+                            headerHeight: 0
+                        )
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(2)
+                    }
                 }
-
-                VStack(spacing: 0) {
-                    CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
-                        .padding(.vertical, Spacing.content)
-                        .background {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        headerHeight = geo.size.height
-                                    }
-                                    .onChange(of: geo.size.height) { newValue in
-                                        headerHeight = newValue
-                                    }
-                            }
+                .ignoresSafeArea(edges: .bottom)
+            } else {
+                ZStack {
+                    VStack(spacing: 0) {
+                        if isSheetExpanded {
+                            CalendarWeekView(planVM: planVM)
+                                .padding(.bottom, Spacing.content)
+                        } else {
+                            CalendarPagingView(planVM: planVM)
                         }
 
-                    Spacer()
+                        ScheduleSheetView(planVM: planVM, isSheetExpanded: $isSheetExpanded, selectedTab: $selectedTab, selectedCreationType: $selectedCreationType)
+                            .frame(maxHeight: .infinity)
+                            .padding(.top)
+                    }
+                    .padding(.top, headerHeight + Spacing.content)
+                    .zIndex(0)
+
+                    if showDatePicker {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .ignoresSafeArea(.all)
+                            .onTapGesture {
+                                withAnimation(.spring) {
+                                    showDatePicker = false
+                                }
+                            }
+                            .zIndex(1)
+                    }
+
+                    if showDatePicker {
+                        DatePickerSheetView(
+                            planVM: planVM,
+                            showDatePicker: $showDatePicker,
+                            headerHeight: headerHeight
+                        )
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(2)
+                    }
+
+                    VStack(spacing: 0) {
+                        CalendarHeaderView(planVM: planVM, showDatePicker: $showDatePicker)
+                            .padding(.vertical, Spacing.content)
+                            .padding(.bottom, Spacing.content)
+                            .background {
+                                GeometryReader { geo in
+                                    Color.clear
+                                        .onAppear {
+                                            headerHeight = geo.size.height
+                                        }
+                                        .onChange(of: geo.size.height) { newValue in
+                                            headerHeight = newValue
+                                        }
+                                }
+                            }
+
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .zIndex(3)
                 }
-                .padding(.horizontal)
-                .zIndex(3)
+                .ignoresSafeArea(edges: .bottom)
+
             }
-            .ignoresSafeArea(edges: .bottom)
         }
     }
 }
 
 #Preview {
-    PlanView(planVM: PlanViewModel(), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
+    PlanView(planVM: PlanViewModel(), showDatePicker: .constant(false), selectedTab: .constant(.plan), selectedCreationType: .constant(.createByUser))
 }
