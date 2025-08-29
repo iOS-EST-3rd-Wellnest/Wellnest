@@ -23,7 +23,8 @@ struct ScheduleItem: Identifiable, Codable, Hashable {
     let eventIdentifier: String?
     let location: String?
     let alarm: String?
-
+    let memo: String?
+    
     var hasAlarm: Bool {
          return alarm != nil && !alarm!.isEmpty
      }

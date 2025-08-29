@@ -59,8 +59,9 @@ final class ManualScheduleViewModel: ObservableObject {
                     repeatEndDate: e.repeatEndDate,
                     isCompleted: e.isCompleted?.boolValue ?? false,
                     eventIdentifier: nil,
-                    location: e.location ?? "",
-                    alarm: e.alarm
+                    location: e.location ?? nil,
+                    alarm: e.alarm ?? nil,
+                    memo: e.detail ?? nil
                 )
             }
             self.todaySchedules = items

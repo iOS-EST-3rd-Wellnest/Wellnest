@@ -25,6 +25,7 @@ final class ScheduleStore: ObservableObject {
 
     private var objectsDidChangeObserver: NSObjectProtocol?
 
+
     init(context: NSManagedObjectContext) {
         self.viewContext = context
         self.viewContext.automaticallyMergesChangesFromParent = true
@@ -121,8 +122,9 @@ final class ScheduleStore: ObservableObject {
                     repeatEndDate: e.repeatEndDate,
                     isCompleted: e.isCompleted?.boolValue ?? false,
                     eventIdentifier: e.eventIdentifier,
-                    location: e.location ?? "",
-                    alarm: e.alarm
+                    location: e.location ?? nil,
+                    alarm: e.alarm ?? nil,
+                    memo: e.detail ?? nil
                 )
             }
         } catch {
@@ -233,6 +235,27 @@ final class ScheduleStore: ObservableObject {
                 for m in affectedMonths {
                     group.addTask { await self.ensureMonthLoaded(m) }
                 }
+            }
+        }
+    }
+}
+
+extension ScheduleStore {
+    func toggleCompleted(for id: UUID) async {
+        await viewContext.perform { [weak self] in
+            guard let self else { return }
+            let req: NSFetchRequest<ScheduleEntity> = ScheduleEntity.fetchRequest()
+            req.fetchLimit = 1
+            req.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            do {
+                if let obj = try viewContext.fetch(req).first {
+                    let current = obj.isCompleted?.boolValue ?? false
+                    obj.isCompleted = NSNumber(value: !current)
+                    obj.updatedAt = Date()
+                    try self.viewContext.save()
+                }
+            } catch {
+                print("toggleCompleted fetch/save error:", error)
             }
         }
     }

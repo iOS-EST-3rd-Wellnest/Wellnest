@@ -12,6 +12,8 @@ struct ScheduleItemView: View {
     var contextDate: Date? = nil
     var showMemo: Bool = true
 
+    var onToggleComplete: ((ScheduleItem) -> Void)? = nil
+
     var body: some View {
         let display: ScheduleDayDisplay? = contextDate.map { schedule.display(on: $0) }
         let isAllDay = display?.isAllDayForThatDate ?? schedule.isAllDay
@@ -65,19 +67,12 @@ struct ScheduleItemView: View {
                     .multilineTextAlignment(.leading)
 
                 if showMemo {
-                    if schedule.title.count > 0 {
-                        Text("중요한 회의입니다. 미리 준비해주세요.")
+                    if let memo = schedule.memo, !memo.isEmpty {
+                        Text(memo)
                             .font(.footnote)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
-
-//                    if let memo = schedule.memo, !memo.isEmpty {
-//                        Text(memo)
-//                            .font(.footnote)
-//                            .foregroundStyle(.secondary)
-//                            .lineLimit(1)
-//                    }
                 }
             }
             .padding(.leading, Spacing.inline)
@@ -85,13 +80,27 @@ struct ScheduleItemView: View {
 
             Spacer()
 
-            Image(systemName: "checkmark")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 20, height: 20)
-                .foregroundStyle(Color.scheduleSolid(color: schedule.backgroundColor))
-                .opacity(schedule.isCompleted ? 1 : 0)
-                .allowsHitTesting(false)
+            Button {
+                onToggleComplete?(schedule)
+            } label: {
+                ZStack {
+                    if schedule.isCompleted {
+                        Circle()
+                            .fill(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray)
+                            .frame(width: 28, height: 28)
+                    } else {
+                        Circle()
+                            .stroke(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray, lineWidth: 1)
+                            .frame(width: 28, height: 28)
+                    }
+
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(schedule.isCompleted ? .white : .gray)
+                }
+            }
+            .buttonStyle(.plain)
+
 
         }
         .padding(Spacing.content)
@@ -104,7 +113,7 @@ struct ScheduleItemView: View {
 //                .stroke(.quaternary, lineWidth: 0.5)
 //        )
         .roundedBorder(cornerRadius: CornerRadius.medium, color: .secondary.opacity(0.5), lineWidth: 0.5)
-        .contentShape(RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous))
     }
 }
 
@@ -126,7 +135,8 @@ struct ScheduleItemView: View {
                 isCompleted: false,
                 eventIdentifier: nil,
                 location: nil,
-                alarm: "10분 전"
+                alarm: "10분 전",
+                memo: nil
             )
         )
 
@@ -147,7 +157,7 @@ struct ScheduleItemView: View {
                 isCompleted: true,
                 eventIdentifier: nil,
                 location: nil,
-                alarm: nil
+                alarm: nil, memo: nil
             )
         )
 
@@ -168,7 +178,8 @@ struct ScheduleItemView: View {
                 isCompleted: true,
                 eventIdentifier: nil,
                 location: nil,
-                alarm: "1시간 전"
+                alarm: "1시간 전",
+                memo: nil
             )
         )
 
