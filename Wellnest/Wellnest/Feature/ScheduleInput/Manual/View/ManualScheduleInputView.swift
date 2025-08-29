@@ -28,6 +28,7 @@ struct ManualScheduleInputView: View {
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
     @State private var showOnlySeriesItemEditMenu = false
+    @State private var showSeriesItemEditMenu = false
     @State private var isChangedRepeatRule = false
     @State private var showMenu = false
     @State private var showDeleteAlert = false
@@ -150,17 +151,25 @@ struct ManualScheduleInputView: View {
                             .popover(isPresented: $showColorPickerSheet,
                                      attachmentAnchor: .rect(.bounds),
                                      arrowEdge: .trailing) {
-                                if #available(iOS 16.4, *) {
-                                    ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
+                                let content = ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
+                                #if os(iOS)
+                                if UIDevice.current.userInterfaceIdiom == .pad {
+                                    content
                                         .frame(width: 320, height: 200)
-                                        .padding()
-                                        .presentationDetents([.fraction(0.3)])
-
+                                        .padding(.bottom, 8)
                                 } else {
-                                    ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
-                                        .frame(width: 320, height: 200)
-                                        .padding()
+                                    if #available(iOS 16.4, *) {
+                                        content
+                                            .presentationDetents([.fraction(0.3)])
+
+                                    } else {
+                                        content
+                                    }
                                 }
+                                #else
+                                content
+                                #endif
+
                             }
                         }
                         .padding(.bottom, 5)
@@ -176,16 +185,6 @@ struct ManualScheduleInputView: View {
 
                         }
                         .tint(colorScheme == .dark ? .white : .black )
-
-//                        .onChange(of: showNote) { open in
-//                            if open {
-//                                DispatchQueue.main.async {
-//                                    FocusableTextField = .note
-//                                }
-//                            } else if focusField == .note {
-//                                focusField = nil
-//                            }
-//                        }
                         Spacer()
                     }
                     .padding()
