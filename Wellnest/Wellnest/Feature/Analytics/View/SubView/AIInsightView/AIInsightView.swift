@@ -36,7 +36,7 @@ struct AIInsightView: View {
                             .font(.footnote)
                             .foregroundColor(.secondary)
                         Text(viewModel.insightText ?? "")
-                            .font(.caption)
+                            .font(.callout)
                             .fontWeight(.medium)
                             .fixedSize(horizontal: false, vertical: true)
                     }

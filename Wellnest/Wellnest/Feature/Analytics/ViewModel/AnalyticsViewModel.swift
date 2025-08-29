@@ -17,39 +17,53 @@ class AnalyticsViewModel: ObservableObject {
     @Published var hasRealData: Bool = false
 
     private let healthManager = HealthManager.shared
+    
+    private static let defaultExerciseData = ExerciseData(
+        averageSteps: 8500,            // 하루 평균 8,500보
+        stepsChange: 300,             // 전일 대비 +300보
+        averageCalories: 2100,        // 하루 평균 2,100kcal
+        caloriesChange: -150,         // 전일 대비 -150kcal
+        weeklySteps: [8200, 8700, 7600, 9100, 10000, 9500, 8800], // 최근 7일
+        monthlySteps: [
+            8300, 8700, 7900, 9200, 8500, 9100, 8800, 9600, 10000, 10200,
+            7700, 8400, 8900, 9100, 9300, 9500, 9700, 8800, 8200, 9400,
+            8600, 8700, 9100, 8900, 9300, 9600, 9800, 10100, 9500, 8700
+        ], // 최근 한 달치
+        dailyStepsChange: 4,          // 어제보다 4% 증가
+        weeklyStepsChange: 6,         // 지난주 대비 6% 증가
+        monthlyStepsChange: -2,       // 지난달 대비 2% 감소
+        dailyCaloriesChange: -5,      // 어제보다 5% 감소
+        weeklyCaloriesChange: 3,      // 지난주 대비 3% 증가
+        monthlyCaloriesChange: 1      // 지난달 대비 1% 증가
+    )
+    
+    private static let deaultSleepData = SleepData(
+        averageHours: 7.3,       // 7시간 18분
+        averageMinutes: 10,     // 분 단위
+        sleepQuality: 75,        // 수면 질 점수 (0~100 가정)
+        qualityChange: 3,        // 전일 대비 +3%
+        
+        weeklySleepHours: [6.8, 7.2, 6.5, 7.0, 7.4, 8.1, 8.0 ], // 최근 7일 (평일/주말 차이 반영)
+        monthlySleepHours: [6.9, 7.1, 7.0, 6.8, 7.5, 8.0, 7.9,
+                            6.7, 7.3, 7.2, 6.9, 7.4, 7.8, 8.1,
+                            6.6, 7.0, 7.3, 6.8, 7.2, 7.6, 8.0,
+                            6.9, 7.1, 7.4, 7.2, 7.5, 8.2, 7.8,
+                            6.8, 7.3], // 최근 30일
+        
+        dailySleepTimeChange: 2,     // 전일 대비 2% 증가
+        weeklySleepTimeChange: -1,   // 지난주 대비 1% 감소
+        monthlySleepTimeChange: 0,   // 지난달과 비슷
+        dailyQualityChange: 1,       // 전일 대비 +1%
+        weeklyQualityChange: -2,     // 지난주 대비 -2%
+        monthlyQualityChange: 3      // 지난달 대비 +3%
+    )
 
     init() {
         self.healthData = HealthData(
             userName: "사용자",
             aiInsight: AIInsightData(message: "데이터를 불러오는 중..."),
-            exercise: ExerciseData(
-                averageSteps: 0,
-                stepsChange: 0,
-                averageCalories: 0,
-                caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7),
-                monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0,
-                weeklyStepsChange: 0,
-                monthlyStepsChange: 0,
-                dailyCaloriesChange: 0,
-                weeklyCaloriesChange: 0,
-                monthlyCaloriesChange: 0
-            ),
-            sleep: SleepData(
-                averageHours: 0,
-                averageMinutes: 0,
-                sleepQuality: 0,
-                qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7),
-                monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0,
-                weeklySleepTimeChange: 0,
-                monthlySleepTimeChange: 0,
-                dailyQualityChange: 0,
-                weeklyQualityChange: 0,
-                monthlyQualityChange: 0
-            ),
+            exercise: Self.defaultExerciseData,
+            sleep: Self.deaultSleepData,
         )
 
         Task {
@@ -79,7 +93,6 @@ class AnalyticsViewModel: ObservableObject {
         print("- 수면 품질: \(sleep.sleepQuality)%")
 
         let aiInsight = generateAIInsight(
-//            planCompletion: plan,
             exercise: exercise,
             sleep: sleep,
             hasRealData: self.hasRealData
@@ -87,7 +100,6 @@ class AnalyticsViewModel: ObservableObject {
 
         self.healthData = HealthData(
             userName: userName,
-//            planCompletion: plan,
             aiInsight: aiInsight,
             exercise: exercise,
             sleep: sleep,
@@ -102,12 +114,7 @@ class AnalyticsViewModel: ObservableObject {
 
         guard HKHealthStore.isHealthDataAvailable() else {
             print("HealthKit을 사용할 수 없음")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            return Self.defaultExerciseData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
@@ -116,12 +123,7 @@ class AnalyticsViewModel: ObservableObject {
 
         if !authCheck.missingCore.isEmpty {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            return Self.defaultExerciseData
         }
 
         let todaySteps: Int
@@ -132,7 +134,7 @@ class AnalyticsViewModel: ObservableObject {
             print("오늘 걸음수: \(todaySteps)")
         } catch {
             print("걸음수 가져오기 실패: \(error)")
-            todaySteps = 0
+            todaySteps = Self.defaultExerciseData.defaultTodaySteps
         }
 
         do {
@@ -140,7 +142,7 @@ class AnalyticsViewModel: ObservableObject {
             print("오늘 칼로리: \(todayCalories)")
         } catch {
             print("칼로리 가져오기 실패: \(error)")
-            todayCalories = 0
+            todayCalories = Self.defaultExerciseData.defaultTodayCalories
         }
 
         if todaySteps > 100 || todayCalories > 10 {
@@ -186,23 +188,13 @@ class AnalyticsViewModel: ObservableObject {
 
         guard HKHealthStore.isHealthDataAvailable() else {
             print("HealthKit을 사용할 수 없음")
-            return SleepData(
-                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
-                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
-            )
+            return Self.deaultSleepData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
         if !authCheck.missingCore.isEmpty {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return SleepData(
-                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
-                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
-            )
+            return Self.deaultSleepData
         }
 
         let sleepDuration: TimeInterval
@@ -211,7 +203,7 @@ class AnalyticsViewModel: ObservableObject {
             print("수면 시간: \(sleepDuration)초 (약 \(sleepDuration/3600)시간)")
         } catch {
             print("수면 시간 가져오기 실패: \(error)")
-            sleepDuration = 0
+            sleepDuration = Self.deaultSleepData.defaultSleepDuration
         }
 
         let hours = sleepDuration / 3600
