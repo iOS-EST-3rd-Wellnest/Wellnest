@@ -118,10 +118,11 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
+    #warning("이거 지금 실데이터로 매핑하기 어려움")
     private func generateTodayData() -> [Double] {
         // 오늘의 시간대별 걸음수 (현실적인 패턴)
         let totalSteps = Double(exerciseData.averageSteps)
-        let hourlyDistribution = [0.02, 0.08, 0.12, 0.18, 0.20, 0.25, 0.15] // 더 현실적인 분포
+        let hourlyDistribution = [0.03, 0.10, 0.07, 0.05, 0.25, 0.50, 0.15] // 더 현실적인 분포
         return hourlyDistribution.map { $0 * totalSteps }
     }
 
@@ -157,8 +158,16 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
+    #warning("이것 임의로 동작하도록 설정 해 둠")
     private func formatCaloriesDisplay() -> String {
-        "\(exerciseData.averageCalories)"
+        switch selectedPeriod {
+        case .today:
+            return "\(exerciseData.averageCalories)"
+        case .week:
+            return "\(Int(Double(exerciseData.averageCalories) * (1.0 + 0.1)))"
+        case .month:
+            return "\(Int(Double(exerciseData.averageCalories) * (1.0 - 0.1)))"
+        }
     }
 
     private func getStepsLabel() -> String {

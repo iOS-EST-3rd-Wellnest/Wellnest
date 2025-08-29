@@ -224,8 +224,7 @@ struct UserInfoForm<Content: View>: View {
             content
         }
         .frame(height: 58)
-        // TODO: 선택하지 않았을 때 카드 배경색 wellnestbackground으로 적용하기, 컬러스킴으로 안나눠도 됨
-        .background(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5))
+        .background(.wellnestBackgroundCard)
         .cornerRadius(CornerRadius.large)
         .overlay{
             RoundedRectangle(cornerRadius: CornerRadius.large)

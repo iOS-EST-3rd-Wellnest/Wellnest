@@ -178,9 +178,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                                 .foregroundColor(item.isSelected ? .primary : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
-                        // TODO: 선택하지 않았을 때 카드 배경색 wellnestbackground으로 적용하기, 컬러스킴으로 안나눠도 됨
-                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))
-
+                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : .wellnestBackgroundCard)
                         .cornerRadius(CornerRadius.large)
                     }
                 }
@@ -217,7 +215,8 @@ struct OnboardingButton: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 24)
+            .frame(height: 39)
+            .offset(y: 15)
 
             HStack {
                 if showPrevious, currentPage > 0 {
@@ -242,7 +241,32 @@ struct OnboardingButton: View {
             }
             .padding(.horizontal, Spacing.layout)
             .padding(.bottom, Spacing.content)
-            .background(colorScheme == .dark ? Color.black : Color.white)
+            .background {
+                ZStack {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+
+                    Rectangle()
+                        .fill(colorScheme == .light ? .white : .black)
+
+                }
+                .mask {
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: .black.opacity(0.5), location: 0.3),
+                            .init(color: .black, location: 0.5),
+                            .init(color: .black, location: 0.7),
+                            .init(color: .black, location: 1.0)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .ignoresSafeArea(edges: .bottom)
+
+            }
+//            .background(colorScheme == .dark ? Color.black : Color.white)
         }
     }
 }

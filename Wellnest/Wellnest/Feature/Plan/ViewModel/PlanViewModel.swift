@@ -62,15 +62,6 @@ extension PlanViewModel {
         selectedDate = date.startOfDay
     }
 
-    func combine(date: Date, time: Date = Date()) -> Date? {
-        let d = calendar.dateComponents([.year, .month, .day], from: date)
-        let t = calendar.dateComponents([.hour, .minute, .second], from: time)
-        var merged = DateComponents()
-        merged.year = d.year; merged.month = d.month; merged.day = d.day
-        merged.hour = t.hour; merged.minute = t.minute; merged.second = t.second
-        return calendar.date(from: merged)
-    }
-
     func updateVisibleMonth(_ month: Date) {
         let m = month.startOfMonth
         visibleMonth = m

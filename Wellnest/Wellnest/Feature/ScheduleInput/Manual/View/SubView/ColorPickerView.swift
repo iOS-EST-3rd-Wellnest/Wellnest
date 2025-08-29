@@ -15,21 +15,21 @@ struct ColorPickerView: View {
     @State private var showColorPicker = false
 
     private let colorNames: [String] = [
-        "wellnestPink",
-        "wellnestPeach",
-        "wellnestGray",
-        "wellnestGreen",
-        "wellnestBlue",
-        "wellnestPurple",
-        "wellnestYellow",
-        "wellnestBrown"
+        "wellnestAccentBlue",
+        "wellnestAccentBrown",
+        "wellnestAccentGray",
+        "wellnestAccentGreen",
+        "wellnestAccentPeach",
+        "wellnestAccentPink",
+        "wellnestAccentPurple",
+        "wellnestAccentYellow"
     ]
 
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
 
-                Text("배경색")
+                Text("색상 선택")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding()
@@ -37,7 +37,7 @@ struct ColorPickerView: View {
                 colorSelectionGrid(selectedIndex: $selectedBackgroundColorIndex, isBackground: true)
                 Spacer()
             }
-            .navigationTitle("색상 선택")
+            .navigationTitle("팔레트")
             .navigationBarTitleDisplayMode(.inline)
         }
 
@@ -64,5 +64,5 @@ struct ColorPickerView: View {
 }
 
 #Preview {
-    ColorPickerView(selectedColorName: .constant("accentCardBlue"))
+    ColorPickerView(selectedColorName: .constant("wellnestAccentBlue"))
 }

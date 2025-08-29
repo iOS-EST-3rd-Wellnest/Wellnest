@@ -22,3 +22,13 @@ struct ExerciseData {
     let weeklyCaloriesChange: Int
     let monthlyCaloriesChange: Int
 }
+
+extension ExerciseData {
+    var defaultTodaySteps: Int {
+        return 7203
+    }
+    
+    var defaultTodayCalories: Int {
+        return 2120
+    }
+}
