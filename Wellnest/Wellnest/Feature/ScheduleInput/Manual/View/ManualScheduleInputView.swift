@@ -16,6 +16,7 @@ struct ManualScheduleInputView: View {
 
     @StateObject private var viewModel: ScheduleEditorViewModel
     @ObservedObject var planVM: PlanViewModel
+    private let notiManager = LocalNotiManager.shared
 
     enum InputField: Hashable {
         case title
@@ -31,6 +32,7 @@ struct ManualScheduleInputView: View {
     @State private var showMenu = false
     @State private var showDeleteAlert = false
     @State private var showDeleteSeriesAlert = false
+    @State private var showNotificationAlert = false
 
     @State private var showNote = false
     @State private var isNoteExpanded = false
@@ -101,8 +103,42 @@ struct ManualScheduleInputView: View {
                             selectedTag: $viewModel.form.alarmRule
                         )
                         .padding(.bottom, 5)
-                        .onChange(of: viewModel.form.isAlarmOn) { _ in
+                        .onChange(of: viewModel.form.isAlarmOn) { isOn in
                             currentFocus = nil
+                            guard isOn else { return }
+                            // 권한 상태 먼저 조회
+                            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                                switch settings.authorizationStatus {
+                                case .notDetermined:
+                                    // 아직 묻지 않았다면 요청
+                                    DispatchQueue.main.async {
+                                        viewModel.form.isAlarmOn = false
+                                        showNotificationAlert = true
+                                    }
+//                                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+//                                        if !granted {
+//                                            DispatchQueue.main.async {
+//                                                viewModel.form.isAlarmOn = false
+//                                                showNotificationAlert = true
+//                                            }
+//                                        }
+//                                    }
+
+                                case .denied:
+                                    // 사용자가 거부한 상태
+                                    DispatchQueue.main.async {
+                                        viewModel.form.isAlarmOn = false
+                                        showNotificationAlert = true
+                                    }
+
+                                case .authorized, .provisional, .ephemeral:
+                                    // 허용됨 → 스케줄 등록 등 진행
+                                    break
+
+                                @unknown default:
+                                    break
+                                }
+                            }
                         }
                         HStack {
                             Text("색상")
@@ -198,7 +234,20 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 }
+                .alert("알림 권한이 필요해요", isPresented: $showNotificationAlert) {
+                    Button("앱 설정으로 이동") {
+                        dismiss()
 
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                selectedTab = .settings
+                            }
+                        }
+                    }
+                    Button("취소", role: .cancel) { }
+                } message: {
+                    Text("앱 설정에서 알림을 켜주세요.")
+                }
             }
             .overlay(alignment: .bottom) {
                 VStack(spacing: 0) {
