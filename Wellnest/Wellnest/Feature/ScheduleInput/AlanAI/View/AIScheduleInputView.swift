@@ -67,8 +67,9 @@ struct AIScheduleInputView: View {
                 }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
             }
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
         }
-        .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
         .fullScreenCover(isPresented: $viewModel.showResult) {
             AIScheduleResultView(
                 viewModel: viewModel,

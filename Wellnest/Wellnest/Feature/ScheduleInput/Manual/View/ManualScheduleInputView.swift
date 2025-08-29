@@ -364,8 +364,9 @@ struct ManualScheduleInputView: View {
                 }
             }
             .padding(.bottom, 8)
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
         }
-        .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
     }
 
     @ViewBuilder

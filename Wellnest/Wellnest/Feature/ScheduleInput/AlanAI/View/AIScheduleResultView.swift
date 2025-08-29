@@ -107,8 +107,9 @@ struct AIScheduleResultView: View {
             } message: {
                 Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
             }
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
         }
-        .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
     }
 
     private var saveButtonsSection: some View {
