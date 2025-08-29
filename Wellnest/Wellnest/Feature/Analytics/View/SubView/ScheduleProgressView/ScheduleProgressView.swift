@@ -56,7 +56,7 @@ private struct ProgressRingView: View {
                     .trim(from: 0, to: viewModel.todayCompletionRate)
                     .stroke(
                         LinearGradient(
-                            colors: [.green, .blue],
+                            colors: [.orange, .wellnestOrange],
                             startPoint: .topTrailing,
                             endPoint: .bottomLeading
                         ),

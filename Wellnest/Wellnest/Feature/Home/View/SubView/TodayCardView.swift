@@ -93,7 +93,7 @@ struct TodayCardView: View {
                                 .trim(from: 0, to: scheduleProgressVM.todayCompletionRate)
                                 .stroke(
                                     LinearGradient(
-                                        colors: [.wellnestOrange],
+                                        colors: [.orange, .wellnestOrange],
                                         startPoint: .topTrailing,
                                         endPoint: .bottomLeading
                                     ),
