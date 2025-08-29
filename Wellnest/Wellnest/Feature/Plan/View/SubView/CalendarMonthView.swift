@@ -13,11 +13,11 @@ struct CalendarMonthView: View {
 
     let month: Date
     var body: some View {
-        CalendarLayout {
-            ForEach(month.filledDatesOfMonth(), id: \.self) { date in
-                dateCell(date: date)
-            }
-        }
+        CalendarLayout(mode: .fixedSlots(slots: 6, aspectRatio: 0.9)) {
+               ForEach(month.filledDatesOfMonth(), id: \.self) { date in
+                   dateCell(date: date)
+               }
+           }
     }
 
     @ViewBuilder
@@ -30,7 +30,7 @@ struct CalendarMonthView: View {
         let scheduleItems = planVM.items(for: date)
         let scheduleCount = scheduleItems.count
 
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Text("\(date.dayNumber)")
                 .font(.system(size: 16))
                 .foregroundStyle(isSelected ? .white : (isCurrentMonth ? date.weekdayColor : .secondary))
@@ -71,7 +71,8 @@ struct CalendarMonthView: View {
                     .foregroundStyle(.clear)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.top, Spacing.content)
     }
 }
 

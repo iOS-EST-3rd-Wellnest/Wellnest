@@ -13,6 +13,7 @@ import Combine
 @MainActor
 final class PlanViewModel: ObservableObject {
 
+
     @Published var selectedDate: Date
     @Published private(set) var anchorMonth: Date
     @Published private(set) var visibleMonth: Date
@@ -80,6 +81,9 @@ extension PlanViewModel {
 //    func updateVisibleMonthOnly(_ month: Date) {
 //        visibleMonth = month.startOfMonth
 //    }
+    func toggleCompleted(for id: UUID) async {
+        await scheduleStore.toggleCompleted(for: id)
+    }
 }
 
 extension PlanViewModel {
@@ -135,27 +139,4 @@ extension PlanViewModel {
     }
 }
 
-extension PlanViewModel {
-    func calendarHeight(
-        width: CGFloat = UIScreen.main.bounds.width,
-        rows: Int,
-        columns: Int = 7,
-        spacing: CGFloat = 4,
-        padding: CGFloat = 16
-    ) -> CGFloat {
-        let screenWidth = width - padding * 2
-        let totalSpacingWidth = spacing * CGFloat(columns - 1)
-        let totalSpacingHeight = spacing * CGFloat(rows - 1)
-        let itemWidth = (screenWidth - totalSpacingWidth) / CGFloat(columns)
 
-        let itemHeight: CGFloat = {
-            if rows == 1 {
-                itemWidth - spacing * 2
-            } else {
-                itemWidth * CGFloat(rows) + totalSpacingHeight
-            }
-        }()
-
-        return itemHeight
-    }
-}
