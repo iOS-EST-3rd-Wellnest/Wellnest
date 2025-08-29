@@ -31,9 +31,7 @@ enum RepeatRuleParser {
     ) -> [Date] {
         let defaultEnd: Date = {
             switch frequency {
-            case .daily, .weekly:
-                return calendar.date(byAdding: .year, value: 1, to: start)!   // 1년
-            case .monthly:
+            case .daily, .weekly, .monthly:
                 return calendar.date(byAdding: .year, value: 3, to: start)!   // 3년
             case .yearly:
                 return calendar.date(byAdding: .year, value: 10, to: start)!  // 10년 (필요 시 조정)
