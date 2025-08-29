@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AIScheduleInputView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
     @StateObject private var viewModel = AIScheduleViewModel()
@@ -53,10 +54,24 @@ struct AIScheduleInputView: View {
                 )
             }
             .safeAreaInset(edge: .bottom) {
-                generateButton
-                    .padding()
-                    .background(.white)
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                VStack(spacing: 0) {
+                    // 버튼 위로 덮일 페이드
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
+                            .init(color: colorScheme == .dark ? .black : .white, location: 1.0),
+                        ]),
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    .frame(height: 28)
+                    
+                    generateButton
+                        .padding()
+                        .background(colorScheme == .dark
+                                    ? Color.black.ignoresSafeArea(edges: .bottom)
+                                    : Color.white.ignoresSafeArea(edges: .bottom))
+                }
+                .ignoresSafeArea(.keyboard, edges: .bottom)
             }
         }
     }
