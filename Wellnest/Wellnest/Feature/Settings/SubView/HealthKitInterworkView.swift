@@ -53,7 +53,7 @@ struct HealthKitInterworkView: View {
                             .font(titleFont)
                             .fontWeight(.bold)
                         
-                        Text("Apple 건강앱과 연동하여 걸음수, 수면, 심박수 등 건강데이터를 자동으로 기록합니다.")
+                        Text("Apple 건강앱과 연동하여 걸음수, 수면 등 건강데이터를 자동으로 기록합니다.")
                             .foregroundStyle(.secondary)
                             .font(subTitleFont)
                     }
@@ -69,7 +69,7 @@ struct HealthKitInterworkView: View {
                             .font(titleFont)
                             .fontWeight(.bold)
                         
-                        Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 확인할 수 있습니다.")
+                        Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 \n확인할 수 있습니다.")
                             .foregroundStyle(.secondary)
                             .font(subTitleFont)
                     }
