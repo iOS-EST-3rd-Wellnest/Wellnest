@@ -59,6 +59,7 @@ struct OnboardingTabView: View {
                     }
                 }
             }
+            .background(Color(.systemBackground))
             .layoutWidth()
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
