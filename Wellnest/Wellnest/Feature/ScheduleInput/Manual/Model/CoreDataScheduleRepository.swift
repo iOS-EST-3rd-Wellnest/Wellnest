@@ -42,6 +42,7 @@ final class CoreDataScheduleRepository: ScheduleRepository {
         let frequency = RepeatRuleParser.frequency(from: input.repeatRuleName)
         let duration = input.endDate.timeIntervalSince(input.startDate)
 
+        print("frequency: \(frequency)")
         let endInclusive = input.hasRepeatEndDate ? input.repeatEndDate?.endOfDay() : nil
         let occurrences: [Date] = {
             guard let frequency else { return [input.startDate] }
@@ -49,6 +50,8 @@ final class CoreDataScheduleRepository: ScheduleRepository {
                                                         end: endInclusive,
                                                         frequency: frequency)
         }()
+
+        print("occurrences: \(occurrences)")
 
         let seriesId = UUID()
         var created: [ScheduleEntity] = []
