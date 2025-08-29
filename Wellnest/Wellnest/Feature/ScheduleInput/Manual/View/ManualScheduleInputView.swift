@@ -239,7 +239,7 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 }
-                .alert("알림 권한이 필요해요", isPresented: $showNotificationAlert) {
+                .alert("알림 권한이 필요합니다.", isPresented: $showNotificationAlert) {
                     Button("앱 설정으로 이동") {
                         dismiss()
 
@@ -340,9 +340,18 @@ struct ManualScheduleInputView: View {
                                     .padding()
                                 }
                             }
-                            .foregroundColor(.black)
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
                             .background(RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(.systemBackground)))
+                                            .fill(Color(.systemBackground))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(
+                                                        colorScheme == .dark
+                                                        ? Color.white.opacity(0.18)   // 다크: 은은한 흰색 보더
+                                                        : Color.black.opacity(0.18),  // 라이트: 얕은 검정 보더
+                                                        lineWidth: 0.8
+                                                    )
+                                            ))
                             .shadow(radius: 0.5)
                             .frame(width: 200)
                             .offset(y: -70)
@@ -455,7 +464,6 @@ struct ManualScheduleInputView: View {
                 Button("이 이벤트만 삭제") {
                     showDeleteAlert = true
                     currentFocus = nil
-
                 }
 
                 Button("이후 모든 이벤트 삭제") {
@@ -467,6 +475,7 @@ struct ManualScheduleInputView: View {
             Image(systemName: "trash")
                 .foregroundColor(.red)
         }
+        .tint(colorScheme == .dark ? .white : .black)
         .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
             Button("삭제", role: .destructive) {
                 showDeleteSeriesAlert = false
