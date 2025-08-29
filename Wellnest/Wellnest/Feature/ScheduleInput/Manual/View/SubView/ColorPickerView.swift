@@ -29,7 +29,7 @@ struct ColorPickerView: View {
         NavigationView {
             VStack(alignment: .leading) {
 
-                Text("배경색")
+                Text("색상 선택")
                     .font(.headline)
                     .foregroundColor(.secondary)
                     .padding()
@@ -37,7 +37,7 @@ struct ColorPickerView: View {
                 colorSelectionGrid(selectedIndex: $selectedBackgroundColorIndex, isBackground: true)
                 Spacer()
             }
-            .navigationTitle("색상 선택")
+            .navigationTitle("팔레트")
             .navigationBarTitleDisplayMode(.inline)
         }
 

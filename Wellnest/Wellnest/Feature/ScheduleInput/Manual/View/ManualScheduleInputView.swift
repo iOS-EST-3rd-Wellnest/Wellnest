@@ -145,13 +145,24 @@ struct ManualScheduleInputView: View {
                                 ColorPicker("팔레트 선택", selection: $viewModel.previewColor)
                                     .labelsHidden()
                                     .disabled(true)
+                                    .padding(.leading, 8)
+                            }
+                            .popover(isPresented: $showColorPickerSheet,
+                                     attachmentAnchor: .rect(.bounds),
+                                     arrowEdge: .trailing) {
+                                if #available(iOS 16.4, *) {
+                                    ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
+                                        .frame(width: 320, height: 200)
+                                        .padding()
+                                        .presentationCompactAdaptation(.sheet)
+                                } else {
+                                    ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
+                                        .frame(width: 320, height: 200)
+                                        .padding()
+                                }
                             }
                         }
                         .padding(.bottom, 5)
-                        .sheet(isPresented: $showColorPickerSheet) {
-                            ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
-                                .presentationDetents([.fraction(0.3)])
-                        }
                         .onChange(of: viewModel.form.selectedColorName) { newName in
                             viewModel.updateColorName(newName)
                         }
