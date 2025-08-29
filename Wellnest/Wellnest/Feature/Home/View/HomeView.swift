@@ -13,8 +13,6 @@ struct HomeView: View {
     @StateObject private var manualScheduleVM = ManualScheduleVMFactory.make()
     @State private var offsetY: CGFloat = .zero
     
-    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
-    
     /// 오늘 일정 목록에서 미완료 일정만 필터링
     private var isCompleteSchedules: [ScheduleItem] {
         manualScheduleVM.todaySchedules.filter { !$0.isCompleted }
