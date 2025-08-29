@@ -11,8 +11,8 @@ struct ScheduleItemView: View {
     let schedule: ScheduleItem
     var contextDate: Date? = nil
     var showMemo: Bool = true
-
     var onToggleComplete: ((ScheduleItem) -> Void)? = nil
+    var upcomingScheduleId: Bool = false
 
     var body: some View {
         let display: ScheduleDayDisplay? = contextDate.map { schedule.display(on: $0) }
@@ -104,15 +104,21 @@ struct ScheduleItemView: View {
 
         }
         .padding(Spacing.content)
-//        .background(
-//            RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)
-//                .fill(Color.scheduleBackground(color: schedule.backgroundColor))
-//        )
-//        .overlay(
-//            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-//                .stroke(.quaternary, lineWidth: 0.5)
-//        )
-        .roundedBorder(cornerRadius: CornerRadius.medium, color: .secondary.opacity(0.5), lineWidth: 0.5)
+        .background(
+                    RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                        .fill(upcomingScheduleId ? Color.scheduleBackground(color: schedule.backgroundColor) : .clear)
+                )
+                .overlay(
+                    Group {
+                        if upcomingScheduleId {
+                            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                                .stroke(Color.scheduleSolid(color: schedule.backgroundColor), lineWidth: 1)
+                        } else {
+                            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                                .stroke(.secondary.opacity(0.5), lineWidth: 0.5)
+                        }
+                    }
+                )
         .contentShape(RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous))
     }
 }

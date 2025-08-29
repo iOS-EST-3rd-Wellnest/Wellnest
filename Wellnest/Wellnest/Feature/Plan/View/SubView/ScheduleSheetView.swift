@@ -38,6 +38,24 @@ struct ScheduleSheetView: View {
                 .opacity(asSidePanel ? 1.0 : (isDragging ? 0.7 : 1.0))
 
             ScrollView {
+                let now = Date()
+
+                let upcomingScheduleId = planVM.selectedDateScheduleItems
+                    .compactMap { item -> (UUID, Date)? in
+                        let display = item.display(on: planVM.selectedDate)
+                        let isAllDay = display.isAllDayForThatDate
+
+                        guard !isAllDay else { return nil }
+
+                        let start = display.displayStart ?? item.startDate
+                        
+                        guard start > now else { return nil }
+
+                        return (item.id, start)
+                    }
+                    .min(by: { $0.1 < $1.1 })?
+                    .0
+
                 LazyVStack(spacing: 10) {
                     if planVM.selectedDateScheduleItems.isEmpty {
                         emptyStateView
@@ -50,7 +68,8 @@ struct ScheduleSheetView: View {
                                     Task {
                                         await planVM.toggleCompleted(for: schedule.id)
                                     }
-                                }
+                                },
+                                upcomingScheduleId: item.id == upcomingScheduleId
                             )
                                 .onTapGesture { selectedItem = item }
                         }
