@@ -21,9 +21,9 @@ struct ManualScheduleInputView: View {
         case title
         case note
     }
+
     @State private var currentFocus: InputField? = .title
 
-    @State private var isKeyboardVisible = true
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
     @State private var showOnlySeriesItemEditMenu = false
@@ -175,9 +175,6 @@ struct ManualScheduleInputView: View {
                 .onChange(of: viewModel.form.endDate) { _ in
                     currentFocus = nil
                 }
-//                .onChange(of: focusField) { f in
-//                    isKeyboardVisible = (f != nil)
-//                }
                 .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
                 .navigationBarTitleDisplayMode(.inline)
