@@ -54,6 +54,7 @@ struct ManualScheduleInputView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
+                Color(uiColor: colorScheme == .dark ? .black : .white).ignoresSafeArea()
                 ScrollView(.vertical) {
                     VStack(alignment: .leading, spacing: Spacing.layout) {
                         VStack {
@@ -115,15 +116,6 @@ struct ManualScheduleInputView: View {
                                         viewModel.form.isAlarmOn = false
                                         showNotificationAlert = true
                                     }
-//                                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-//                                        if !granted {
-//                                            DispatchQueue.main.async {
-//                                                viewModel.form.isAlarmOn = false
-//                                                showNotificationAlert = true
-//                                            }
-//                                        }
-//                                    }
-
                                 case .denied:
                                     // 사용자가 거부한 상태
                                     DispatchQueue.main.async {
@@ -169,8 +161,9 @@ struct ManualScheduleInputView: View {
                             Text("메모")
                                 .font(.headline)
                                 .fontWeight(.semibold)
+
                         }
-                        .tint(.black)
+                        .tint(colorScheme == .dark ? .white : .black )
 
 //                        .onChange(of: showNote) { open in
 //                            if open {
@@ -301,9 +294,8 @@ struct ManualScheduleInputView: View {
                         }
                         .padding(.horizontal)
                         .frame(maxWidth: .infinity)
-                        .background(colorScheme == .dark
-                                    ? Color.black.ignoresSafeArea(edges: .bottom)
-                                    : Color.white.ignoresSafeArea(edges: .bottom))
+                        .background(colorScheme == .dark ? Color.black : Color.white).ignoresSafeArea(edges: .bottom)
+
 
                         if showOnlySeriesItemEditMenu {
                             VStack(spacing: 0) {
@@ -353,9 +345,6 @@ struct ManualScheduleInputView: View {
                 }
             }
             .padding(.bottom, 8)
-
-
-
         }
     }
 
