@@ -44,28 +44,38 @@ struct TodayCardView: View {
                 if homeVM.goalList.isEmpty {
                     GoalSkeletonView(height: cardHeight)
                 } else {
-                    RoundedRectangle(cornerRadius: CornerRadius.large)
-                        .fill(.wellnestBackgroundCard)
-                        .frame(minHeight: cardHeight)
-                        .roundedBorder(cornerRadius: CornerRadius.large)
-                        .defaultShadow()
-                        .overlay(alignment: .topLeading) {
-                            VStack(alignment: .leading, spacing: Spacing.content) {
-                                Text("목표")
-                                    .font(isDevicePad ? .title2 : .title3)
-                                    .fontWeight(.semibold)
-                                    .padding(.vertical, Spacing.inline)
-                                    .padding(.bottom, Spacing.inline)
-                                
-                                ForEach(homeVM.goalList, id: \.self) {
-                                    Text("\($0)")
-                                        .font(isDevicePad ? .body : .subheadline)
-                                }
+                    HStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("목표")
+                                .font(isDevicePad ? .title2 : .title3)
+                                .fontWeight(.semibold)
+                                .padding(.bottom, isDevicePad ? Spacing.layout : Spacing.content)
+                            
+                            ForEach(homeVM.goalList, id: \.self) {
+                                Text("\($0)")
+                                    .font(isDevicePad ? .body : .subheadline)
+                                    .padding(.bottom, isDevicePad ? Spacing.content : Spacing.inline)
                             }
-                            .padding()
-                            .padding(.top, isDevicePad ? Spacing.layout : 0)
-                            .padding(.leading, isDevicePad ? Spacing.layout : 0)
+                            
+                            if isDevicePad {
+                                Spacer()
+                            }
                         }
+                        .if(isDevicePad) { content in
+                            content
+                                .padding(.top, Spacing.layout * 2)
+                        }
+                        .padding(.leading, Spacing.layout * 1.5)
+                        
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, minHeight: cardHeight)
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.large)
+                            .fill(.wellnestBackgroundCard)
+                            .roundedBorder(cornerRadius: CornerRadius.large)
+                            .defaultShadow()
+                    )
                 }
                 
                 RoundedRectangle(cornerRadius: CornerRadius.large)
