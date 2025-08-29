@@ -42,11 +42,11 @@ final class CoreDataScheduleRepository: ScheduleRepository {
         let frequency = RepeatRuleParser.frequency(from: input.repeatRuleName)
         let duration = input.endDate.timeIntervalSince(input.startDate)
 
+        let endInclusive = input.hasRepeatEndDate ? input.repeatEndDate?.endOfDay() : nil
         let occurrences: [Date] = {
             guard let frequency else { return [input.startDate] }
-            let end = input.hasRepeatEndDate ? input.repeatEndDate : nil
             return RepeatRuleParser.generateOccurrences(start: input.startDate,
-                                                        end: end,
+                                                        end: endInclusive,
                                                         frequency: frequency)
         }()
 
@@ -220,4 +220,11 @@ struct ScheduleSnapshot {
     let isAlarmOn: Bool
     let isCompleted: Bool
     let seriesId: UUID?
+}
+
+extension Date {
+    func endOfDay(in calendar: Calendar = .current) -> Date {
+        let sod = calendar.startOfDay(for: self)
+        return calendar.date(byAdding: DateComponents(day: 1, second: -1), to: sod)!
+    }
 }

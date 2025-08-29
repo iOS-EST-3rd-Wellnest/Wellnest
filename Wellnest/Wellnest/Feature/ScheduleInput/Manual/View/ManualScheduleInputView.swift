@@ -185,16 +185,6 @@ struct ManualScheduleInputView: View {
 
                         }
                         .tint(colorScheme == .dark ? .white : .black )
-
-//                        .onChange(of: showNote) { open in
-//                            if open {
-//                                DispatchQueue.main.async {
-//                                    FocusableTextField = .note
-//                                }
-//                            } else if focusField == .note {
-//                                focusField = nil
-//                            }
-//                        }
                         Spacer()
                     }
                     .padding()
