@@ -154,7 +154,8 @@ struct ManualScheduleInputView: View {
                                     ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
                                         .frame(width: 320, height: 200)
                                         .padding()
-                                        .presentationCompactAdaptation(.sheet)
+                                        .presentationDetents([.fraction(0.3)])
+
                                 } else {
                                     ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
                                         .frame(width: 320, height: 200)
