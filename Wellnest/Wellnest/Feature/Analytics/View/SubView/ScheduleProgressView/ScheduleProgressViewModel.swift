@@ -77,7 +77,7 @@ final class ScheduleProgressViewModel: NSObject, ObservableObject {
         let cal = Calendar.current
         let start = cal.startOfDay(for: Date())
         let end   = cal.date(byAdding: .day, value: 1, to: start)!
-        return NSPredicate(format: "createdAt >= %@ AND createdAt < %@", start as NSDate, end as NSDate)
+        return NSPredicate(format: "startDate >= %@ AND endDate < %@", start as NSDate, end as NSDate)
     }
     
     private func todayRange() -> (Date, Date) {
