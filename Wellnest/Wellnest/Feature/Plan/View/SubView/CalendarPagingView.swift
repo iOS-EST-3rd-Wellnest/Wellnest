@@ -18,15 +18,11 @@ struct CalendarPagingView: View {
     @State private var isJumping = false
     @State private var previousSelection: Int = 3
 
-    let screenWidth: CGFloat
+    @State private var monthHeight: CGFloat = 0
 
     var body: some View {
-        let rowH1 = planVM.calendarHeight(width: screenWidth, rows: 1)
-        let rowH5 = planVM.calendarHeight(width: screenWidth, rows: 5)
-        let totalH = rowH1 + rowH5
-
         VStack(spacing: 0) {
-            CalendarLayout(fixedHeight: rowH1) {
+            CalendarLayout(mode: .intrinsic) {
                 ForEach(Date.weekdays.indices, id: \.self) { idx in
                     Text(Date.weekdays[idx])
                         .font(.subheadline)
@@ -35,6 +31,7 @@ struct CalendarPagingView: View {
                 }
             }
             .padding(.horizontal)
+            .padding(.bottom, Spacing.content)
 
             TabView(selection: $selection) {
                 ForEach(pages.indices, id: \.self) { idx in
@@ -44,10 +41,21 @@ struct CalendarPagingView: View {
                         .onDisappear {
                             handlePageDisappear(idx: idx)
                         }
+                        .background {
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        if monthHeight == 0 {
+                                            monthHeight = geo.size.height
+                                        }
+                                    }
+                            }
+                        }
                 }
             }
-            .frame(height: rowH5)
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: monthHeight > 0 ? monthHeight : nil)
+            .clipped()
             .simultaneousGesture(
                 DragGesture()
                     .onChanged { _ in
@@ -111,7 +119,6 @@ struct CalendarPagingView: View {
                 }
             }
         }
-        .frame(height: totalH)
     }
 
     private func handlePageDisappear(idx: Int) {
@@ -144,5 +151,5 @@ struct CalendarPagingView: View {
 }
 
 #Preview {
-    CalendarPagingView(planVM: PlanViewModel(), screenWidth: 390)
+    CalendarPagingView(planVM: PlanViewModel())
 }
