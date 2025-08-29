@@ -13,103 +13,109 @@ struct SleepStatChartCardView: View {
     @State private var selectedPeriod: ChartPeriod = .week
 
     var body: some View {
-        RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(.wellnestBackgroundCard)
-            .frame(minHeight: 360)
-            .roundedBorder(cornerRadius: CornerRadius.large)
-            .defaultShadow()
-            .overlay(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: Spacing.content) {
-                    HStack {
-                        HStack(spacing: Spacing.content) {
-                            Image(systemName: "bed.double.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                            Text("수면")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
+        VStack(alignment: .leading, spacing: Spacing.content) {
+            HStack {
+                HStack(spacing: Spacing.content) {
+                    Image(systemName: "bed.double.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                    
+                    Text("수면")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
 
-                        Spacer()
+                Spacer()
 
-                        Picker("기간", selection: $selectedPeriod) {
-                            ForEach(ChartPeriod.allCases, id: \.self) { period in
-                                Text(period.rawValue).tag(period)
-                            }
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .frame(width: 150)
-                    }
-
-                    HStack(spacing: Spacing.layout * 2) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("수면 시간")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text(formatSleepTimeDisplay())
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text(getSleepTimeLabel())
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            HStack(spacing: Spacing.inline) {
-                                Image(systemName: getSleepTimeChangeIcon())
-                                    .font(.caption)
-                                    .foregroundColor(getSleepTimeChangeColor())
-                                Text(getSleepTimeChangeText())
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(getSleepTimeChangeColor())
-                            }
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("수면 효율")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text(formatSleepQualityDisplay())
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text("%")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            HStack(spacing: Spacing.inline) {
-                                Image(systemName: getSleepEfficiencyChangeIcon())
-                                    .font(.caption)
-                                    .foregroundColor(getSleepEfficiencyChangeColor())
-                                Text(getSleepEfficiencyChangeText())
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(getSleepEfficiencyChangeColor())
-                            }
-                        }
-
-                        Spacer()
-                    }
-
-                    VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
-                        Text(getChartTitle())
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        BarChartView(
-                            data: currentChartData,
-                            color: .blue,
-                            period: selectedPeriod,
-                            dataType: .sleep
-                        )
-                        .frame(height: 140)
+                Picker("기간", selection: $selectedPeriod) {
+                    ForEach(ChartPeriod.allCases, id: \.self) { period in
+                        Text(period.rawValue).tag(period)
                     }
                 }
-                .padding(16)
+                .pickerStyle(SegmentedPickerStyle())
+                .frame(width: 150)
             }
+
+            HStack(spacing: Spacing.layout * 2) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("수면 시간")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack(alignment: .bottom, spacing: Spacing.inline) {
+                        Text(formatSleepTimeDisplay())
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text(getSleepTimeLabel())
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: Spacing.inline) {
+                        Image(systemName: getSleepTimeChangeIcon())
+                            .font(.caption)
+                            .foregroundColor(getSleepTimeChangeColor())
+                        
+                        Text(getSleepTimeChangeText())
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(getSleepTimeChangeColor())
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("수면 효율")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(alignment: .bottom, spacing: Spacing.inline) {
+                        Text(formatSleepQualityDisplay())
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        Text("%")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: Spacing.inline) {
+                        Image(systemName: getSleepEfficiencyChangeIcon())
+                            .font(.caption)
+                            .foregroundColor(getSleepEfficiencyChangeColor())
+                        
+                        Text(getSleepEfficiencyChangeText())
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(getSleepEfficiencyChangeColor())
+                    }
+                }
+
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
+                Text(getChartTitle())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                BarChartView(
+                    data: currentChartData,
+                    color: .blue,
+                    period: selectedPeriod,
+                    dataType: .sleep
+                )
+                .frame(height: 140)
+            }
+        }
+        .frame(maxHeight: 400)
+        .padding()
+        .padding(.bottom, Spacing.layout)
+        .roundedBorder(cornerRadius: CornerRadius.large)
+        .defaultShadow()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .fill(.wellnestBackgroundCard)
+        )
     }
 
     private var currentChartData: [Double] {

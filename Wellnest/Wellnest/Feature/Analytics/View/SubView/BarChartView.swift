@@ -111,19 +111,19 @@ struct BarChartView: View {
     private var regularBarChartView: some View {
         HStack(spacing: 0) {
             // Y축 레이블
-            VStack(spacing: 0) {
+            VStack(alignment: .trailing, spacing: 0) {
                 ForEach(yAxisValues.reversed(), id: \.self) { value in
                     HStack {
-                        Spacer()
                         Text(formatYAxisLabel(value))
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.trailing)
                     }
                     .frame(maxHeight: .infinity)
                 }
             }
             .frame(width: 45, height: 160)
-            .padding(.trailing, 6)
+            .padding(.trailing, 5)
 
             VStack(spacing: 8) {
                 // 차트 영역
