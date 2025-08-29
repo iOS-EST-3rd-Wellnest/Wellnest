@@ -18,7 +18,7 @@ class AnalyticsViewModel: ObservableObject {
 
     private let healthManager = HealthManager.shared
     
-    private static let defaultExerciseData = ExerciseData(
+    static let defaultExerciseData = ExerciseData(
         averageSteps: 8500,            // 하루 평균 8,500보
         stepsChange: 300,             // 전일 대비 +300보
         averageCalories: 2100,        // 하루 평균 2,100kcal
