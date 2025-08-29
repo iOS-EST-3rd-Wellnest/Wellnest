@@ -12,7 +12,6 @@ struct GoalSkeletonView: View {
     var body: some View {
         SkeletonView(shape: RoundedRectangle(cornerRadius: CornerRadius.large))
             .frame(minHeight: height)
-            .roundedBorder(cornerRadius: CornerRadius.large)
     }
 }
 
@@ -43,7 +42,6 @@ struct RecommendContentSkeletonView: View {
         VStack(alignment: .leading ) {
             SkeletonView(shape: .rect(cornerRadius: CornerRadius.large))
                 .frame(maxWidth: .infinity, minHeight: category == RecommendCategory.weather ? 100 : 60, alignment: .leading)
-                //.roundedBorder(cornerRadius: CornerRadius.large)
         }
     }
 }
