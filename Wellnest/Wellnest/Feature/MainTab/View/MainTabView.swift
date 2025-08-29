@@ -100,6 +100,7 @@ struct MainTabView: View {
                     }
             }
         }
+        .dynamicTypeSize(.medium ... .xxLarge)
         .fullScreenCover(item: $selectedCreationType) { type in
             switch type {
             case .createByAI:
