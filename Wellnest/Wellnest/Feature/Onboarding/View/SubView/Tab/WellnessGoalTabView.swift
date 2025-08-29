@@ -60,7 +60,6 @@ struct WellnessGoalTabView: View {
             }
             .padding(.horizontal, Spacing.layout)
         }
-        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(

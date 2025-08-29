@@ -42,7 +42,6 @@ struct FirstIntroductionTabView: View {
             Spacer()
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color(.systemBackground))
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
                 title: "다음",
