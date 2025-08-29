@@ -23,6 +23,8 @@ final class CoreDataService {
                 fatalError("error \(error), \(error.userInfo)")
             }
         }
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         return container
     }()
 
@@ -101,9 +103,21 @@ extension CoreDataService {
     func deleteAll<Entity>(_ type: Entity.Type) throws where Entity: NSManagedObject {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Entity.self))
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+        deleteRequest.resultType = .resultTypeObjectIDs
+        
         do {
-            try context.execute(deleteRequest)
-            try saveContext()
+            let result = try persistentContainer.viewContext.execute(deleteRequest) as? NSBatchDeleteResult
+            // 삭제된 objectID들
+            let deletedIDs = result?.result as? [NSManagedObjectID] ?? []
+            
+            // 삭제 ID가 있다면
+            if !deletedIDs.isEmpty {
+                // 변경 딕셔너리 구성
+                let changes: [AnyHashable: Any] = [NSDeletedObjectsKey: deletedIDs]
+                // viewContext에 변경사항 머지
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes,
+                                                    into: [persistentContainer.viewContext])
+            }
         } catch {
             throw CoreDataError.deleteError(error)
         }
