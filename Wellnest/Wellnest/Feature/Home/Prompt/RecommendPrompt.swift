@@ -92,7 +92,7 @@ struct RecommendPrompt {
         
         {
             "category": "\(category)"        
-            "description": "오늘의 날씨는 (날씨 정보)). \n(실내 또는 실외 등의 장소)에서 할 수 있는 일정을 추천해드릴게요.",
+            "description": "ex) 오늘의 날씨는 맑음 입니다.. \n실외에서 할 수 있는 일정을 추천해드릴게요.",
             "schedules": ["#추천일정1", "#추천일정2", "#추천일정3"]
         }
         """

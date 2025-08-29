@@ -25,14 +25,14 @@ extension Color {
 
     static func scheduleSolid(color: String) -> Color {
         switch color.lowercased() {
-        case "wellnestblue": return .wellnestAccentBlue
-        case "wellnestbrown": return .wellnestAccentBrown
-        case "wellnestgray": return .wellnestAccentGray
-        case "wellnestgreen": return .wellnestAccentGreen
-        case "wellnestpeach": return .wellnestAccentPeach
-        case "wellnestpink": return .wellnestAccentPink
-        case "wellnestpurple": return .wellnestAccentPurple
-        case "wellnestyellow": return .wellnestAccentYellow
+        case "wellnestaccentblue": return .wellnestAccentBlue
+        case "wellnestaccentbrown": return .wellnestAccentBrown
+        case "wellnestaccentgray": return .wellnestAccentGray
+        case "wellnestaccentgreen": return .wellnestAccentGreen
+        case "wellnestaccentpeach": return .wellnestAccentPeach
+        case "wellnestaccentpink": return .wellnestAccentPink
+        case "wellnestaccentpurple": return .wellnestAccentPurple
+        case "wellnestaccentyellow": return .wellnestAccentYellow
         default: return .wellnestOrange
         }
     }

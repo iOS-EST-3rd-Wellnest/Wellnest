@@ -379,6 +379,7 @@ final class AIScheduleViewModel: ObservableObject {
             newSchedule.repeatEndDate = nil
             newSchedule.alarm = nil
             newSchedule.scheduleType = "ai_generated"
+            newSchedule.backgroundColor = "#007AFF"
             newSchedule.createdAt = Date()
             newSchedule.updatedAt = Date()
         }
@@ -494,6 +495,7 @@ final class AIScheduleViewModel: ObservableObject {
                 newSchedule.repeatEndDate = nil
                 newSchedule.alarm = nil
                 newSchedule.scheduleType = "ai_generated"
+                newSchedule.backgroundColor = "#007AFF"
                 newSchedule.createdAt = Date()
                 newSchedule.updatedAt = Date()
                 newSchedule.eventIdentifier = nil
@@ -552,6 +554,7 @@ final class AIScheduleViewModel: ObservableObject {
                 newSchedule.repeatEndDate = routineEndDate
                 newSchedule.alarm = nil
                 newSchedule.scheduleType = "ai_generated"
+                newSchedule.backgroundColor = "#007AFF"
                 newSchedule.createdAt = Date()
                 newSchedule.updatedAt = Date()
                 newSchedule.eventIdentifier = nil

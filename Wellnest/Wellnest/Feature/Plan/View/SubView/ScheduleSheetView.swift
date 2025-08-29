@@ -71,7 +71,7 @@ struct ScheduleSheetView: View {
             view.defaultShadow(color: .secondary.opacity(0.4), radius: 4, x: 0, y: 0)
         }
         .gesture(dragGesture)
-        .sheet(item: $selectedItem) { item in
+        .fullScreenCover(item: $selectedItem) { item in
             ManualScheduleInputView(
                 mode: .edit(id: item.id),
                 selectedTab: $selectedTab,
