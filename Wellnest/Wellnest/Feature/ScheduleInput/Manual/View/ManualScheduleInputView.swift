@@ -24,7 +24,6 @@ struct ManualScheduleInputView: View {
     }
 
     @State private var currentFocus: InputField? = .title
-
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
     @State private var showOnlySeriesItemEditMenu = false
@@ -34,11 +33,11 @@ struct ManualScheduleInputView: View {
     @State private var showDeleteAlert = false
     @State private var showDeleteSeriesAlert = false
     @State private var showNotificationAlert = false
-
     @State private var showNote = false
     @State private var isNoteExpanded = false
-
     @State private var didInit = false
+
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
 
     init(
         mode: EditorMode,
@@ -366,6 +365,7 @@ struct ManualScheduleInputView: View {
             }
             .padding(.bottom, 8)
         }
+        .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
     }
 
     @ViewBuilder

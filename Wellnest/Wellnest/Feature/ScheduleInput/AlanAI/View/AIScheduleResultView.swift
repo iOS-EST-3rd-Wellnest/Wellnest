@@ -14,6 +14,7 @@ struct AIScheduleResultView: View {
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
     let parentDismiss: DismissAction
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
 
     var body: some View {
         NavigationView {
@@ -107,6 +108,7 @@ struct AIScheduleResultView: View {
                 Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
             }
         }
+        .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
     }
 
     private var saveButtonsSection: some View {
