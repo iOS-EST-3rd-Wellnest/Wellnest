@@ -30,12 +30,12 @@ struct SkeletonView<S: Shape>: View {
                     let maxX = size.width * 2
 
                     Rectangle()
-                        .fill(colorScheme == .dark ? .white : .gray.opacity(0.6))
+                        .fill(colorScheme == .dark ? Color(.lightGray).opacity(0.5) : .gray.opacity(0.5))
                         .frame(width: animationRectWidth / 4, height: size.height * 2)
                         .frame(height: size.height)
                         .rotationEffect(.init(degrees: 5))
                         .blur(radius: blurRadius)
-                        .blendMode(colorScheme == .dark ? .softLight : .darken)
+                        .blendMode(colorScheme == .dark ? .hardLight : .darken)
                         .offset(x: isAnimating ? maxX : minX)
                 }
             }

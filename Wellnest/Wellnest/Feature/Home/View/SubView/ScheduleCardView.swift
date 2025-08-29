@@ -17,7 +17,7 @@ struct ScheduleCardView: View {
     let schedule: ScheduleItem
     let scheduleWidth: CGFloat
     
-    let maxSwipeDistance: CGFloat = 30
+    let maxSwipeDistance: CGFloat = 26
     let isDevice = UIDevice.current.userInterfaceIdiom == .pad
     
     private let calManager = CalendarManager.shared
@@ -63,7 +63,7 @@ struct ScheduleCardView: View {
                         Image(systemName: "checkmark")
                             .foregroundStyle(.black)
                             .frame(maxHeight: .infinity)
-                            .frame(width: 50)
+                            .frame(width: 43)
                     }
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -95,7 +95,7 @@ struct ScheduleCardView: View {
                         Image(systemName: "trash.fill")
                             .foregroundColor(.white)
                             .frame(maxHeight: .infinity)
-                            .frame(width: 50)
+                            .frame(width: 43)
                     }
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.large)
@@ -107,7 +107,7 @@ struct ScheduleCardView: View {
             .disabled(isDeleting || isCompleted)
             
             ScheduleItemView(schedule: schedule, showOnlyPlanView: false)
-                .frame(width: currentWidth - abs(currentOffset) - (currentOffset == 0  ? 0 : (isDevice ? Spacing.layout * 1.9 : Spacing.layout * 1.8)))
+                .frame(width: currentWidth - abs(currentOffset) - (currentOffset == 0  ? 0 : Spacing.layout * 1.6))
                 .offset(x: animationOffset)
                 .gesture(
                     DragGesture(minimumDistance: 35)

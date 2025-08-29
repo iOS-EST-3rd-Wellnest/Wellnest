@@ -27,7 +27,7 @@ enum RepeatRuleParser {
         end: Date?,
         frequency: RepeatFrequency,
         calendar: Calendar = .current,
-        max: Int = 1000
+        max: Int = 1200
     ) -> [Date] {
         let defaultEnd: Date = {
             switch frequency {
