@@ -32,9 +32,9 @@ enum RepeatRuleParser {
         let defaultEnd: Date = {
             switch frequency {
             case .daily, .weekly, .monthly:
-                return calendar.date(byAdding: .year, value: 3, to: start)!
+                return calendar.date(byAdding: .year, value: 3, to: start) ?? start
             case .yearly:
-                return calendar.date(byAdding: .year, value: 10, to: start)!
+                return calendar.date(byAdding: .year, value: 10, to: start) ?? start
             }
         }()
 

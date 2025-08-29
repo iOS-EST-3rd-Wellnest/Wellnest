@@ -24,7 +24,6 @@ struct ManualScheduleInputView: View {
     }
 
     @State private var currentFocus: InputField? = .title
-
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
     @State private var showOnlySeriesItemEditMenu = false
@@ -34,11 +33,11 @@ struct ManualScheduleInputView: View {
     @State private var showDeleteAlert = false
     @State private var showDeleteSeriesAlert = false
     @State private var showNotificationAlert = false
-
     @State private var showNote = false
     @State private var isNoteExpanded = false
-
     @State private var didInit = false
+
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
 
     init(
         mode: EditorMode,
@@ -257,19 +256,22 @@ struct ManualScheduleInputView: View {
                 VStack(spacing: 0) {
                     // 버튼 위로 덮일 페이드
                     LinearGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
-                            .init(color:colorScheme == .dark ? .black : .white, location: 1.0),
-                        ]),
+                        colors: [
+                            colorScheme == .dark
+                                ? .black.opacity(0.0)
+                                : .white.opacity(0.0),
+                            colorScheme == .dark
+                                ? .black.opacity(1.0)
+                                : .white.opacity(1.0),
+                        ],
                         startPoint: .top, endPoint: .bottom
                     )
-                    .frame(height: 28)
+                    .frame(height: 80)
 
                     ZStack(alignment: .bottom) {
                         // 버튼
                         FilledButton(title: viewModel.primaryButtonTitle,
-                                     disabled: viewModel.form.isTextEmpty
-                        ) {
+                                     disabled: viewModel.form.isTextEmpty) {
                             // 편집 모드일 때
                             if viewModel.isEditMode {
 
@@ -305,9 +307,6 @@ struct ManualScheduleInputView: View {
                         }
                         .padding(.horizontal)
                         .frame(maxWidth: .infinity)
-                        .background(colorScheme == .dark ? Color.black : Color.white).ignoresSafeArea(edges: .bottom)
-
-
                         if showOnlySeriesItemEditMenu {
                             VStack(spacing: 0) {
                                 Section(header:
@@ -365,6 +364,8 @@ struct ManualScheduleInputView: View {
                 }
             }
             .padding(.bottom, 8)
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
         }
     }
 

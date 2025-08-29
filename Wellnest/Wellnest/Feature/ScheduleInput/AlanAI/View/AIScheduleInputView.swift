@@ -14,6 +14,8 @@ struct AIScheduleInputView: View {
     @Binding var selectedCreationType: ScheduleCreationType?
     @StateObject private var viewModel = AIScheduleViewModel()
 
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -45,14 +47,6 @@ struct AIScheduleInputView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $viewModel.showResult) {
-                AIScheduleResultView(
-                    viewModel: viewModel,
-                    selectedTab: $selectedTab,
-                    selectedCreationType: $selectedCreationType,
-                    parentDismiss: dismiss
-                )
-            }
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 0) {
                     // 버튼 위로 덮일 페이드
@@ -73,6 +67,16 @@ struct AIScheduleInputView: View {
                 }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
             }
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
+        }
+        .fullScreenCover(isPresented: $viewModel.showResult) {
+            AIScheduleResultView(
+                viewModel: viewModel,
+                selectedTab: $selectedTab,
+                selectedCreationType: $selectedCreationType,
+                parentDismiss: dismiss
+            )
         }
     }
 

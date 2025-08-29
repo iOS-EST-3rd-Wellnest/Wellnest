@@ -97,8 +97,17 @@ final class ScheduleEditorViewModel: ObservableObject {
     }
 
     func updateColorName(_ name: String) {
-        form.selectedColorName = name
-        previewColor = Color(name)
+        if isValidColorAsset(named: name) {
+            form.selectedColorName = name
+            previewColor = Color(name)
+        } else {
+            form.selectedColorName = "wellnestAccentPeach"
+            previewColor = Color("wellnestAccentPeach")
+        }
+    }
+
+    func isValidColorAsset(named name: String) -> Bool {
+        return UIColor(named: name) != nil
     }
 
     @MainActor

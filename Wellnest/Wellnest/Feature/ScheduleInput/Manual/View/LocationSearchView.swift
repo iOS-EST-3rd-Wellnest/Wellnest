@@ -15,10 +15,6 @@ struct LocationSearchView: View {
     @State private var query = ""
     @StateObject private var completerWrapper = SearchCompleterWrapper()
 
-    private let allowedCategories: [MKPointOfInterestCategory] = [
-        .cafe, .restaurant, .fitnessCenter, .park, .school, .library, .hospital, .pharmacy, .stadium
-    ]
-
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
@@ -110,19 +106,27 @@ extension LocationSearchView {
         center: CLLocationCoordinate2D
     ) {
         Task { @MainActor in
-            do {
-                let items = try await resolveToMeaningfulPlaces(
-                    from: completion,
-                    center: center,
-                    allowed: allowedCategories
-                )
-                selectedLocation = items.first?.name ?? completion.title
-            } catch {
+            if let item = try? await resolve(completion: completion, center: center) {
+                selectedLocation = item.name ?? completion.title
+            } else {
                 selectedLocation = completion.title
             }
             isPresented = false
             dismiss()
         }
+    }
+
+    private func resolve(
+        completion: MKLocalSearchCompletion,
+        center: CLLocationCoordinate2D
+    ) async throws -> MKMapItem? {
+        let req = MKLocalSearch.Request(completion: completion)
+        req.region = MKCoordinateRegion(
+            center: center,
+            span: MKCoordinateSpan(latitudeDelta: 0.4, longitudeDelta: 0.4)
+        )
+        let resp = try await MKLocalSearch(request: req).start()
+        return resp.mapItems.first
     }
 
     func resolveToMeaningfulPlaces(
@@ -132,8 +136,6 @@ extension LocationSearchView {
     ) async throws -> [MKMapItem] {
         let req = MKLocalSearch.Request()
         req.naturalLanguageQuery = "\(completion.title) \(completion.subtitle)".trimmingCharacters(in: .whitespaces)
-        req.resultTypes = .pointOfInterest
-        req.pointOfInterestFilter = MKPointOfInterestFilter(including: allowed)
         req.region = MKCoordinateRegion(center: center,
                                         span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15))
 
