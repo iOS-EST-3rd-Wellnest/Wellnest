@@ -19,9 +19,9 @@ final class AIInsightViewModel: ObservableObject {
     }
     
     func loadAIInsight() async {
-//        let healthData = try? await loadExerciseData()
-        //let result = await fetchAIInsight(input: healthData)
-        let result = await fetchAIInsight(input: nil)
+        let healthData = try? await loadExerciseData()
+        let result = await fetchAIInsight(input: healthData)
+//        let result = await fetchAIInsight(input: nil)
         
         await MainActor.run {
             self.insightText = result
@@ -46,7 +46,7 @@ private extension AIInsightViewModel {
         return """
                 \(input?.AIPrompt)
                 
-                위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 한 문장으로 만들어줘.
+                위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 40자 제한, 한 문장으로 만들어줘.
                 응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘. 
                 """
     }
