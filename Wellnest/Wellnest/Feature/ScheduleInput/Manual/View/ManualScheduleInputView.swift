@@ -33,6 +33,8 @@ struct ManualScheduleInputView: View {
     @State private var showDeleteSeriesAlert = false
 
     @State private var showNote = false
+    @State private var isNoteExpanded = false
+
     @State private var didInit = false
 
     init(
@@ -125,7 +127,7 @@ struct ManualScheduleInputView: View {
                         .onChange(of: viewModel.form.selectedColorName) { newName in
                             viewModel.updateColorName(newName)
                         }
-                        DisclosureGroup {
+                        DisclosureGroup(isExpanded: $isNoteExpanded) {
                             noteTextField
                         } label: {
                             Text("메모")
@@ -133,9 +135,7 @@ struct ManualScheduleInputView: View {
                                 .fontWeight(.semibold)
                         }
                         .tint(.black)
-                        .onTapGesture {
-                            withAnimation { showNote.toggle() }
-                        }
+
 //                        .onChange(of: showNote) { open in
 //                            if open {
 //                                DispatchQueue.main.async {
@@ -154,10 +154,12 @@ struct ManualScheduleInputView: View {
                     await viewModel.loadIfNeeded()
                     if viewModel.isEditMode {
                         currentFocus = nil
+                        if !viewModel.form.detail.isEmpty {
+                            isNoteExpanded = true
+                        }
                     }
                 }
                 .onAppear {
-
                     guard !didInit else { return }
                     if selectedTab == .plan {
                         // 플랜탭일 때.
