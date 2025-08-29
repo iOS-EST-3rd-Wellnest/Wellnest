@@ -9,11 +9,9 @@ import Foundation
 
 struct HealthData {
     let userName: String
-    let planCompletion: PlanCompletionData
     let aiInsight: AIInsightData
     let exercise: ExerciseData
     let sleep: SleepData
-    let meditation: MeditationData
 }
 
 enum ChartPeriod: String, CaseIterable {

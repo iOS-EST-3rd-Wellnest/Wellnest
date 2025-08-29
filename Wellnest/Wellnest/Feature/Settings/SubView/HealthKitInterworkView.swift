@@ -11,6 +11,7 @@ import HealthKit
 struct HealthKitInterworkView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var hsClass
     
     @EnvironmentObject private var hiddenTabBar: TabBarState
     
@@ -41,73 +42,65 @@ struct HealthKitInterworkView: View {
             
             Spacer()
             
-            VStack(alignment: .leading, spacing: 40) {
+            VStack(alignment: .leading, spacing: vstackSpacing) {
                 HStack {
                     Image(systemName: "shoeprints.fill")
                         .foregroundStyle(.wellnestOrange)
-                        .font(.system(size: 36))
+                        .font(.system(size: stepSymbolSize))
                     
                     VStack(alignment: .leading) {
                         Text("당신의 건강여정을 시작하세요")
-                            .font(.title3)
+                            .font(titleFont)
                             .fontWeight(.bold)
                         
                         Text("Apple 건강앱과 연동하여 걸음수, 수면, 심박수 등 건강데이터를 자동으로 기록합니다.")
                             .foregroundStyle(.secondary)
-                            .font(.footnote)
+                            .font(subTitleFont)
                     }
                 }
                 
                 HStack {
                     Image(systemName: "iphone")
                         .foregroundStyle(.wellnestOrange)
-                        .font(.system(size: 42))
+                        .font(.system(size: iphoneSymbolSize))
                     
                     VStack(alignment: .leading) {
                         Text("하루의 건강 리포트를 한눈에")
-                            .font(.title3)
+                            .font(titleFont)
                             .fontWeight(.bold)
                         
                         Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 확인할 수 있습니다.")
                             .foregroundStyle(.secondary)
-                            .font(.footnote)
+                            .font(subTitleFont)
                     }
                 }
                 
                 HStack {
                     Image(systemName: "chart.xyaxis.line")
                         .foregroundStyle(.wellnestOrange)
-                        .font(.system(size: 34))
+                        .font(.system(size: chartSymbolSize))
                     
                     VStack(alignment: .leading) {
                         Text("목표 달성의 시작")
-                            .font(.title3)
+                            .font(titleFont)
                             .fontWeight(.bold)
                         
                         Text("건강 데이터를 기반으로 매일의 성취를 확인하세요.")
                             .foregroundStyle(.secondary)
-                            .font(.footnote)
+                            .font(subTitleFont)
                     }
                 }
             }
-            
-//            if userDefault.isHealthKitEnabled {
-//                VStack {
-//                    Text("연동 완료")
-//                    
-//                    Text("걸음수: \(stepCount)")
-//                    Text("칼로리: \(caloriesCount)")
-//                    Text("수면 시간: \(formattedSleepTime)")
-//                    Text("심박수: \(heartRate)")
-//                    Text("BMI: \(String(format: "%.1f", bmi))")
-//                    Text("체지방률: \(String(format: "%.1f", bodyFatPercentage))%")
-//                }
-//            }
+            .padding()
+            .overlay {
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .stroke(Color.wellnestOrange.opacity(0.4), lineWidth: 1)
+            }
             
             Spacer()
             
             Text("건강 > 데이터 접근 및 기기 > Wellnest에서 연동목록을 변경할 수 있습니다.")
-                .padding(.top, Spacing.inline)
+                .padding(.bottom, Spacing.inline)
                 .foregroundStyle(.secondary)
                 .font(.caption2)
             
@@ -119,6 +112,7 @@ struct HealthKitInterworkView: View {
                     await connectHealthKit()
                 }
             }
+            .layoutWidth()
         }
         .padding(.horizontal)
         .padding(.bottom, Spacing.content)
@@ -144,7 +138,6 @@ struct HealthKitInterworkView: View {
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 Task {
-                    //                    try? await Task.sleep(for: .milliseconds(250))
                     await resyncAuthorizationFlag()
                     
                     if userDefault.isHealthKitEnabled {
@@ -307,6 +300,56 @@ extension HealthKitInterworkView {
         
         if !snap.missingCore.isEmpty {
             userDefault.isHealthKitEnabled = false
+        }
+    }
+}
+
+extension HealthKitInterworkView {
+    var vstackSpacing: CGFloat {
+        if hsClass == .compact {
+            return 40
+        } else {
+            return 60
+        }
+    }
+    
+    var stepSymbolSize: CGFloat {
+        if hsClass == .compact {
+            return 32
+        } else {
+            return 52
+        }
+    }
+    
+    var iphoneSymbolSize: CGFloat {
+        if hsClass == .compact {
+            return 40
+        } else {
+            return 60
+        }
+    }
+    
+    var chartSymbolSize: CGFloat {
+        if hsClass == .compact {
+            return 30
+        } else {
+            return 50
+        }
+    }
+    
+    var titleFont: Font {
+        if hsClass == .compact {
+            return .title3
+        } else {
+            return .title
+        }
+    }
+    
+    var subTitleFont: Font {
+        if hsClass == .compact {
+            return .footnote
+        } else {
+            return .body
         }
     }
 }
