@@ -24,7 +24,7 @@ struct ScheduleFormState {
     var isAlarmOn: Bool = false
     var alarmRule: AlarmRule? = nil
 
-    var selectedColorName: String = "wellnestBlue"
+    var selectedColorName: String = "wellnestAccentPeach"
 
     var hasRepeatEndDate: Bool {
         return repeatEndMode == .date
