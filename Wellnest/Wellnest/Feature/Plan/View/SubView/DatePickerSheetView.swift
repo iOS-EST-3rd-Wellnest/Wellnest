@@ -39,12 +39,15 @@ struct DatePickerSheetView: View {
                         planVM.jumpToDate(newDate)
                     }
                 }
-                .background(colorScheme == .light ? Color(.systemBackground) : Color(.systemGray6))
+                .background(.wellnestBackgroundCard)
                 .clipShape(
                     RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)
                 )
                 .offset(y: dragOffset)
                 .gesture(dragGesture)
+            }
+            .if(colorScheme == .light) { view in
+                view.defaultShadow(color: .secondary.opacity(0.4), radius: 4, x: 0, y: 0)
             }
         }
         .ignoresSafeArea(.all)

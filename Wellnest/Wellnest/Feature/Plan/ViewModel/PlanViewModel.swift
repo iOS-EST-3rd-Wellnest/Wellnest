@@ -13,6 +13,7 @@ import Combine
 @MainActor
 final class PlanViewModel: ObservableObject {
 
+
     @Published var selectedDate: Date
     @Published private(set) var anchorMonth: Date
     @Published private(set) var visibleMonth: Date
@@ -71,6 +72,9 @@ extension PlanViewModel {
 //    func updateVisibleMonthOnly(_ month: Date) {
 //        visibleMonth = month.startOfMonth
 //    }
+    func toggleCompleted(for id: UUID) async {
+        await scheduleStore.toggleCompleted(for: id)
+    }
 }
 
 extension PlanViewModel {
@@ -127,26 +131,34 @@ extension PlanViewModel {
 }
 
 extension PlanViewModel {
-    func calendarHeight(
-        width: CGFloat = UIScreen.main.bounds.width,
-        rows: Int,
-        columns: Int = 7,
-        spacing: CGFloat = 4,
-        padding: CGFloat = 16
-    ) -> CGFloat {
-        let screenWidth = width - padding * 2
-        let totalSpacingWidth = spacing * CGFloat(columns - 1)
-        let totalSpacingHeight = spacing * CGFloat(rows - 1)
-        let itemWidth = (screenWidth - totalSpacingWidth) / CGFloat(columns)
+    func upcomingStart(on date: Date, now: Date = Date()) -> Date? {
+        selectedDateScheduleItems
+            .compactMap { item -> Date? in
+                let display = item.display(on: date)
+                let isAllDay = display.isAllDayForThatDate
+                guard !isAllDay else { return nil }
 
-        let itemHeight: CGFloat = {
-            if rows == 1 {
-                itemWidth - spacing * 2
-            } else {
-                itemWidth * CGFloat(rows) + totalSpacingHeight
+                let start = display.displayStart ?? item.startDate
+                return start > now ? start : nil
             }
-        }()
+            .min()
+    }
 
-        return itemHeight
+    func highlightedUpcomingIDs(on date: Date, now: Date = Date()) -> Set<UUID> {
+        guard let targetStart = upcomingStart(on: date, now: now) else { return [] }
+        let cal = Calendar.current
+
+        let ids = selectedDateScheduleItems.compactMap { item -> UUID? in
+            let display = item.display(on: date)
+            let isAllDay = display.isAllDayForThatDate
+            guard !isAllDay else { return nil }
+
+            let start = display.displayStart ?? item.startDate
+            return cal.compare(start, to: targetStart, toGranularity: .minute) == .orderedSame
+                ? item.id
+                : nil
+        }
+        return Set(ids)
     }
 }
+

@@ -9,12 +9,8 @@ import SwiftUI
 
 struct AIInsightView: View {
     @Environment(\.colorScheme) private var colorScheme
-//    let insight: AIInsightData
     @StateObject private var viewModel: AIInsightViewModel
     
-//    @StateObject private var viewModel: ScheduleProgressViewModel
-    
-    //init(context: NSManagedObjectContext) {
     init() {
         _viewModel = StateObject(wrappedValue: AIInsightViewModel())
     }
@@ -36,7 +32,7 @@ struct AIInsightView: View {
                             .font(.footnote)
                             .foregroundColor(.secondary)
                         Text(viewModel.insightText ?? "")
-                            .font(.caption)
+                            .font(.callout)
                             .fontWeight(.medium)
                             .fixedSize(horizontal: false, vertical: true)
                     }

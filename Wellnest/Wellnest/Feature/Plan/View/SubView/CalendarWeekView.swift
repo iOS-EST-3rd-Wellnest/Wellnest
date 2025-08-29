@@ -10,22 +10,23 @@ import SwiftUI
 struct CalendarWeekView: View {
     @ObservedObject var planVM: PlanViewModel
 
-
     let calendar = Calendar.current
 
-    var body: some View {
-        GeometryReader { geo in
+    @State private var weekHeight: CGFloat = 0
 
+    var body: some View {
             ZStack {
                 HStack(spacing: 4) {
                     ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
-                        columnBackground(date: date, width: geo.size.width)
+                        VStack(spacing: 0) {
+                            columnBackground(date: date)
+                        }
                     }
                 }
                 .padding(.horizontal)
 
-                VStack(spacing: 0) {
-                    CalendarLayout(fixedHeight: planVM.calendarHeight(width: geo.size.width, rows: 1)) {
+                VStack(spacing: Spacing.layout) {
+                    CalendarLayout(mode: .intrinsic) {
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
                             let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
 
@@ -37,7 +38,7 @@ struct CalendarWeekView: View {
                         }
                     }
 
-                    CalendarLayout(fixedHeight: planVM.calendarHeight(width: geo.size.width, rows: 1)) {
+                    CalendarLayout(mode: .intrinsic) {
                         ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
 
                             let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
@@ -52,31 +53,41 @@ struct CalendarWeekView: View {
                 }
                 .padding(.horizontal)
                 .allowsHitTesting(false)
+                .background {
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear {
+                                if weekHeight == 0 {
+                                    weekHeight = geo.size.height
+                                }
+                            }
+                    }
+                }
             }
-        }
-        .frame(height: planVM.calendarHeight(rows: 1) * 2)
+            .frame(height: weekHeight)
     }
 
     @ViewBuilder
-    private func columnBackground(date: Date, width: CGFloat) -> some View {
+    private func columnBackground(date: Date) -> some View {
         let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
         let isToday = date.isToday
 
         RoundedRectangle(cornerRadius: CornerRadius.medium)
             .foregroundStyle(Color.clear)
-            .overlay(
-                 Group {
-                     if isSelected {
-                         RoundedRectangle(cornerRadius: CornerRadius.medium)
-                             .foregroundStyle(.wellnestOrange)
-                     } else if isToday {
-                         RoundedRectangle(cornerRadius: CornerRadius.medium)
-                             .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                     }
-                 }
-             )
             .frame(maxWidth: .infinity)
-            .frame(height: planVM.calendarHeight(width: width, rows: 1) * 2)
+            .frame(height: weekHeight)
+            .padding(.vertical, Spacing.content)
+            .overlay {
+                Group {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: CornerRadius.medium)
+                            .foregroundStyle(.wellnestOrange)
+                    } else if isToday {
+                        RoundedRectangle(cornerRadius: CornerRadius.medium)
+                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                    }
+                }
+            }
             .contentShape(Rectangle())
             .onTapGesture {
                 planVM.selectDate(date)

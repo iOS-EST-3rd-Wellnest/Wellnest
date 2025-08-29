@@ -12,7 +12,9 @@ struct CustomTabBar: View {
 
     @Binding var selectedTab: TabBarItem
     @Binding var showScheduleMenu: Bool
-    
+
+    @State private var barHeight: CGFloat = 0
+
     var body: some View {
         ZStack {
             HStack {
@@ -36,6 +38,8 @@ struct CustomTabBar: View {
                             .position(x: geo.size.width / 2, y: 0)
                             .blendMode(.destinationOut)
                     }
+                    .onAppear { barHeight = geo.size.height }
+                    .onChange(of: geo.size.height) { barHeight = $0 }
                     .compositingGroup()
                 }
             }
@@ -61,7 +65,7 @@ struct CustomTabBar: View {
 
             }
             .defaultShadow(color: .wellnestOrange.opacity(0.4), radius: 4)
-            .offset(y: -(20 + Spacing.content))
+            .offset(y: -(barHeight / 2))
         }
     }
     
@@ -72,17 +76,17 @@ struct CustomTabBar: View {
         } label: {
             VStack(spacing: Spacing.inline) {
                 Image(systemName: tab.iconName)
-                    .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 24, height: 24)
-                
+                    .symbolRenderingMode(.hierarchical)
+                    .font(.title3)
+                    .imageScale(.medium)
+
                 Text(tab.title)
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                    .font(.footnote.weight(.semibold))
+                    .lineLimit(1)
 
             }
             .foregroundStyle(selectedTab == tab ? .wellnestSelected : .wellnestTabItem)
+
         }
         .frame(maxWidth: .infinity)
     }

@@ -8,6 +8,11 @@
 import SwiftUI
 import HealthKit
 
+enum HealthKitError: Error {
+    case notAvailable
+    case unknown(Error)
+}
+
 enum HealthAuthError: Error {
     case notAvailable
     case unknown(Error)
