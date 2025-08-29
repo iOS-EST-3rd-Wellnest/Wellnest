@@ -19,8 +19,9 @@ final class AIInsightViewModel: ObservableObject {
     }
     
     func loadAIInsight() async {
-        let healthData = await loadExerciseData()
-        let result = await fetchAIInsight()
+        let healthData = try? await loadExerciseData()
+        let result = await fetchAIInsight(input: healthData)
+//        let result = await fetchAIInsight(input: nil)
         
         await MainActor.run {
             self.insightText = result
@@ -29,55 +30,67 @@ final class AIInsightViewModel: ObservableObject {
 }
 
 private extension AIInsightViewModel {
-    func fetchAIInsight() async -> AttributedString? {
+    func fetchAIInsight(input: ExerciseData?) async -> AttributedString? {
         do {
-            //            guard let userInfo else { return "" }
             let aiService = AIServiceProxy()
-            let result = try await aiService.request(prompt: Self.insightPrompt(user: nil))
-            print("##### ai result: \(result)")
+            let result = try await aiService.request(prompt: Self.insightPrompt(input: input))
             return try? AttributedString(markdown: result.content)
         } catch {
-            print("오늘의 한마디 요청 실패:", error.localizedDescription)
-            return "AI 응답을 가져올 수 없습니다."
+            var text = AttributedString("AI 응답을 가져올 수 없습니다.")
+            text.foregroundColor = .red
+            return text
         }
     }
     
-    static func insightPrompt(user: UserEntity?) -> String {
+    static func insightPrompt(input: ExerciseData?) -> String {
         return """
-                iOS 개발자의 미래는 어떻다고 생각해? 
-                중요1: 반드시 간단한 한 문장으로
-                중요2: 반드시 해당 한글과 영어를 제외한 문자는 제외시켜줘. *도 제외시켜줘
-                중요3: 형식은 JSON 형식 아님
+                \(input?.AIPrompt)
+                
+                위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 40자 제한, 한 문장으로 만들어줘.
+                응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘. 
                 """
     }
 }
+
+private extension ExerciseData {
+    var AIPrompt: String {
+     return """
+         운동 데이터 AI 프롬프트
+         사용자 운동 데이터:
+         - 하루 평균 걸음 수: \(averageSteps)보
+         - 걸음 수 변화량: \(stepsChange)
+         - 하루 평균 칼로리 소모: \(averageCalories)kcal
+         - 칼로리 변화량: \(caloriesChange)
+         - 주간 걸음 수 데이터: \(weeklySteps)
+         - 월간 걸음 수 데이터: \(monthlySteps)
+         변화율 데이터:
+         - 일일 걸음 수 변화율: \(dailyStepsChange)%
+         - 주간 걸음 수 변화율: \(weeklyStepsChange)%
+         - 월간 걸음 수 변화율: \(monthlyStepsChange)%
+         - 일일 칼로리 변화율: \(dailyCaloriesChange)%
+         - 주간 칼로리 변화율: \(weeklyCaloriesChange)%
+         - 월간 칼로리 변화율: \(monthlyCaloriesChange)%
+         """
+    }
+}
+
     
 private extension AIInsightViewModel {
-    func loadExerciseData() async -> ExerciseData {
+    func loadExerciseData() async throws -> ExerciseData {
         print("❤️ 운동 데이터 로드 시작")
 
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("❤️ HealthKit을 사용할 수 없음")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            print("HealthKit을 사용할 수 없음")
+            throw HealthKitError.notAvailable
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        print("❤️ HealthKit 권한 상태:")
-        print("❤️ - 누락된 권한: \(authCheck.missingCore)")
+        print("HealthKit 권한 상태:")
+        print(" - 누락된 권한: \(authCheck.missingCore)")
 
         if !authCheck.missingCore.isEmpty {
-            print("❤️ HealthKit 권한이 없어서 빈 데이터 반환")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            print("HealthKit 권한이 없어서 빈 데이터 반환")
+            throw HealthKitError.notAvailable
         }
 
         let todaySteps: Int
@@ -85,10 +98,10 @@ private extension AIInsightViewModel {
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
-            print("❤️ 오늘 걸음수: \(todaySteps)")
+            print("오늘 걸음수: \(todaySteps)")
         } catch {
             print("❤️ 걸음수 가져오기 실패: \(error)")
-            todaySteps = 0
+            throw HealthKitError.notAvailable
         }
 
         do {
@@ -96,7 +109,7 @@ private extension AIInsightViewModel {
             print("❤️ 오늘 칼로리: \(todayCalories)")
         } catch {
             print("❤️ 칼로리 가져오기 실패: \(error)")
-            todayCalories = 0
+            throw HealthKitError.notAvailable
         }
 
         let yearlyData: [HealthManager.DailyMetric]
@@ -112,9 +125,9 @@ private extension AIInsightViewModel {
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
 
-        print("❤️ 계산된 변화율:")
-        print("❤️ - 걸음수 변화: \(stepsChange)%")
-        print("❤️ - 칼로리 변화: \(caloriesChange)%")
+        print("계산된 변화율:")
+        print("- 걸음수 변화: \(stepsChange)%")
+        print("- 칼로리 변화: \(caloriesChange)%")
 
         return ExerciseData(
             averageSteps: todaySteps,
