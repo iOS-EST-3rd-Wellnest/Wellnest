@@ -52,7 +52,6 @@ struct UserInfoTabView: View {
                 }
 
                 /// 닉네임
-                // TODO: 영어 최소 2글자 이상
                 UserInfoForm(title: "닉네임", isRequired: true, isFocused: isFieldFocused == .nickname, isNicknameValid: $isNicknameValid) {
                     TextField(
                         "",
@@ -115,7 +114,6 @@ struct UserInfoTabView: View {
                 }
 
                 /// 키
-                // TODO: 키 입력하고 키보드의 다음버튼이 아니라, 온보딩 버튼 누르면 몸무게로 포커스 이동하고 몸무게 입력하고 다시 온보딩 버튼 누르면 저장되고 다음 페이지로 넘어가게 해보기
                 UserInfoForm(title: "키(cm)", isFocused: isFieldFocused == .height) {
                     TextField(
                         "",
@@ -154,7 +152,6 @@ struct UserInfoTabView: View {
             }
             .padding(.horizontal, Spacing.layout)
         }
-        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(
@@ -162,14 +159,11 @@ struct UserInfoTabView: View {
                 isDisabled: isButtonDisabled,
                 action: {
                     if isFieldFocused == .height {
-                        /// 키 입력 후 → 몸무게로 포커스 이동
                         isFieldFocused = .weight
                     } else if isFieldFocused == .weight {
-                        /// 몸무게 입력 후 → 저장하고 다음 페이지
                         saveUserInfo()
                         withAnimation { currentPage += 1 }
                     } else {
-                        /// 혹시 포커스 없는 상태 → 저장하고 다음 페이지
                         saveUserInfo()
                         withAnimation { currentPage += 1 }
                     }
@@ -238,7 +232,7 @@ struct UserInfoForm<Content: View>: View {
 /// 닉네임 유효성 검사
 struct NicknameValidator {
     static func isNicknameValid(_ text: String) -> Bool {
-        // 허용된 문자 (완성된 한글, 영어, 숫자)
+        /// 허용된 문자 (완성된 한글, 영어, 숫자)
         let pattern = "^[가-힣a-zA-Z0-9]*$"
         let regex = try! NSRegularExpression(pattern: pattern)
         let range = NSRange(location: 0, length: text.utf16.count)
@@ -246,12 +240,12 @@ struct NicknameValidator {
             return false
         }
 
-        // 영어만 입력한 경우 → 최소 2글자 이상
+        /// 영어만 입력한 경우 → 최소 2글자 이상
         if text.range(of: "^[A-Za-z]+$", options: .regularExpression) != nil {
             return text.count >= 2
         }
 
-        // 한글이나 숫자 포함 시에는 길이 제한 없음
+        /// 한글이나 숫자 포함 시에는 길이 제한 없음
         return true
     }
 }

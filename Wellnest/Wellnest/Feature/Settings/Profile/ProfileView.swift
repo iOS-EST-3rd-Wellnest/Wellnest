@@ -53,7 +53,3 @@ struct ProfileView: View {
         .padding(.bottom)
     }
 }
-
-//#Preview {
-//    ProfileView(name: , profileImage: .constant(nil))
-//}
