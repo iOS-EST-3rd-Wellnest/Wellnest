@@ -584,25 +584,23 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func getUserName() -> String {
-//        let coreDataService = CoreDataService.shared
-//
-//        do {
-//            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
-//            userRequest.fetchLimit = 1
-//
-//            let users = try coreDataService.context.fetch(userRequest)
-//
-//            if let user = users.first,
-//               let nickname = user.value(forKey: "nickname") as? String,
-//               !nickname.isEmpty {
-//                print("사용자 이름 발견: \(nickname)")
-//                return nickname
-//            }
-//        } catch {
-//            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
-//        }
-//
-//        print("기본 사용자 이름 사용")
+        let coreDataService = CoreDataService.shared
+
+        do {
+            let userRequest = NSFetchRequest<NSManagedObject>(entityName: "UserEntity")
+            userRequest.fetchLimit = 1
+
+            let users = try coreDataService.context.fetch(userRequest)
+
+            if let user = users.first,
+               let nickname = user.value(forKey: "nickname") as? String,
+               !nickname.isEmpty {
+                return nickname
+            }
+        } catch {
+            print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
+        }
+        
         return "사용자"
     }
 
