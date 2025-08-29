@@ -112,7 +112,7 @@ struct ManualScheduleInputView: View {
                                 showColorPickerSheet = true
                                 currentFocus = nil
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $viewModel.previewColor)
+                                ColorPicker("팔레트 선택", selection: $viewModel.previewColor)
                                     .labelsHidden()
                                     .disabled(true)
                             }

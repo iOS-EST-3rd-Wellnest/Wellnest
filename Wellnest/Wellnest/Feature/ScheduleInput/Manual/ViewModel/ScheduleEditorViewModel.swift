@@ -16,7 +16,7 @@ enum EditorMode: Equatable {
 @MainActor
 final class ScheduleEditorViewModel: ObservableObject {
     @Published var form = ScheduleFormState()
-    @Published var previewColor: Color = .wellnestBlue
+    @Published var previewColor: Color = .wellnestAccentPeach
     @Published var lastSavedID: NSManagedObjectID?
     @Published var isSaving = false
 

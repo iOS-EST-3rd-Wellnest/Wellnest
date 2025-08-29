@@ -15,14 +15,14 @@ struct ColorPickerView: View {
     @State private var showColorPicker = false
 
     private let colorNames: [String] = [
-        "wellnestPink",
-        "wellnestPeach",
-        "wellnestGray",
-        "wellnestGreen",
-        "wellnestBlue",
-        "wellnestPurple",
-        "wellnestYellow",
-        "wellnestBrown"
+        "wellnestAccentBlue",
+        "wellnestAccentBrown",
+        "wellnestAccentGray",
+        "wellnestAccentGreen",
+        "wellnestAccentPeach",
+        "wellnestAccentPink",
+        "wellnestAccentPurple",
+        "wellnestAccentYellow"
     ]
 
     var body: some View {
@@ -64,5 +64,5 @@ struct ColorPickerView: View {
 }
 
 #Preview {
-    ColorPickerView(selectedColorName: .constant("accentCardBlue"))
+    ColorPickerView(selectedColorName: .constant("wellnestAccentBlue"))
 }
