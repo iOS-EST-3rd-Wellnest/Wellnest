@@ -10,9 +10,9 @@ import SwiftUI
 struct ScheduleItemView: View {
     let schedule: ScheduleItem
     var contextDate: Date? = nil
-    var showMemo: Bool = true
+    var showOnlyPlanView: Bool = true
     var onToggleComplete: ((ScheduleItem) -> Void)? = nil
-    var upcomingScheduleId: Bool = false
+    var isUpcomingGroup: Bool = false
 
     var body: some View {
         let display: ScheduleDayDisplay? = contextDate.map { schedule.display(on: $0) }
@@ -66,7 +66,7 @@ struct ScheduleItemView: View {
                     .lineLimit(1)
                     .multilineTextAlignment(.leading)
 
-                if showMemo {
+                if showOnlyPlanView {
                     if let memo = schedule.memo, !memo.isEmpty {
                         Text(memo)
                             .font(.footnote)
@@ -80,45 +80,46 @@ struct ScheduleItemView: View {
 
             Spacer()
 
-            Button {
-                onToggleComplete?(schedule)
-            } label: {
-                ZStack {
-                    if schedule.isCompleted {
-                        Circle()
-                            .fill(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray)
-                            .frame(width: 28, height: 28)
-                    } else {
-                        Circle()
-                            .stroke(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray, lineWidth: 1)
-                            .frame(width: 28, height: 28)
+            if showOnlyPlanView {
+                Button {
+                    onToggleComplete?(schedule)
+                } label: {
+                    ZStack {
+                        if schedule.isCompleted {
+                            Circle()
+                                .fill(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray)
+                                .frame(width: 28, height: 28)
+                        } else {
+                            Circle()
+                                .stroke(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray, lineWidth: 1)
+                                .frame(width: 28, height: 28)
+                        }
+                        
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(schedule.isCompleted ? .white : .gray)
                     }
-
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(schedule.isCompleted ? .white : .gray)
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-
 
         }
         .padding(Spacing.content)
-        .background(
+        .background {
+            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                .fill(showOnlyPlanView && isUpcomingGroup && !isAllDay ? Color.scheduleBackground(color: schedule.backgroundColor) : .clear)
+        }
+        .overlay {
+            Group {
+                if showOnlyPlanView && isUpcomingGroup || isAllDay {
                     RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-                        .fill(upcomingScheduleId ? Color.scheduleBackground(color: schedule.backgroundColor) : .clear)
-                )
-                .overlay(
-                    Group {
-                        if upcomingScheduleId {
-                            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-                                .stroke(Color.scheduleSolid(color: schedule.backgroundColor), lineWidth: 1)
-                        } else {
-                            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-                                .stroke(.secondary.opacity(0.5), lineWidth: 0.5)
-                        }
-                    }
-                )
+                        .stroke(Color.scheduleSolid(color: schedule.backgroundColor), lineWidth: 1)
+                } else {
+                    RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                        .stroke(.secondary.opacity(0.5), lineWidth: 0.5)
+                }
+            }
+        }
         .contentShape(RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous))
     }
 }

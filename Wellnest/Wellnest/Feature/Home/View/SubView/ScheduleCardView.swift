@@ -116,7 +116,7 @@ struct ScheduleCardView: View {
             .frame(width: currentWidth)
             .disabled(isDeleting || isCompleted)
             
-            ScheduleItemView(schedule: schedule, showMemo: false)
+            ScheduleItemView(schedule: schedule, showOnlyPlanView: false)
                 .frame(width: currentWidth - abs(currentOffset) - (currentOffset == 0  ? 0 : (isDevice ? Spacing.layout * 1.9 : Spacing.layout * 1.8)))
                 .offset(x: animationOffset)
                 .gesture(

@@ -38,23 +38,7 @@ struct ScheduleSheetView: View {
                 .opacity(asSidePanel ? 1.0 : (isDragging ? 0.7 : 1.0))
 
             ScrollView {
-                let now = Date()
-
-                let upcomingScheduleId = planVM.selectedDateScheduleItems
-                    .compactMap { item -> (UUID, Date)? in
-                        let display = item.display(on: planVM.selectedDate)
-                        let isAllDay = display.isAllDayForThatDate
-
-                        guard !isAllDay else { return nil }
-
-                        let start = display.displayStart ?? item.startDate
-                        
-                        guard start > now else { return nil }
-
-                        return (item.id, start)
-                    }
-                    .min(by: { $0.1 < $1.1 })?
-                    .0
+                let upcomingIDs = planVM.highlightedUpcomingIDs(on: planVM.selectedDate)
 
                 LazyVStack(spacing: 10) {
                     if planVM.selectedDateScheduleItems.isEmpty {
@@ -69,18 +53,17 @@ struct ScheduleSheetView: View {
                                         await planVM.toggleCompleted(for: schedule.id)
                                     }
                                 },
-                                upcomingScheduleId: item.id == upcomingScheduleId
+                                isUpcomingGroup: upcomingIDs.contains(item.id)
                             )
-                                .onTapGesture { selectedItem = item }
+                            .onTapGesture { selectedItem = item }
                         }
                     }
                 }
-                .transaction { $0.disablesAnimations = true }
                 .padding()
             }
             .safeAreaInset(edge: .bottom) {
-                    Color.clear
-                        .frame(height: 100)
+                Color.clear
+                    .frame(height: 100)
             }
             .scrollDisabled(asSidePanel ? false : (isDragging || !isSheetExpanded))
             .opacity(asSidePanel ? 1.0 : (isDragging ? 0.7 : 1.0))

@@ -139,4 +139,35 @@ extension PlanViewModel {
     }
 }
 
+extension PlanViewModel {
+    func upcomingStart(on date: Date, now: Date = Date()) -> Date? {
+        selectedDateScheduleItems
+            .compactMap { item -> Date? in
+                let display = item.display(on: date)
+                let isAllDay = display.isAllDayForThatDate
+                guard !isAllDay else { return nil }
+
+                let start = display.displayStart ?? item.startDate
+                return start > now ? start : nil
+            }
+            .min()
+    }
+
+    func highlightedUpcomingIDs(on date: Date, now: Date = Date()) -> Set<UUID> {
+        guard let targetStart = upcomingStart(on: date, now: now) else { return [] }
+        let cal = Calendar.current
+
+        let ids = selectedDateScheduleItems.compactMap { item -> UUID? in
+            let display = item.display(on: date)
+            let isAllDay = display.isAllDayForThatDate
+            guard !isAllDay else { return nil }
+
+            let start = display.displayStart ?? item.startDate
+            return cal.compare(start, to: targetStart, toGranularity: .minute) == .orderedSame
+                ? item.id
+                : nil
+        }
+        return Set(ids)
+    }
+}
 
