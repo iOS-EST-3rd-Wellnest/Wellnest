@@ -86,7 +86,7 @@ struct TodayCardView: View {
                     .overlay {
                         Circle()
                             .stroke(Color.gray.opacity(0.3), lineWidth: 18)
-                            .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
+                            .frame(width: isDevicePad ? 140 : 130, height: isDevicePad ? 140 : 130)
                         
                         if scheduleProgressVM.todayScheduleCount > 0 {
                             Circle()
@@ -99,7 +99,7 @@ struct TodayCardView: View {
                                     ),
                                     style: StrokeStyle(lineWidth: 18, lineCap: .round)
                                 )
-                                .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
+                                .frame(width: isDevicePad ? 140 : 130, height: isDevicePad ? 140 : 130)
                                 .rotationEffect(.degrees(-90))
                             
                             VStack(spacing: Spacing.inline) {
