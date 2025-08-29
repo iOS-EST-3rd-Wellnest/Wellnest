@@ -13,11 +13,14 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct MainTabView: View {
     @Environment(\.colorScheme) var colorScheme
 
     @StateObject private var planVM = PlanViewModel()
+    
+    @StateObject private var scheduleProgressViewModel: ScheduleProgressViewModel = ScheduleProgressViewModel()
 
     @State private var selectedTab: TabBarItem = .home
     @State private var showScheduleMenu: Bool = false
@@ -113,6 +116,7 @@ struct MainTabView: View {
         .onChange(of: selectedTab) { _ in
             showScheduleMenu = false
         }
+        .environmentObject(scheduleProgressViewModel)
         .padding(.bottom, 0)
 //        .ignoresSafeArea(edges: .bottom)
 //        .ignoresSafeArea(.keyboard, edges: .bottom)

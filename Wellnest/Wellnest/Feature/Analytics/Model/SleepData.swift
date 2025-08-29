@@ -22,3 +22,9 @@ struct SleepData {
     let weeklyQualityChange: Int
     let monthlyQualityChange: Int
 }
+
+extension SleepData {
+    var defaultSleepDuration: TimeInterval {
+        return 7 * 3600
+    }
+}

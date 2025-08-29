@@ -18,6 +18,8 @@ struct DatePickerView: View {
     @State private var showCalendar = false
     @State private var showTimePicker = false
 
+    var onButtonTap: (() -> Void)? = nil
+
     var selectedDate: Bool {
         return isPresented && showCalendar
     }
@@ -36,7 +38,8 @@ struct DatePickerView: View {
                 // 날짜 텍스트 버튼
                 Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
-                        UIApplication.hideKeyboard()
+                        onButtonTap?()
+
                         if isPresented {
                             // 이미 보여짐
                             if showCalendar {
@@ -73,7 +76,8 @@ struct DatePickerView: View {
                 if !isAllDay {
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) {
-                            UIApplication.hideKeyboard()
+                            onButtonTap?()
+
                             if isPresented {
                                 // 이미 보여짐
                                 if showTimePicker {

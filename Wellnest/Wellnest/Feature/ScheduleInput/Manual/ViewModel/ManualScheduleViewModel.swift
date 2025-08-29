@@ -76,6 +76,7 @@ final class ManualScheduleViewModel: ObservableObject {
         Task { await updateCompleted(item: item) } // async 버전 재사용
     }
 
+    @MainActor
     private func updateCompleted(item: ScheduleItem) async {
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
 
@@ -110,7 +111,8 @@ final class ManualScheduleViewModel: ObservableObject {
         Task { await deleteSchedule(item: item) } // async 버전 재사용
     }
 
-    func deleteSchedule(item: ScheduleItem) async {
+    @MainActor
+    private func deleteSchedule(item: ScheduleItem) async {
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
 
         do {

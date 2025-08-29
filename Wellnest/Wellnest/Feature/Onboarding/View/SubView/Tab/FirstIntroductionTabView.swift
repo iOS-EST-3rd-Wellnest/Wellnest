@@ -11,25 +11,35 @@ struct FirstIntroductionTabView: View {
     @Binding var currentPage: Int
     @Binding var title: String
 
+    let isIPad = OnboardingCardLayout.isIPad
+
     var body: some View {
         VStack {
-            Text("Wellnest")
-                .font(.system(size: 50))
-                .fontWeight(.semibold)
-                .padding(.top, 70)
-                .padding(.bottom)
+            Spacer()
 
             VStack {
-                Text("바쁜 일상 속에서도")
-                Text("건강하고 균형 잡힌 삶을 실현할 수 있도록 돕는,")
-                Text("AI 라이프스타일 플래너")
-            }
-            .padding(.bottom, 30)
+                Text("Wellnest")
+                    .font(isIPad ? .system(size: 65) : .system(size: 45))
+                    .fontWeight(.semibold)
+                    .padding(.bottom)
 
-            Image("firstIntroduction")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 430)
+                VStack {
+                    Text("바쁜 일상 속에서도")
+                    Text("건강하고 균형 잡힌 삶을 실현할 수 있도록 돕는,")
+                    Text("AI 라이프스타일 플래너")
+                }
+                .font(isIPad ? .title2 : .body)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .padding(.bottom, isIPad ? 50 : 30)
+
+                Image("firstIntro")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: isIPad ? 400 : 300)
+            }
+
+            Spacer()
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Color(.systemBackground))

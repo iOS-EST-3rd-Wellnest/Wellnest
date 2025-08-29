@@ -21,12 +21,15 @@ struct OnboardingTabView: View {
             VStack {
                 if let user = viewModel.userEntity {
                     switch currentPage {
-                    /// 동기부여
+                    /// 앱 소개
                     case 0:
                         FirstIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 앱 소개
-                    case 1, 2:
+                    case 1:
                         SecondIntroductionTabView(currentPage: $currentPage, title: $title)
+                    /// 앱 소개
+                    case 2:
+                        ThirdIntroductionTabView(currentPage: $currentPage, title: $title)
                     /// 사용자 정보
                     case 3:
                         UserInfoTabView(userEntity: user, currentPage: $currentPage, title: $title, isNicknameValid: $isNicknameValid)
@@ -175,8 +178,7 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
                                 .foregroundColor(item.isSelected ? .primary : .gray)
                         }
                         .frame(width: cardWidth, height: cardWidth)
-                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : (colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.5)))
-
+                        .background(item.isSelected ? (colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray5)) : .wellnestBackgroundCard)
                         .cornerRadius(CornerRadius.large)
                     }
                 }
@@ -213,7 +215,8 @@ struct OnboardingButton: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 24)
+            .frame(height: 39)
+            .offset(y: 15)
 
             HStack {
                 if showPrevious, currentPage > 0 {
@@ -238,7 +241,32 @@ struct OnboardingButton: View {
             }
             .padding(.horizontal, Spacing.layout)
             .padding(.bottom, Spacing.content)
-            .background(colorScheme == .dark ? Color.black : Color.white)
+            .background {
+                ZStack {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+
+                    Rectangle()
+                        .fill(colorScheme == .light ? .white : .black)
+
+                }
+                .mask {
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: .black.opacity(0.5), location: 0.3),
+                            .init(color: .black, location: 0.5),
+                            .init(color: .black, location: 0.7),
+                            .init(color: .black, location: 1.0)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .ignoresSafeArea(edges: .bottom)
+
+            }
+//            .background(colorScheme == .dark ? Color.black : Color.white)
         }
     }
 }

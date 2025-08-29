@@ -48,7 +48,7 @@ struct VideoiPhoneCardView: View {
                         
                         Text(video.title)
                             .font(.callout)
-                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .foregroundStyle(Color(.label))
                             .lineLimit(2)
                             .frame(maxWidth: titleWidth, minHeight: twoLineHeight, alignment: .topLeading)
                             .multilineTextAlignment(.leading)
@@ -102,7 +102,7 @@ struct VideoiPadCardView: View {
                         
                         Text(video.title)
                             .font(.body)
-                            .foregroundStyle(colorScheme == .dark ? .white : .black)
+                            .foregroundStyle(Color(.label))
                             .lineLimit(2)
                             .frame(maxWidth: .infinity, minHeight: twoLineHeight, alignment: .topLeading)
                             .multilineTextAlignment(.leading)

@@ -81,7 +81,7 @@ struct ProfileDetailView: View {
             /// 사용자 정보 입력 폼
             VStack {
                 HStack {
-                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. ㅏ, ㅈ 불가능)")
+                    Text("닉네임은 한글, 영문, 숫자만 입력 가능 (ex. a, ㅏ, ㅈ 불가능)")
                         .font(.caption2)
                         .foregroundColor(.red)
                         .padding(.leading, 4)
@@ -208,11 +208,21 @@ struct ProfileDetailView: View {
         .safeAreaInset(edge: .bottom) {
             /// 저장 버튼
             OnboardingButton(
-                title: "저장",
+                title: isFieldFocused == .height ? "다음" : "저장",
                 isDisabled: isButtonDisabled,
                 action: {
-                    saveUserInfo()
-                    withAnimation { dismiss() }
+                    if isFieldFocused == .height {
+                        /// 키 입력 후 → 몸무게로 포커스 이동
+                        isFieldFocused = .weight
+                    } else if isFieldFocused == .weight {
+                        /// 몸무게 입력 후 → 저장하고 다음 페이지
+                        saveUserInfo()
+                        withAnimation { currentPage += 1 }
+                    } else {
+                        /// 혹시 포커스 없는 상태 → 저장하고 다음 페이지
+                        saveUserInfo()
+                        withAnimation { currentPage += 1 }
+                    }
                 },
                 currentPage: $currentPage
             )

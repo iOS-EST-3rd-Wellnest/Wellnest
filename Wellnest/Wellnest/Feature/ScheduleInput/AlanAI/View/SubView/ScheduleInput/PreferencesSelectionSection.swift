@@ -64,7 +64,6 @@ struct FlowResult {
 
 struct PreferencesSelectionSection: View {
     @Binding var selectedPreferences: Set<String>
-    let onPreferenceToggle: (String) -> Void
 
     @StateObject private var userInfoViewModel = UserInfoViewModel()
 
@@ -74,12 +73,65 @@ struct PreferencesSelectionSection: View {
         for preference in userInfoViewModel.activityPreferences {
             let splitTitles = preference.title.components(separatedBy: "/")
                 .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
+                .filter { !$0.isEmpty && $0 != "기타" }
 
             result.append(contentsOf: splitTitles)
         }
 
-        return Array(Set(result)).sorted()
+        let uniqueResult = Array(Set(result))
+
+        let withoutSpecialNone = uniqueResult.filter { $0 != "특별히 없음" }.sorted()
+        let withSpecialNone = uniqueResult.contains("특별히 없음") ? withoutSpecialNone + ["특별히 없음"] : withoutSpecialNone
+
+        return withSpecialNone
+    }
+
+    private func getUserStoredPreferences() -> Set<String> {
+        guard let userEntity = userInfoViewModel.userEntity else {
+            return Set<String>()
+        }
+
+        var storedPreferences: Set<String> = Set()
+
+        if let activityPreferencesString = userEntity.activityPreferences {
+            let preferences = activityPreferencesString.components(separatedBy: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+
+            for preference in preferences {
+                let splitTitles = preference.components(separatedBy: "/")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty && $0 != "기타" }
+
+                storedPreferences.formUnion(splitTitles)
+            }
+        }
+
+        return storedPreferences
+    }
+
+    private func handlePreferenceToggle(_ preference: String) {
+        if preference == "특별히 없음" {
+            if selectedPreferences.contains("특별히 없음") {
+                // "특별히 없음"이 이미 선택되어 있으면 해제
+                selectedPreferences.remove("특별히 없음")
+            } else {
+                // "특별히 없음"을 선택하면 다른 모든 항목 해제
+                selectedPreferences.removeAll()
+                selectedPreferences.insert("특별히 없음")
+            }
+        } else {
+            // 다른 항목을 선택할 때
+            if selectedPreferences.contains("특별히 없음") {
+                selectedPreferences.remove("특별히 없음")
+            }
+
+            if selectedPreferences.contains(preference) {
+                selectedPreferences.remove(preference)
+            } else {
+                selectedPreferences.insert(preference)
+            }
+        }
     }
 
     var body: some View {
@@ -94,18 +146,25 @@ struct PreferencesSelectionSection: View {
                         title: preference,
                         isSelected: selectedPreferences.contains(preference)
                     ) {
-                        onPreferenceToggle(preference)
+                        handlePreferenceToggle(preference)
                     }
                 }
             }
+        }
+        .onAppear {
+            let storedPreferences = getUserStoredPreferences()
+            selectedPreferences.formUnion(storedPreferences)
+        }
+        .onChange(of: userInfoViewModel.userEntity) { _ in
+            let storedPreferences = getUserStoredPreferences()
+            selectedPreferences.formUnion(storedPreferences)
         }
     }
 }
 
 #Preview {
     PreferencesSelectionSection(
-        selectedPreferences: .constant(Set(["산책", "요가"])),
-        onPreferenceToggle: { _ in }
+        selectedPreferences: .constant(Set(["요가"]))
     )
     .padding()
 }

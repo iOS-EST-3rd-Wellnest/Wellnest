@@ -19,9 +19,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct WellnestApp: App {
+    let container = CoreDataService.shared
+    
     var body: some Scene {
         WindowGroup {
             AppRouter()
+                .environment(\.managedObjectContext, container.context)
         }
     }
 }

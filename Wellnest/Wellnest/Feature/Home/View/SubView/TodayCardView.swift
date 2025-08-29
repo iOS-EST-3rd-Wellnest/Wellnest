@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TodayCardView: View {
     @Environment(\.colorScheme) var colorScheme
-    @EnvironmentObject var analyticsVM: AnalyticsViewModel
+    @EnvironmentObject var scheduleProgressVM: ScheduleProgressViewModel
     @ObservedObject var homeVM: HomeViewModel
     @ObservedObject var manualScheduleVM: ManualScheduleViewModel
     @State private var isLandscape: Bool = UIScreen.main.bounds.width > UIScreen.main.bounds.height
@@ -17,10 +17,6 @@ struct TodayCardView: View {
     let isCompleteSchedules: [ScheduleItem]
     
     private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
-    
-    private var planData: PlanCompletionData {
-        analyticsVM.healthData.planCompletion
-    }
     
     private var today: String {
         let df = DateFormatter()
@@ -83,9 +79,9 @@ struct TodayCardView: View {
                             .stroke(Color.gray.opacity(0.3), lineWidth: 18)
                             .frame(width: isDevicePad ? 140 : 120, height: isDevicePad ? 140 : 120)
                         
-                        if planData.totalItems > 0 {
+                        if scheduleProgressVM.todayScheduleCount > 0 {
                             Circle()
-                                .trim(from: 0, to: planData.completionRate)
+                                .trim(from: 0, to: scheduleProgressVM.todayCompletionRate)
                                 .stroke(
                                     LinearGradient(
                                         colors: [.wellnestOrange],
@@ -98,17 +94,17 @@ struct TodayCardView: View {
                                 .rotationEffect(.degrees(-90))
                             
                             VStack(spacing: Spacing.inline) {
-                                Text("\(Int(planData.completionRate * 100))%")
+                                Text(scheduleProgressVM.progressInfo.title)
                                     .font(.title)
                                     .fontWeight(.bold)
                                 
-                                Text("남은 일정 \(planData.remainingItems)개")
+                                Text(scheduleProgressVM.remainScheduleCountText)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         } else {
                             VStack(spacing: Spacing.inline) {
-                                Text("\(Int(planData.completionRate * 100))%")
+                                Text("0%")
                                     .font(.title)
                                     .bold()
                             }

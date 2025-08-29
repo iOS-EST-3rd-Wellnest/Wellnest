@@ -26,7 +26,7 @@ struct PlanValidationHelper {
         case .single:
             return singleEndTime > singleStartTime
         case .multiple:
-            return multipleEndDate > multipleStartDate && multipleEndTime > multipleStartTime
+            return multipleEndDate >= multipleStartDate && multipleEndTime > multipleStartTime
         case .routine:
             return !selectedWeekdays.isEmpty && routineEndDate > routineStartDate && routineEndTime > routineStartTime
         }
