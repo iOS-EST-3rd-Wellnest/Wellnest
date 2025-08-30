@@ -37,11 +37,17 @@ struct AnalyticsView: View {
 
     private var customNavigationHeader: some View {
         VStack {
-            HStack {
-                Text("\(viewModel.healthData.userName)님의 건강지표")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+            HStack(spacing: 0) {
+                Group {
+                    Text("\(viewModel.healthData.userName)")
+                        .foregroundColor(.wellnestOrange)
+                    
+                    Text("님의 건강지표")
+                        .foregroundColor(.primary)
+                }
+                .font(.title2)
+                .fontWeight(.semibold)
+                
                 Spacer()
             }
             .padding(.horizontal)

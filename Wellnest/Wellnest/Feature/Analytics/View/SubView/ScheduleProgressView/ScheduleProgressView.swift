@@ -13,25 +13,27 @@ struct ScheduleProgressView: View {
     @EnvironmentObject var viewModel: ScheduleProgressViewModel
 
     var body: some View {
-        RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-            .frame(minHeight: 150)
-            .defaultShadow()
-            .overlay {
-                VStack(alignment: .leading, spacing: Spacing.content) {
-                    HStack(spacing: Spacing.layout) {
-                        ProgressRingView(viewModel: viewModel)
-                        .padding(8)
-                        
-                        ProgressInfoView(viewModel: viewModel)
-                        
-                        Spacer()
-
-                        ProgressFooterView(viewModel: viewModel)
-                    }
-                }
-                .padding()
-            }
+        HStack(spacing: 0) {
+            ProgressRingView(viewModel: viewModel)
+                .padding(.vertical)
+                .padding(.horizontal, Spacing.content)
+            
+            ProgressInfoView(viewModel: viewModel)
+                .padding(.vertical)
+                .padding(.leading)
+                
+            Spacer()
+            
+            ProgressFooterView(viewModel: viewModel)
+        }
+        .frame(maxWidth: .infinity, minHeight: 150)
+        .padding()
+        .roundedBorder(cornerRadius: CornerRadius.large)
+        .defaultShadow()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .fill(.wellnestBackgroundCard)
+        )
     }
 }
 
@@ -54,7 +56,7 @@ private struct ProgressRingView: View {
                     .trim(from: 0, to: viewModel.todayCompletionRate)
                     .stroke(
                         LinearGradient(
-                            colors: [.green, .blue],
+                            colors: [.orange, .wellnestOrange],
                             startPoint: .topTrailing,
                             endPoint: .bottomLeading
                         ),
@@ -84,8 +86,6 @@ private struct ProgressInfoView: View {
             Text(viewModel.progressInfo.description)
                 .font(.headline)
                 .foregroundColor(.secondary)
-
-            Spacer()
         }
     }
 }
