@@ -190,7 +190,6 @@ struct OnboardingCardContent<Item: SelectableItem>: View {
     }
 }
 
-// TODO: disabled 될 때 애니메이션 되면 좋을 것 같음
 /// 온보딩 버튼 레이아웃
 struct OnboardingButton: View {
     @Environment(\.colorScheme) var colorScheme
@@ -267,7 +266,7 @@ struct OnboardingButton: View {
                 .ignoresSafeArea(edges: .bottom)
 
             }
-//            .background(colorScheme == .dark ? Color.black : Color.white)
+            .background(colorScheme == .dark ? Color.black : Color.white)
         }
     }
 }
