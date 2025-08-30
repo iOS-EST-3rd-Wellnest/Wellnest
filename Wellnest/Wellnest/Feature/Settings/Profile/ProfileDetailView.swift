@@ -96,7 +96,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $nickname,
-                        prompt: Text("10글자 이하로 입력해주세요")
+                        prompt: Text("10글자 이하로 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -158,7 +158,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $heightText,
-                        prompt: Text("cm 단위로 정수만 입력해주세요")
+                        prompt: Text("cm 단위로 정수만 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -177,7 +177,7 @@ struct ProfileDetailView: View {
                     TextField(
                         "",
                         text: $weightText,
-                        prompt: Text("kg 단위로 정수만 입력해주세요")
+                        prompt: Text("kg 단위로 정수만 입력해주세요.")
                             .font(.footnote)
                             .foregroundColor(.gray.opacity(0.4))
                     )
@@ -198,7 +198,7 @@ struct ProfileDetailView: View {
                     if isFieldFocused == .height {
                         Button("다음") { isFieldFocused = .weight }
                     } else if isFieldFocused == .weight {
-                        Button("완료") { isFieldFocused = nil }
+                        Button("저장하기") { isFieldFocused = nil }
                     }
                 }
             }
@@ -208,7 +208,7 @@ struct ProfileDetailView: View {
         .safeAreaInset(edge: .bottom) {
             /// 저장 버튼
             OnboardingButton(
-                title: isFieldFocused == .height ? "다음" : "저장",
+                title: isFieldFocused == .height ? "다음" : "저장하기",
                 isDisabled: isButtonDisabled,
                 action: {
                     if isFieldFocused == .height {

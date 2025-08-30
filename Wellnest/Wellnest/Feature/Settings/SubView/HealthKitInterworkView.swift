@@ -24,13 +24,6 @@ struct HealthKitInterworkView: View {
     @State private var bmi: Double = 0.0
     @State private var bodyFatPercentage: Double = 0.0
     
-    var formattedSleepTime: String {
-        let minutes = sleepTime / 60
-        let hour = minutes / 60
-        let minute = minutes % 60
-        return "\(hour)시간 \(minute)분"
-    }
-    
     @State private var isAuthorizing: Bool = false
     @State private var showSettingAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -69,7 +62,7 @@ struct HealthKitInterworkView: View {
                             .font(titleFont)
                             .fontWeight(.bold)
                         
-                        Text("Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 \n확인할 수 있습니다.")
+                        Text(title)
                             .foregroundStyle(.secondary)
                             .font(subTitleFont)
                     }
@@ -251,7 +244,7 @@ extension HealthKitInterworkView {
         }
     }
     
-    /// 건강앱의 데이터가 변경 시  업데이트
+//    /// 건강앱의 데이터가 변경 시  업데이트
     private func startObserversIfNeeded() {
         guard userDefault.isHealthKitEnabled else { return }
         
@@ -350,6 +343,14 @@ extension HealthKitInterworkView {
             return .footnote
         } else {
             return .body
+        }
+    }
+    
+    var title: String {
+        if hsClass == .compact {
+            return "Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 확인할 수 있습니다."
+        } else {
+            return "Apple 건강앱과 연동시 오늘의 활동량, 칼로리, 수면시간을 한 화면에서 \n확인할 수 있습니다."
         }
     }
 }
