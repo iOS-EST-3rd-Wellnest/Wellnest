@@ -11,14 +11,14 @@ extension Color {
 
     static func scheduleBackground(color: String) -> Color {
         switch color.lowercased() {
-        case "wellnestblue": return .wellnestBlue
-        case "wellnestbrown": return .wellnestBrown
-        case "wellnestgray": return .wellnestGray
-        case "wellnestgreen": return .wellnestGreen
-        case "wellnestpeach": return .wellnestPeach
-        case "wellnestpink": return .wellnestPink
-        case "wellnestpurple": return .wellnestPurple
-        case "wellnestyellow": return .wellnestYellow
+        case "wellnestaccentblue": return .wellnestBlue
+        case "wellnestaccentbrown": return .wellnestBrown
+        case "wellnestaccentgray": return .wellnestGray
+        case "wellnestaccentgreen": return .wellnestGreen
+        case "wellnestaccentpeach": return .wellnestPeach
+        case "wellnestaccentpink": return .wellnestPink
+        case "wellnestaccentpurple": return .wellnestPurple
+        case "wellnestaccentyellow": return .wellnestYellow
         default: return .wellnestPeach
         }
     }
