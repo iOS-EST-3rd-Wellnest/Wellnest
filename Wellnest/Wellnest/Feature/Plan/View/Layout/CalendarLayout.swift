@@ -96,3 +96,21 @@ struct CalendarLayout: Layout {
         }
     }
 }
+
+extension CalendarLayout {
+    static func fixedHeight(
+        for width: CGFloat,
+        columns: Int = 7,
+        spacing: CGFloat = 4,
+        slots: Int = 6,
+        aspect: CGFloat = 0.9
+    ) -> CGFloat {
+        guard width > 0, columns > 0, slots > 0 else { return 0 }
+
+        let totalSpacingW = spacing * CGFloat(columns - 1)
+        let itemWidth = (width - totalSpacingW) / CGFloat(columns)
+        let itemHeight = aspect * itemWidth
+        let totalSpacingH = spacing * CGFloat(slots - 1)
+        return itemHeight * CGFloat(slots) + totalSpacingH
+    }
+}

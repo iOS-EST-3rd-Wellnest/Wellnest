@@ -18,13 +18,14 @@ struct CalendarPagingView: View {
     @State private var isJumping = false
     @State private var previousSelection: Int = 3
 
-    @State private var monthHeight: CGFloat = 0
 
     @Environment(\.horizontalSizeClass) private var hSize
     private var isRegularWidth: Bool { hSize == .regular }
     private var dayFontSize: CGFloat { isRegularWidth ? 22 : 16 }
     private var weekdayFont: Font { .system(size: dayFontSize, weight: .semibold) }
-    private var weekdayBottomPadding: CGFloat { isRegularWidth ? Spacing.layout + 4 : Spacing.layout }
+    private var weekdayBottomPadding: CGFloat { isRegularWidth ? Spacing.content + 4 : Spacing.content }
+
+    @State private var screenWidth: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,20 +48,10 @@ struct CalendarPagingView: View {
                         .onDisappear {
                             handlePageDisappear(idx: idx)
                         }
-                        .background {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        if monthHeight == 0 {
-                                            monthHeight = geo.size.height
-                                        }
-                                    }
-                            }
-                        }
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: monthHeight > 0 ? monthHeight : nil)
+            .frame(height: screenWidth > 0 ? calculateFixedMonthHeight(for: screenWidth) : nil)
             .clipped()
             .simultaneousGesture(
                 DragGesture()
@@ -125,6 +116,17 @@ struct CalendarPagingView: View {
                 }
             }
         }
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear {
+                        screenWidth = geo.size.width
+                    }
+                    .onChange(of: geo.size.width) { newWidth in
+                        screenWidth = newWidth
+                    }
+            }
+        }
     }
 
     private func handlePageDisappear(idx: Int) {
@@ -153,6 +155,19 @@ struct CalendarPagingView: View {
 
         planVM.recenterVisibleMonth(to: centerMonth)
         pages = planVM.generatePageMonths(center: centerMonth)
+    }
+
+    private func calculateFixedMonthHeight(for width: CGFloat) -> CGFloat {
+        let horizontalPadding: CGFloat = 32
+        let calendarWidth = width - horizontalPadding
+
+        return CalendarLayout.fixedHeight(
+            for: calendarWidth,
+            columns: 7,
+            spacing: 4,
+            slots: 6,
+            aspect: isRegularWidth ? 1.0 : 0.9
+        )
     }
 }
 
