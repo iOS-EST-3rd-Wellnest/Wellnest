@@ -17,7 +17,7 @@ struct AnalyticsView: View {
     @Environment(\.managedObjectContext) private var context
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack {
                 SafeAreaBlurView(offsetY: $offsetY, space: .named("analyticsViewScroll"))
                 
@@ -42,7 +42,7 @@ struct AnalyticsView: View {
                     Text("\(viewModel.healthData.userName)")
                         .foregroundColor(.wellnestOrange)
                     
-                    Text("님의 건강지표")
+                    Text(" 님의 건강지표")
                         .foregroundColor(.primary)
                 }
                 .font(.title2)
@@ -64,12 +64,22 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            ScheduleProgressView()
-            AIInsightView()
-            ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
-            SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+            TabView {
+                ForEach(ScheduleProgressType.allCases) {
+                    ScheduleProgressView(scheduleProgressType: $0)
+                        .padding(.horizontal)
+                }
+            }
+            .tabViewStyle(.page)
+            .frame(minHeight: 180)
+            
+            Group {
+                AIInsightView()
+                ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
+                SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+            }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
         .padding(.top, Spacing.layout)
         .padding(.bottom, 100)
     }
