@@ -39,7 +39,7 @@ struct AnalyticsView: View {
         VStack {
             HStack(spacing: 0) {
                 Group {
-                    Text("\(viewModel.healthData.userName)")
+                    Text("\(viewModel.getUserName())")
                         .foregroundColor(.wellnestOrange)
                     
                     Text("님의 건강지표")

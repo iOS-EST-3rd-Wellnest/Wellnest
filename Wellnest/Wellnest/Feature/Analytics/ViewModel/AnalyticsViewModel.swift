@@ -583,7 +583,7 @@ class AnalyticsViewModel: ObservableObject {
         return data.reversed()
     }
 
-    private func getUserName() -> String {
+    func getUserName() -> String {
         let coreDataService = CoreDataService.shared
 
         do {
