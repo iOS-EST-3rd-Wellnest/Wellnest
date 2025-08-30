@@ -17,15 +17,13 @@ struct ScheduleProgressView: View {
     var body: some View {
         HStack(spacing: 0) {
             ProgressRingView(viewModel: viewModel, scheduleProgressType: scheduleProgressType)
-                .padding(.vertical)
-                .padding(.horizontal, Spacing.content)
+                .padding()
             
             ProgressInfoView(viewModel: viewModel, scheduleProgressType: scheduleProgressType)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical)
-                .padding(.leading)
+                .padding(.leading, Spacing.content)
                 
-            Spacer()
-            
             ProgressFooterView(viewModel: viewModel, scheduleProgressType: scheduleProgressType)
         }
         .frame(maxWidth: .infinity, minHeight: 150)
@@ -118,7 +116,7 @@ private struct ProgressInfoView: View {
                 .bold()
             
             Text(progressInfo.description)
-                .font(.headline)
+                .font(UIDevice.current.userInterfaceIdiom == .pad ? .body : .subheadline)
                 .foregroundColor(.secondary)
         }
         .onAppear {

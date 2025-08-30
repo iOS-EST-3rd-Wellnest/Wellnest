@@ -91,10 +91,12 @@ struct AnalyticsView: View {
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    ScheduleProgressView()
+                    ScheduleProgressView(scheduleProgressType: .today)
+                    ScheduleProgressView(scheduleProgressType: .monthly)
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {
+                    ScheduleProgressView(scheduleProgressType: .weekly)
                     AIInsightView()
                     SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
                 }

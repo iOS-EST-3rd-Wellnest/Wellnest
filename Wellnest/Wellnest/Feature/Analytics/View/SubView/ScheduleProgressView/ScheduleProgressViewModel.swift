@@ -200,9 +200,17 @@ extension ScheduleProgressViewModel {
 
     var progressInfo: (title: String, description: String) {
         if hasToday {
+            var des = ""
+            if todayCompletionRate < 0.1 {
+                des = "오늘 일정이\n\(todayRemainCount)개 남았어요."
+            } else {
+                des = "오늘 일정이\n모두 완료되었어요."
+            }
+            
             return (
                 title: "\(Int(todayCompletionRate * 100))%",
-                description: "오늘 일정이\n\(todayRemainCount)개 남았어요."
+//                description: "오늘 일정이\n\(todayRemainCount)개 남았어요."
+                description: des
             )
         } else {
             return (
@@ -214,9 +222,16 @@ extension ScheduleProgressViewModel {
     
     var progressWeeklyInfo: (title: String, description: String) {
         if hasWeekly {
+            var des = ""
+            if weeklyCompletionRate < 0.1 {
+                des = "이번주 일정이\n\(weeklyRemainCount)개 남았어요."
+            } else {
+                des = "이번주 일정이\n모두 완료되었어요."
+            }
+            
             return (
                 title: "\(Int(weeklyCompletionRate * 100))%",
-                description: "이번주 일정이\n\(weeklyRemainCount)개 남았어요."
+                description: des
             )
         } else {
             return (
@@ -228,9 +243,16 @@ extension ScheduleProgressViewModel {
     
     var progressMonthlyInfo: (title: String, description: String) {
         if hasMonthly {
+            var des = ""
+            if monthlyCompletionRate < 0.1 {
+                des = "이번달 일정이\n\(monthlyRemainCount)개 남았어요."
+            } else {
+                des = "이번달 일정이\n모두 완료되었어요."
+            }
+            
             return (
                 title: "\(Int(monthlyCompletionRate * 100))%",
-                description: "이번달 일정이\n\(monthlyRemainCount)개 남았어요."
+                description: des
             )
         } else {
             return (
@@ -254,14 +276,6 @@ extension ScheduleProgressViewModel {
 
     var remainScheduleCountText: String {
         return "남은 일정 \(todayRemainCount)개"
-    }
-    
-    var remainScheduleWeeklyCountText: String {
-        return "남은 일정 \(weeklyRemainCount)개"
-    }
-    
-    var remainScheduleMonthlyCountText: String {
-        return "남은 일정 \(monthlyRemainCount)개"
     }
 
     var todayCompletionRateText: String {
