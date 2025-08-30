@@ -8,16 +8,20 @@
 import SwiftUI
 import HealthKit
 
+/// HealthKit 사용 중 발생 가능한 일반 오류
 enum HealthKitError: Error {
     case notAvailable
     case unknown(Error)
 }
 
+/// HealthKit 권한 관련 오류
 enum HealthAuthError: Error {
     case notAvailable
     case unknown(Error)
 }
 
+/// 읽기 권한(프로브 기반) 누락 스냅샷
+/// - Note: `missingCore` 는 필수, `missingOptional` 은 선택 타입의 누락 목록
 struct MissingSampleCheck {
     let missingCore: [HKObjectType]
     let missingOptional: [HKObjectType]
@@ -27,17 +31,23 @@ struct MissingSampleCheck {
 final class HealthManager {
     static let shared = HealthManager()
     
+    /// HealthKit 저장소
     let store = HKHealthStore()
     
-    let stepCount: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .stepCount) // 걸음 수
-    let calorieCount: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) // 소모 칼로리
-    let sleepTime: HKObjectType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) // 수면 시간
-    let heartRateType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .heartRate) // 평균 심박수
-    let bmiType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .bodyMassIndex) // BMI
-    let bodyFatType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage) // 체지방량
+    /// 걸음 수
+    let stepCount: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .stepCount)
+    /// 소모 칼로리
+    let calorieCount: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)
+    /// 수면 시간
+    let sleepTime: HKObjectType? = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
+    /// 평균 심박수
+    let heartRateType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .heartRate)
+    /// BMI
+    let bmiType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .bodyMassIndex)
+    /// 체지방량
+    let bodyFatType: HKQuantityType? = HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage)
     
-    // MARK: 권한 요청 관련 -
-    
+    // MARK: - 권한 요청 관련
     /// 필수 허용 타입
     private var requiredCoreTypes: Set<HKObjectType> {
         var s = Set<HKObjectType>()
@@ -47,7 +57,7 @@ final class HealthManager {
         return s
     }
     
-    /// 옵셔널 허용 타입
+    /// 선택 허용 타입
     private var optionalTypes: Set<HKObjectType> {
         var s = Set<HKObjectType>()
         if let hr  = HKObjectType.quantityType(forIdentifier: .heartRate) { s.insert(hr) }
@@ -66,7 +76,8 @@ final class HealthManager {
     /// 모든 읽기 타입을 포함
     private var requiredReadTypes: Set<HKObjectType> { requiredCoreTypes.union(optionalTypes) }
     
-    /// 읽기 권한이 MissingSampleCheck에 포함되었는지 확인
+    /// 읽기 권한 상태를 **실제 읽기 프로브**로 점검해 스냅샷을 반환
+    /// - Returns: 필수/선택 타입에 대해 읽기 불가로 판단된 타입 목록
     func authorizationSnapshotByReadProbe() async -> MissingSampleCheck {
         @Sendable func canRead(_ type: HKObjectType) async -> Bool {
             if let qt = type as? HKQuantityType {
@@ -108,7 +119,12 @@ final class HealthManager {
         return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
-    /// Quantity 타입의 (걸음수, 심박수, 칼로리 등) 데이터의 읽기 권한이 있는지 확인
+    /// Quantity 타입(걸음/칼로리/심박 등)에 대해 **읽기 가능 여부를 프로브**한다.
+        /// - Parameters:
+        ///   - type: 조회할 수량형 타입
+        ///   - start: 조회 시작 시점
+        ///   - end: 조회 종료 시점
+        /// - Returns: 권한 OK(또는 데이터 없음) → `true`, 권한 거부/미결정/제한 → `false`
     private func probeQuantityRead(type: HKQuantityType, start: Date, end: Date) async -> Bool {
         await withCheckedContinuation { cont in
             let pred = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
@@ -132,7 +148,12 @@ final class HealthManager {
         }
     }
     
-    /// Category 타입의(수면 시간) 읽기 권한이 있는지 확인
+    /// Category 타입(수면 등)에 대해 **읽기 가능 여부를 프로브**한다.
+    /// - Parameters:
+    ///   - type: 조회할 카테고리 타입
+    ///   - start: 조회 시작 시점
+    ///   - end: 조회 종료 시점
+    /// - Returns: 권한 OK(또는 데이터 없음) → `true`, 권한 거부/미결정/제한 → `false`
     private func probeCategoryRead(type: HKCategoryType, start: Date, end: Date) async -> Bool {
         await withCheckedContinuation { cont in
             let pred = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
@@ -155,7 +176,9 @@ final class HealthManager {
         }
     }
     
-    /// 권한이 필요한 상황이면 권한 요청
+    /// 필수 읽기 타입에 누락이 있을 경우 HealthKit 권한 요청을 수행하고, 최종 스냅샷을 반환한다.
+    /// - Returns: 권한 허용 후 프로브 기반 최종 누락 스냅샷
+    /// - Throws: `HealthAuthError.notAvailable`, `HealthAuthError.unknown`
     func requestAuthorizationIfNeeded() async throws -> MissingSampleCheck {
         guard HKHealthStore.isHealthDataAvailable() else { throw HealthAuthError.notAvailable }
         let before = await finalAuthSnapshot()
@@ -172,7 +195,8 @@ final class HealthManager {
         return await finalAuthSnapshot()
     }
     
-    /// 권한 허용 최종 스냅샷
+    /// 권한 허용 상태에 대한 **최종 스냅샷**을 생성한다. (쓰기/읽기 혼합 판정)
+    /// - Returns: 필수/선택 타입의 최종 누락 목록
     func finalAuthSnapshot() async -> MissingSampleCheck {
         var missingCore: [HKObjectType] = []
         var missingOptional: [HKObjectType] = []
@@ -203,6 +227,9 @@ final class HealthManager {
         return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
+    /// 단일 타입에 대해 읽기 가능 여부를 프로브한다.
+    /// - Parameter type: 점검할 타입
+    /// - Returns: 읽기 가능하면 `true`
     private func canReadByProbe(_ type: HKObjectType) async -> Bool {
         if let qt = type as? HKQuantityType {
             let start = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
@@ -216,7 +243,9 @@ final class HealthManager {
         return false
     }
     
-    /// 데이터 읽기 권한 요청
+    /// 지정된 읽기 타입 집합에 대해 권한을 요청한다. (단순 요청)
+    /// - Throws: `HealthAuthError.notAvailable`, `HealthAuthError.unknown`
+    /// - Note: 이후 상태 확인은 별도 로직 필요
     func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
             throw HealthAuthError.notAvailable
@@ -243,9 +272,9 @@ final class HealthManager {
     }
     
     
-    // MARK: 오늘 측정 데이터 -
-    
-    /// 오늘 걸음 수 가져오기
+    // MARK: - 오늘 측정 데이터
+    /// 오늘 걸음 수 합계를 가져온다.
+    /// - Returns: 오늘 누적 걸음 수 (개)
     func fetchStepCount() async throws -> Int {
         guard let stepCount else {
             return 0
@@ -274,7 +303,8 @@ final class HealthManager {
         }
     }
     
-    /// 오늘 소모 칼로리 가져오기
+    /// 오늘 활동 칼로리(kcal) 합계를 가져온다.
+    /// - Returns: 오늘 누적 활동 칼로리 (kcal)
     func fetchCalorieCount() async throws -> Int {
         guard let calorieCount else {
             return 0
@@ -304,7 +334,8 @@ final class HealthManager {
         }
     }
     
-    /// 오늘 수면시간 가져오기
+    /// 최근 24시간 수면 시간을 합산해 반환한다.
+    /// - Returns: 수면 시간(초 단위)
     func fetchSleepDuration() async throws -> TimeInterval {
         guard let sleepTime else {
             return 0
@@ -350,7 +381,8 @@ final class HealthManager {
         }
     }
     
-    /// 오늘 심박수 평균 값
+    /// 오늘 평균 심박수(bpm)를 반환한다.
+    /// - Returns: 평균 심박수 (bpm, 정수 반올림)
     func fetchAverageHeartRate() async throws -> Int {
         guard let heartRateType else {
             return 0
@@ -380,7 +412,8 @@ final class HealthManager {
         }
     }
     
-    /// 최근 BMI값
+    /// 최근 BMI(체질량지수)를 반환한다.
+    /// - Returns: BMI 값
     func fetchBMI() async throws -> Double {
         guard let bmiType else {
             return 0.0
@@ -408,7 +441,8 @@ final class HealthManager {
         }
     }
     
-    /// 최근 체지방률
+    /// 최근 체지방률(%)를 반환한다.
+    /// - Returns: 체지방률(%) 값
     func fetchBodyFatPercentage() async throws -> Double {
         guard let bodyFatType else {
             return 0.0
@@ -435,7 +469,9 @@ final class HealthManager {
         }
     }
     
-    /// 건강 앱 데이터가 업데이트 될 때 호출
+    /// 지정한 샘플 타입에 대한 변경 사항을 옵저빙한다. (백그라운드 업데이트 트리거)
+    /// - Parameter type: 관찰할 샘플 타입
+    /// - Note: 변경 시 `Notification.Name.healthDataDidUpdate` 노티를 전송한다.
     func startObservingUpdates(for type: HKSampleType) {
         let query = HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, error in
             if let error = error {
@@ -459,7 +495,8 @@ extension HealthManager {
     
     // MARK: - 어제부터 지난 1년간의 데이터 (걸음수, 칼로리, 심박수, 수면시간)
     
-    /// 일자별 요약
+    /// [어제 00:00)까지의 1년 범위를 반환한다. (오늘 제외)
+    /// - Returns: 시작일(1년 전 자정) ~ 종료일(오늘 자정)의 구간
     struct DailyMetric {
         let dayStart: Date      // 해당 날짜 00:00
         let steps: Int          // 걸음(합계)
@@ -476,7 +513,13 @@ extension HealthManager {
         return DateInterval(start: start, end: today0) // 어제까지 포함
     }
     
-    /// 수량형(걸음/칼로리/심박) 일별 값
+    /// 수량형(걸음/칼로리/심박) 데이터를 일 단위로 집계한다.
+    /// - Parameters:
+    ///   - type: 조회할 수량형 타입
+    ///   - unit: 결과 단위 (예: .count(), .kilocalorie(), "count/min")
+    ///   - options: 통계 옵션(.cumulativeSum, .discreteAverage 등)
+    ///   - range: 조회 범위
+    /// - Returns: `(dayStart, value)` 배열 (누락일은 0으로 채움)
     private func dailyStatistics(
         type: HKQuantityType,
         unit: HKUnit,
@@ -516,7 +559,12 @@ extension HealthManager {
         }
     }
     
-    /// 수면: 범위 내 샘플을 가져와 전날 18시 ~ 오늘 18시의 시간으로 집계
+    /// 수면 샘플을 **앵커 시각(기본 18시)** 기준으로 시프트하여 일 단위 집계(분)를 수행한다.
+    /// - Parameters:
+    ///   - range: 집계 범위(예: 어제까지 1년)
+    ///   - sleepSampleType: 수면 샘플 타입
+    ///   - anchorHour: 날짜 그룹핑 기준 시각(기본 18시). 18시~다음날 18시를 “하루”로 본다.
+    /// - Returns: `(dayStart, minutes)` 배열
     private func dailySleepMinutes(
         range: DateInterval,
         sleepSampleType: HKSampleType,
@@ -593,7 +641,8 @@ extension HealthManager {
     }
     
     
-    /// 어제부터 지난 1년간의 "일별" 걸음/칼로리/평균심박/수면(분)
+    /// 어제부터 지난 1년간의 일별 메트릭(걸음/칼로리/평균심박/수면분)을 가져온다.
+    /// - Returns: `DailyMetric` 배열(오름차순 날짜)
     func fetchLastYearFromYesterday() async throws -> [DailyMetric] {
         let range = lastYearExcludingToday()
         let cal = Calendar.current
@@ -633,6 +682,11 @@ extension HealthManager {
     }
 }
 
+/// 주어진 범위의 모든 날짜(자정 기준)를 반환한다.
+/// - Parameters:
+///   - range: 날짜 범위
+///   - cal: 캘린더(기본 .current)
+/// - Returns: [시작일 자정, 시작일+1 자정, ..., 종료일 이전 자정]
 @inline(__always)
 func daysInRange(_ range: DateInterval, calendar cal: Calendar = .current) -> [Date] {
     var out: [Date] = []
@@ -646,5 +700,6 @@ func daysInRange(_ range: DateInterval, calendar cal: Calendar = .current) -> [D
 
 
 extension Notification.Name {
+    /// HealthKit 데이터 변경 알림 (옵저버 쿼리에서 게시)
     static let healthDataDidUpdate = Notification.Name("healthDataDidUpdate")
 }
