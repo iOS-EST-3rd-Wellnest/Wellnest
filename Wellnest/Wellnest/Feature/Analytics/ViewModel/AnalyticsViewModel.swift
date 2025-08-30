@@ -17,42 +17,53 @@ class AnalyticsViewModel: ObservableObject {
     @Published var hasRealData: Bool = false
 
     private let healthManager = HealthManager.shared
-    private let coreDataStore = CoreDataStore()
+    
+    static let defaultExerciseData = ExerciseData(
+        averageSteps: 8500,            // 하루 평균 8,500보
+        stepsChange: 300,             // 전일 대비 +300보
+        averageCalories: 2100,        // 하루 평균 2,100kcal
+        caloriesChange: -150,         // 전일 대비 -150kcal
+        weeklySteps: [8200, 8700, 7600, 9100, 10000, 9500, 8800], // 최근 7일
+        monthlySteps: [
+            8300, 8700, 7900, 9200, 8500, 9100, 8800, 9600, 10000, 10200,
+            7700, 8400, 8900, 9100, 9300, 9500, 9700, 8800, 8200, 9400,
+            8600, 8700, 9100, 8900, 9300, 9600, 9800, 10100, 9500, 8700
+        ], // 최근 한 달치
+        dailyStepsChange: 4,          // 어제보다 4% 증가
+        weeklyStepsChange: 6,         // 지난주 대비 6% 증가
+        monthlyStepsChange: -2,       // 지난달 대비 2% 감소
+        dailyCaloriesChange: -5,      // 어제보다 5% 감소
+        weeklyCaloriesChange: 3,      // 지난주 대비 3% 증가
+        monthlyCaloriesChange: 1      // 지난달 대비 1% 증가
+    )
+    
+    private static let deaultSleepData = SleepData(
+        averageHours: 7.3,       // 7시간 18분
+        averageMinutes: 10,     // 분 단위
+        sleepQuality: 75,        // 수면 질 점수 (0~100 가정)
+        qualityChange: 3,        // 전일 대비 +3%
+        
+        weeklySleepHours: [6.8, 7.2, 6.5, 7.0, 7.4, 8.1, 8.0 ], // 최근 7일 (평일/주말 차이 반영)
+        monthlySleepHours: [6.9, 7.1, 7.0, 6.8, 7.5, 8.0, 7.9,
+                            6.7, 7.3, 7.2, 6.9, 7.4, 7.8, 8.1,
+                            6.6, 7.0, 7.3, 6.8, 7.2, 7.6, 8.0,
+                            6.9, 7.1, 7.4, 7.2, 7.5, 8.2, 7.8,
+                            6.8, 7.3], // 최근 30일
+        
+        dailySleepTimeChange: 2,     // 전일 대비 2% 증가
+        weeklySleepTimeChange: -1,   // 지난주 대비 1% 감소
+        monthlySleepTimeChange: 0,   // 지난달과 비슷
+        dailyQualityChange: 1,       // 전일 대비 +1%
+        weeklyQualityChange: -2,     // 지난주 대비 -2%
+        monthlyQualityChange: 3      // 지난달 대비 +3%
+    )
 
     init() {
         self.healthData = HealthData(
             userName: "사용자",
-            planCompletion: PlanCompletionData(completedItems: 0, totalItems: 0),
             aiInsight: AIInsightData(message: "데이터를 불러오는 중..."),
-            exercise: ExerciseData(
-                averageSteps: 0,
-                stepsChange: 0,
-                averageCalories: 0,
-                caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7),
-                monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0,
-                weeklyStepsChange: 0,
-                monthlyStepsChange: 0,
-                dailyCaloriesChange: 0,
-                weeklyCaloriesChange: 0,
-                monthlyCaloriesChange: 0
-            ),
-            sleep: SleepData(
-                averageHours: 0,
-                averageMinutes: 0,
-                sleepQuality: 0,
-                qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7),
-                monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0,
-                weeklySleepTimeChange: 0,
-                monthlySleepTimeChange: 0,
-                dailyQualityChange: 0,
-                weeklyQualityChange: 0,
-                monthlyQualityChange: 0
-            ),
-            meditation: MeditationData(weeklyCount: 0, changeCount: 0)
+            exercise: Self.defaultExerciseData,
+            sleep: Self.deaultSleepData,
         )
 
         Task {
@@ -68,152 +79,34 @@ class AnalyticsViewModel: ObservableObject {
 
         let userName = getUserName()
 
-        async let planData = loadPlanCompletionData()
         async let exerciseData = loadExerciseData()
         async let sleepData = loadSleepData()
-        async let meditationData = loadMeditationData()
 
-        let (plan, exercise, sleep, meditation) = await (
-            planData, exerciseData, sleepData, meditationData
+        let (exercise, sleep) = await (
+            exerciseData, sleepData
         )
 
         print("로드된 데이터:")
-        print("- 일정: \(plan.completedItems)/\(plan.totalItems)")
         print("- 걸음수: \(exercise.averageSteps)")
         print("- 칼로리: \(exercise.averageCalories)")
         print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
         print("- 수면 품질: \(sleep.sleepQuality)%")
 
         let aiInsight = generateAIInsight(
-            planCompletion: plan,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation,
             hasRealData: self.hasRealData
         )
 
         self.healthData = HealthData(
             userName: userName,
-            planCompletion: plan,
             aiInsight: aiInsight,
             exercise: exercise,
             sleep: sleep,
-            meditation: meditation
         )
 
         print("건강 데이터 로드 완료 - UI 업데이트됨")
         isLoading = false
-    }
-
-    private func loadPlanCompletionData() async -> PlanCompletionData {
-        let coreDataService = CoreDataService.shared
-        let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
-        let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
-
-        print("사용 가능한 CoreData 엔터티: \(entityNames)")
-
-        guard entityNames.contains("ScheduleEntity") else {
-            print("ScheduleEntity 엔터티가 없음. 기본 데이터 사용")
-            return PlanCompletionData(completedItems: 0, totalItems: 0)
-        }
-
-        do {
-            let explorationRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduleEntity")
-            explorationRequest.fetchLimit = 5
-
-            let sampleActivities = try coreDataService.context.fetch(explorationRequest)
-            print("ScheduleEntity 샘플 개수: \(sampleActivities.count)")
-
-            if sampleActivities.isEmpty {
-                print("일정이 없음. 0/0 반환")
-                return PlanCompletionData(completedItems: 0, totalItems: 0)
-            }
-
-            var dateAttributeName: String?
-            var completedAttributeName: String?
-
-            if let firstActivity = sampleActivities.first {
-                let entity = firstActivity.entity
-                let attributeNames = entity.attributesByName.keys.sorted()
-                print("ScheduleEntity 속성들: \(attributeNames)")
-
-                let possibleDateFields = ["date", "scheduledDate", "startDate", "createdAt", "dateTime"]
-                for dateField in possibleDateFields {
-                    if attributeNames.contains(dateField) {
-                        dateAttributeName = dateField
-                        print("날짜 속성 발견: \(dateField)")
-                        break
-                    }
-                }
-
-                let possibleCompletedFields = ["isCompleted", "completed", "isDone", "finished", "status"]
-                for completedField in possibleCompletedFields {
-                    if attributeNames.contains(completedField) {
-                        completedAttributeName = completedField
-                        print("완료 상태 속성 발견: \(completedField)")
-                        break
-                    }
-                }
-            }
-
-            var todayActivities: [NSManagedObject] = []
-
-            if let dateAttr = dateAttributeName {
-                let calendar = Calendar.current
-                let today = calendar.startOfDay(for: Date())
-                let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-
-                let todayRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduleEntity")
-                todayRequest.predicate = NSPredicate(
-                    format: "%K >= %@ AND %K < %@",
-                    dateAttr, today as NSDate,
-                    dateAttr, tomorrow as NSDate
-                )
-                todayRequest.sortDescriptors = [NSSortDescriptor(key: dateAttr, ascending: true)]
-
-                todayActivities = try coreDataService.context.fetch(todayRequest)
-                print("오늘 일정 개수: \(todayActivities.count)")
-            } else {
-                todayActivities = sampleActivities
-                print("전체 일정 개수: \(todayActivities.count)")
-            }
-
-            if todayActivities.isEmpty {
-                print("오늘 일정이 없음. 0/0 반환")
-                return PlanCompletionData(completedItems: 0, totalItems: 0)
-            }
-
-            let totalItems = todayActivities.count
-            var completedItems = 0
-
-            if let completedAttr = completedAttributeName {
-                for activity in todayActivities {
-                    if let isCompleted = activity.value(forKey: completedAttr) as? Bool, isCompleted {
-                        completedItems += 1
-                    } else if let status = activity.value(forKey: completedAttr) as? String,
-                              status.lowercased().contains("complete") || status.lowercased().contains("done") {
-                        completedItems += 1
-                    }
-                }
-                print("완료된 일정: \(completedItems)/\(totalItems)")
-            } else {
-                completedItems = 0
-                print("완료 상태 속성이 없음: 0/\(totalItems)")
-            }
-
-            if totalItems > 0 {
-                self.hasRealData = true
-            }
-
-            return PlanCompletionData(
-                completedItems: completedItems,
-                totalItems: totalItems
-            )
-
-        } catch {
-            print("플랜 데이터 로드 오류: \(error)")
-            return PlanCompletionData(completedItems: 0, totalItems: 0)
-        }
     }
 
     private func loadExerciseData() async -> ExerciseData {
@@ -221,12 +114,7 @@ class AnalyticsViewModel: ObservableObject {
 
         guard HKHealthStore.isHealthDataAvailable() else {
             print("HealthKit을 사용할 수 없음")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            return Self.defaultExerciseData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
@@ -235,12 +123,7 @@ class AnalyticsViewModel: ObservableObject {
 
         if !authCheck.missingCore.isEmpty {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return ExerciseData(
-                averageSteps: 0, stepsChange: 0, averageCalories: 0, caloriesChange: 0,
-                weeklySteps: Array(repeating: 0, count: 7), monthlySteps: Array(repeating: 0, count: 8),
-                dailyStepsChange: 0, weeklyStepsChange: 0, monthlyStepsChange: 0,
-                dailyCaloriesChange: 0, weeklyCaloriesChange: 0, monthlyCaloriesChange: 0
-            )
+            return Self.defaultExerciseData
         }
 
         let todaySteps: Int
@@ -251,7 +134,7 @@ class AnalyticsViewModel: ObservableObject {
             print("오늘 걸음수: \(todaySteps)")
         } catch {
             print("걸음수 가져오기 실패: \(error)")
-            todaySteps = 0
+            todaySteps = Self.defaultExerciseData.defaultTodaySteps
         }
 
         do {
@@ -259,7 +142,7 @@ class AnalyticsViewModel: ObservableObject {
             print("오늘 칼로리: \(todayCalories)")
         } catch {
             print("칼로리 가져오기 실패: \(error)")
-            todayCalories = 0
+            todayCalories = Self.defaultExerciseData.defaultTodayCalories
         }
 
         if todaySteps > 100 || todayCalories > 10 {
@@ -305,23 +188,13 @@ class AnalyticsViewModel: ObservableObject {
 
         guard HKHealthStore.isHealthDataAvailable() else {
             print("HealthKit을 사용할 수 없음")
-            return SleepData(
-                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
-                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
-            )
+            return Self.deaultSleepData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
         if !authCheck.missingCore.isEmpty {
             print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return SleepData(
-                averageHours: 0, averageMinutes: 0, sleepQuality: 0, qualityChange: 0,
-                weeklySleepHours: Array(repeating: 0, count: 7), monthlySleepHours: Array(repeating: 0, count: 8),
-                dailySleepTimeChange: 0, weeklySleepTimeChange: 0, monthlySleepTimeChange: 0,
-                dailyQualityChange: 0, weeklyQualityChange: 0, monthlyQualityChange: 0
-            )
+            return Self.deaultSleepData
         }
 
         let sleepDuration: TimeInterval
@@ -330,7 +203,7 @@ class AnalyticsViewModel: ObservableObject {
             print("수면 시간: \(sleepDuration)초 (약 \(sleepDuration/3600)시간)")
         } catch {
             print("수면 시간 가져오기 실패: \(error)")
-            sleepDuration = 0
+            sleepDuration = Self.deaultSleepData.defaultSleepDuration
         }
 
         let hours = sleepDuration / 3600
@@ -374,88 +247,23 @@ class AnalyticsViewModel: ObservableObject {
         )
     }
 
-    private func loadMeditationData() async -> MeditationData {
-        print("명상 데이터 로드 시작")
-
-        let coreDataService = CoreDataService.shared
-        let model = coreDataService.context.persistentStoreCoordinator?.managedObjectModel
-        let entityNames = model?.entities.map { $0.name ?? "Unknown" } ?? []
-
-        guard entityNames.contains("ScheduledActivity") else {
-            print("ScheduledActivity 엔터티가 없음. 기본 데이터 사용")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-
-        do {
-            let calendar = Calendar.current
-            let now = Date()
-            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
-
-            let weekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            weekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt <= %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                weekAgo as NSDate,
-                now as NSDate
-            )
-            weekRequest.sortDescriptors = [NSSortDescriptor(key: "completedAt", ascending: false)]
-
-            let weekActivities = try coreDataService.context.fetch(weekRequest)
-            let weeklyCount = weekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            print("이번 주 명상 횟수: \(weeklyCount)")
-
-            let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now)!
-            let previousWeekRequest = NSFetchRequest<NSManagedObject>(entityName: "ScheduledActivity")
-            previousWeekRequest.predicate = NSPredicate(
-                format: "completedAt >= %@ AND completedAt < %@ AND (title CONTAINS[c] '명상' OR category CONTAINS[c] '명상')",
-                twoWeeksAgo as NSDate,
-                weekAgo as NSDate
-            )
-
-            let previousWeekActivities = try coreDataService.context.fetch(previousWeekRequest)
-            let previousWeekCount = previousWeekActivities.filter { activity in
-                return (activity.value(forKey: "isCompleted") as? Bool) ?? false
-            }.count
-
-            let changeCount = weeklyCount - previousWeekCount
-            print("명상 변화량: \(changeCount)")
-
-            if weeklyCount > 0 {
-                self.hasRealData = true
-                print("실제 명상 데이터 발견")
-            }
-
-            return MeditationData(
-                weeklyCount: weeklyCount,
-                changeCount: changeCount
-            )
-
-        } catch {
-            print("명상 데이터 로드 오류: \(error)")
-            return MeditationData(weeklyCount: 0, changeCount: 0)
-        }
-    }
-
     private func generateAIInsight(
-        planCompletion: PlanCompletionData,
+//        planCompletion: PlanCompletionData,
         exercise: ExerciseData,
         sleep: SleepData,
-        meditation: MeditationData,
         hasRealData: Bool
     ) -> AIInsightData {
 
         print("AI 인사이트 생성 중...")
-        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
+//        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
         print("- 걸음수: \(exercise.averageSteps)")
         print("- 수면: \(sleep.averageHours)시간")
         print("- hasRealData: \(hasRealData)")
 
-        if planCompletion.totalItems == 0 {
-            print("일정이 없음 - 일정 추가 권유")
-            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
-        }
+//        if planCompletion.totalItems == 0 {
+//            print("일정이 없음 - 일정 추가 권유")
+//            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
+//        }
 
         if !hasRealData {
             print("실제 데이터 없음 - 대기 메시지")
@@ -464,19 +272,19 @@ class AnalyticsViewModel: ObservableObject {
 
         var insights: [String] = []
 
-        let completionRate = planCompletion.completionRate
-        if completionRate >= 0.8 {
-            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
-        } else if completionRate >= 0.5 {
-            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
-        } else if planCompletion.totalItems > 0 {
-            let remaining = planCompletion.totalItems - planCompletion.completedItems
-            if remaining == 1 {
-                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
-            } else {
-                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
-            }
-        }
+//        let completionRate = planCompletion.completionRate
+//        if completionRate >= 0.8 {
+//            insights.append("오늘 계획을 \(Int(completionRate * 100))% 달성했어요! 훌륭해요")
+//        } else if completionRate >= 0.5 {
+//            insights.append("오늘 계획을 절반 이상 완료했어요. 조금만 더 힘내세요!")
+//        } else if planCompletion.totalItems > 0 {
+//            let remaining = planCompletion.totalItems - planCompletion.completedItems
+//            if remaining == 1 {
+//                insights.append("오늘 1개 일정이 남았어요. 마지막 스퍼트!")
+//            } else {
+//                insights.append("오늘 \(remaining)개 일정이 남았어요. 하나씩 차근차근 해보세요!")
+//            }
+//        }
 
         if exercise.averageSteps >= 10000 {
             insights.append("오늘 \(formatSteps(exercise.averageSteps))를 걸었어요. 목표 달성!")
@@ -496,14 +304,6 @@ class AnalyticsViewModel: ObservableObject {
             insights.append("수면이 부족해 보여요. 오늘은 일찍 잠자리에 들어보세요")
         } else if sleep.averageHours > 9 {
             insights.append("충분히 잠을 잤네요. 활기찬 하루 되세요!")
-        }
-
-        if meditation.weeklyCount >= 5 {
-            insights.append("이번 주 \(meditation.weeklyCount)회 명상으로 마음이 평온해졌을 거예요")
-        } else if meditation.weeklyCount >= 3 {
-            insights.append("꾸준한 명상이 좋은 습관이 되고 있네요")
-        } else if meditation.weeklyCount > 0 {
-            insights.append("명상을 시작했네요! 꾸준히 이어가 보세요")
         }
 
         if exercise.stepsChange > 15 && sleep.sleepQuality >= 80 {
@@ -795,14 +595,12 @@ class AnalyticsViewModel: ObservableObject {
             if let user = users.first,
                let nickname = user.value(forKey: "nickname") as? String,
                !nickname.isEmpty {
-                print("사용자 이름 발견: \(nickname)")
                 return nickname
             }
         } catch {
             print("CoreData에서 사용자 닉네임 가져오기 실패: \(error)")
         }
-
-        print("기본 사용자 이름 사용")
+        
         return "사용자"
     }
 
@@ -810,13 +608,4 @@ class AnalyticsViewModel: ObservableObject {
         print("수동 새로고침 시작")
         await loadHealthData()
     }
-}
-
-@objc(ScheduledActivity)
-public class ScheduledActivity: NSManagedObject {
-    @NSManaged public var date: Date?
-    @NSManaged public var title: String?
-    @NSManaged public var category: String?
-    @NSManaged public var isCompleted: Bool
-    @NSManaged public var completedAt: Date?
 }

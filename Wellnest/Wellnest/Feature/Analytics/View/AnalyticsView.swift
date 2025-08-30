@@ -14,6 +14,8 @@ struct AnalyticsView: View {
     @State private var showDivider = false
     @State private var offsetY: CGFloat = .zero
     
+    @Environment(\.managedObjectContext) private var context
+    
     var body: some View {
         ScrollView {
             VStack {
@@ -35,11 +37,17 @@ struct AnalyticsView: View {
 
     private var customNavigationHeader: some View {
         VStack {
-            HStack {
-                Text("\(viewModel.healthData.userName)님의 건강지표")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+            HStack(spacing: 0) {
+                Group {
+                    Text("\(viewModel.healthData.userName)")
+                        .foregroundColor(.wellnestOrange)
+                    
+                    Text("님의 건강지표")
+                        .foregroundColor(.primary)
+                }
+                .font(.title2)
+                .fontWeight(.semibold)
+                
                 Spacer()
             }
             .padding(.horizontal)
@@ -56,11 +64,10 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
-            AIInsightCardView(insight: viewModel.healthData.aiInsight)
+            ScheduleProgressView()
+            AIInsightView()
             ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
             SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
-            MeditationStatCardView(meditationData: viewModel.healthData.meditation)
         }
         .padding(.horizontal)
         .padding(.top, Spacing.layout)
@@ -74,13 +81,12 @@ struct AnalyticsView: View {
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    PlanCompletionCardView(planData: viewModel.healthData.planCompletion)
+                    ScheduleProgressView()
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    AIInsightCardView(insight: viewModel.healthData.aiInsight)
+                    AIInsightView()
                     SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
-                    MeditationStatCardView(meditationData: viewModel.healthData.meditation)
                 }
             }
         }

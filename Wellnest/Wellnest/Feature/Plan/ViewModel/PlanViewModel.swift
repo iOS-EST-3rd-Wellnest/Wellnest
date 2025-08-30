@@ -12,6 +12,8 @@ import Combine
 
 @MainActor
 final class PlanViewModel: ObservableObject {
+
+
     @Published var selectedDate: Date
     @Published private(set) var anchorMonth: Date
     @Published private(set) var visibleMonth: Date
@@ -20,221 +22,143 @@ final class PlanViewModel: ObservableObject {
     @Published var scheduleStore: ScheduleStore
 
     private var cancellables: Set<AnyCancellable> = []
-
-    struct CachedMonthData {
-        let monthStart: Date
-        let dates: [Date]
-    }
-    @Published private(set) var monthDataCache: [Date: CachedMonthData] = [:]
-    private var backgroundLoaders: [Date: Task<CachedMonthData, Never>] = [:]
-
     private let prefetchRadius = 3
     private let pageRange = -3...3
-
     private let calendar = Calendar.current
 
-    init(selectedDate: Date = Date(), context: NSManagedObjectContext = CoreDataStack.shared.container.viewContext) {
-        let normalized = selectedDate.startOfDay
-        let normalizedMonth = normalized.startOfMonth
 
-        self.scheduleStore = ScheduleStore(context: context)
+    init(selectedDate: Date = Date()) {
+        let normalized = selectedDate.startOfDay
+        let month = normalized.startOfMonth
 
         self.selectedDate = normalized
-        self.anchorMonth =	normalizedMonth
-        self.visibleMonth = normalizedMonth
+        self.anchorMonth  = month
+        self.visibleMonth = month
+        self.scheduleStore = ScheduleStore(context: CoreDataService.shared.context)
 
         bindScheduleStoreChangeForwarding()
 
-        prefetchMonthsAroundAnchor()
-        trimCacheAroundMonth(normalizedMonth)
+        Task { await prefetchMonthsAround(anchorMonth) }
     }
 
     deinit {
-        for (_, task) in backgroundLoaders { task.cancel() }
-
         cancellables.removeAll()
     }
 }
 
 extension PlanViewModel {
     var selectedDateScheduleItems: [ScheduleItem] {
-        scheduleStore.scheduleItems(for: selectedDate)
+        scheduleStore.items(on: selectedDate)
     }
 
     func hasSchedule(for date: Date) -> Bool {
-        scheduleStore.hasSchedule(for: date)
+        scheduleStore.hasItems(on: date)
+    }
+
+    func items(for day: Date) -> [ScheduleItem] {
+        scheduleStore.items(on: day)
     }
 
     func selectDate(_ date: Date) {
         selectedDate = date.startOfDay
     }
 
-    func combine(date: Date, time: Date = Date()) -> Date? {
-        let calendar = Calendar.current
-
-        // 날짜에서 연월일 추출
-        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
-        // 시간에서 시분초 추출
-        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: time)
-
-        // 합쳐서 새로운 DateComponents 생성
-        var mergedComponents = DateComponents()
-        mergedComponents.year = dateComponents.year
-        mergedComponents.month = dateComponents.month
-        mergedComponents.day = dateComponents.day
-        mergedComponents.hour = timeComponents.hour
-        mergedComponents.minute = timeComponents.minute
-        mergedComponents.second = timeComponents.second
-
-        return calendar.date(from: mergedComponents)
-    }
-
     func updateVisibleMonth(_ month: Date) {
-        let startOfMonth = month.startOfMonth
-        visibleMonth = startOfMonth
-        selectedDate = startOfMonth
+        let m = month.startOfMonth
+        visibleMonth = m
+        selectedDate = m
     }
 
-    func updateVisibleMonthOnly(_ month: Date) {
-        visibleMonth = month.startOfMonth
+//    func updateVisibleMonthOnly(_ month: Date) {
+//        visibleMonth = month.startOfMonth
+//    }
+    func toggleCompleted(for id: UUID) async {
+        await scheduleStore.toggleCompleted(for: id)
     }
 }
 
 extension PlanViewModel {
     func generatePageMonths(center: Date? = nil) -> [Date] {
-         let baseMonth = (center ?? visibleMonth).startOfMonth
-         return pageRange.map { offset in
-             addMonths(to: baseMonth, count: offset)
-         }
-     }
+        let baseMonth = (center ?? visibleMonth).startOfMonth
+        return pageRange.map { addMonths(to: baseMonth, count: $0) }
+    }
 
     func recenterVisibleMonth(to month: Date) {
-        let startOfMonth = month.startOfMonth
-        visibleMonth = startOfMonth
-        anchorMonth = startOfMonth
-        selectedDate = startOfMonth
-        
-        prefetchMonthsAroundAnchor()
-        trimCacheAroundMonth(anchorMonth)
+        let monthStart = month.startOfMonth
+        visibleMonth = monthStart
+        anchorMonth  = monthStart
+        selectedDate = monthStart
+        Task { await prefetchMonthsAround(monthStart) }
     }
 
     func jumpToDate(_ date: Date) {
-        let startOfMonth = date.startOfMonth
-        visibleMonth = startOfMonth
-        anchorMonth  = startOfMonth
+        let monthStart = date.startOfMonth
+        visibleMonth = monthStart
+        anchorMonth  = monthStart
         selectedDate = date.startOfDay
-
-        prefetchMonthsAroundAnchor()
-        trimCacheAroundMonth(anchorMonth)
+        Task { await prefetchMonthsAround(monthStart) }
         jumpToken &+= 1
     }
 
     func stagePrefetch(direction: Int) {
         let nextAnchorMonth = addMonths(to: visibleMonth, count: direction)
         guard nextAnchorMonth != anchorMonth else { return }
-
         anchorMonth = nextAnchorMonth
-        prefetchMonthsAroundAnchor()
+        Task { await prefetchMonthsAround(nextAnchorMonth) }
     }
 }
 
 extension PlanViewModel {
-    private func prefetchMonthsAroundAnchor() {
+    private func prefetchMonthsAround(_ month: Date) async {
         for offset in -prefetchRadius...prefetchRadius {
-            let targetMonth = addMonths(to: anchorMonth, count: offset)
-            ensureMonthDataInCache(targetMonth)
-        }
-    }
-
-    private func ensureMonthDataInCache(_ month: Date) {
-        let monthKey = month.startOfMonth
-        if monthDataCache[monthKey] != nil { return }
-        if backgroundLoaders[monthKey] != nil { return }
-
-        backgroundLoaders[monthKey] = Task(priority: .utility) { [weak self] in
-            guard let self else { return CachedMonthData(monthStart: monthKey, dates: []) }
-
-            let result = await MonthDataLoader.load(month: monthKey, store: self.scheduleStore)
-
-            await MainActor.run {
-                self.monthDataCache[monthKey] = CachedMonthData(monthStart: monthKey, dates: result)
-                self.backgroundLoaders[monthKey] = nil
-            }
-
-            return self.monthDataCache[monthKey] ?? CachedMonthData(monthStart: monthKey, dates: [])
-        }
-    }
-
-    private func trimCacheAroundMonth(_ centerMonth: Date) {
-        let monthsToKeep = Set((-prefetchRadius...prefetchRadius).map {
-            addMonths(to: centerMonth, count: $0)
-        })
-
-        let cachedMonthsToRemove = monthDataCache.keys.filter {
-            !monthsToKeep.contains($0)
-        }
-        cachedMonthsToRemove.forEach { monthDataCache.removeValue(forKey: $0) }
-
-        let loadersToCancel = backgroundLoaders.keys.filter {
-            !monthsToKeep.contains($0)
-        }
-        loadersToCancel.forEach { monthKey in
-            backgroundLoaders[monthKey]?.cancel()
-            backgroundLoaders[monthKey] = nil
+            let targetMonth = addMonths(to: month, count: offset)
+            await scheduleStore.ensureMonthLoaded(targetMonth)
         }
     }
 
     func addMonths(to date: Date, count: Int) -> Date {
-         calendar.date(byAdding: .month, value: count, to: date.startOfMonth)!.startOfMonth
-     }
-}
-extension PlanViewModel {
-    private func rebindScheduleStoreIfNeeded() {
-        cancellables.removeAll()
-        bindScheduleStoreChangeForwarding()
+        calendar.date(byAdding: .month, value: count, to: date.startOfMonth)!.startOfMonth
     }
+}
 
+extension PlanViewModel {
     private func bindScheduleStoreChangeForwarding() {
         scheduleStore.objectWillChange
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
+            .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
     }
 }
 
 extension PlanViewModel {
-    func calendarHeight(
-        width: CGFloat = UIScreen.main.bounds.width,
-        rows: Int,
-        columns: Int = 7,
-        spacing: CGFloat = 4,
-        padding: CGFloat = 16
-    ) -> CGFloat {
-        let screenWidth = width - padding * 2
+    func upcomingStart(on date: Date, now: Date = Date()) -> Date? {
+        selectedDateScheduleItems
+            .compactMap { item -> Date? in
+                let display = item.display(on: date)
+                let isAllDay = display.isAllDayForThatDate
+                guard !isAllDay else { return nil }
 
-        let totalSpacingWidth = spacing * CGFloat(columns - 1)
-        let totalSpacingHeight = spacing * CGFloat(rows - 1)
-
-        let itemWidth = (screenWidth - totalSpacingWidth) / CGFloat(columns)
-
-        let itemHeight: CGFloat = {
-            if rows == 1 {
-                itemWidth - spacing * 2
-            } else {
-                itemWidth * CGFloat(rows) + totalSpacingHeight
+                let start = display.displayStart ?? item.startDate
+                return start > now ? start : nil
             }
-        }()
+            .min()
+    }
 
-        return itemHeight
+    func highlightedUpcomingIDs(on date: Date, now: Date = Date()) -> Set<UUID> {
+        guard let targetStart = upcomingStart(on: date, now: now) else { return [] }
+        let cal = Calendar.current
+
+        let ids = selectedDateScheduleItems.compactMap { item -> UUID? in
+            let display = item.display(on: date)
+            let isAllDay = display.isAllDayForThatDate
+            guard !isAllDay else { return nil }
+
+            let start = display.displayStart ?? item.startDate
+            return cal.compare(start, to: targetStart, toGranularity: .minute) == .orderedSame
+                ? item.id
+                : nil
+        }
+        return Set(ids)
     }
 }
 
-actor MonthDataLoader {
-    static func load(month: Date, store: ScheduleStore) async -> [Date] {
-        let dates = month.filledDatesOfMonth()
-        _ = await store.fetchSchedules(in: month)
-        return dates
-    }
-}

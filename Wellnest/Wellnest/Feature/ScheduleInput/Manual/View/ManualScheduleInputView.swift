@@ -16,12 +16,28 @@ struct ManualScheduleInputView: View {
 
     @StateObject private var viewModel: ScheduleEditorViewModel
     @ObservedObject var planVM: PlanViewModel
+    private let notiManager = LocalNotiManager.shared
 
-    @State private var isKeyboardVisible = true
+    enum InputField: Hashable {
+        case title
+        case note
+    }
+
+    @State private var currentFocus: InputField? = .title
     @State private var showLocationSearchSheet = false
     @State private var showColorPickerSheet = false
-    @State private var showDeleteConfirmationSheet = false
-    @State private var showAlert = false
+    @State private var showOnlySeriesItemEditMenu = false
+    @State private var showSeriesItemEditMenu = false
+    @State private var isChangedRepeatRule = false
+    @State private var showMenu = false
+    @State private var showDeleteAlert = false
+    @State private var showDeleteSeriesAlert = false
+    @State private var showNotificationAlert = false
+    @State private var showNote = false
+    @State private var isNoteExpanded = false
+    @State private var didInit = false
+
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
 
     init(
         mode: EditorMode,
@@ -38,6 +54,7 @@ struct ManualScheduleInputView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
+                Color(uiColor: colorScheme == .dark ? .black : .white).ignoresSafeArea()
                 ScrollView(.vertical) {
                     VStack(alignment: .leading, spacing: Spacing.layout) {
                         VStack {
@@ -47,8 +64,14 @@ struct ManualScheduleInputView: View {
                         PeriodPickerView(
                             startDate: $viewModel.form.startDate,
                             endDate: $viewModel.form.endDate,
-                            isAllDay: $viewModel.form.isAllDay
+                            isAllDay: $viewModel.form.isAllDay,
+                            onButtonTap: {
+                                currentFocus = nil
+                            }
                         )
+                        .onChange(of: viewModel.form.isAllDay) { _ in
+                            currentFocus = nil
+                        }
                         .padding(.bottom, 5)
                         TagToggleSection(
                             title: "반복",
@@ -56,13 +79,23 @@ struct ManualScheduleInputView: View {
                             isOn: $viewModel.form.isRepeated,
                             selectedTag: $viewModel.form.selectedRepeatRule,
                             showDetail: viewModel.form.selectedRepeatRule != nil,
-                            onTagTap: { _ in isKeyboardVisible = false }
+                            onTagTap: { _ in
+                                currentFocus = nil
+                            }
                         ) {
-                            EndDateSelectorView(mode: $viewModel.form.repeatEndMode, endDate: $viewModel.form.repeatEndDate)
+                            EndDateSelectorView(
+                                mode: $viewModel.form.repeatEndMode,
+                                endDate: $viewModel.form.repeatEndDate
+                            )
                         }
                         .padding(.bottom, 5)
-                        .onChange(of: viewModel.form.isRepeated) { newValue in
-                            isKeyboardVisible = false
+                        .onChange(of: viewModel.form.isRepeated) { _ in
+                            currentFocus = nil
+                        }
+                        .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
+                            if viewModel.isEditMode && viewModel.form.isRepeated {
+                                isChangedRepeatRule = true
+                            }
                         }
                         TagToggleSection(
                             title: "알람",
@@ -71,52 +104,117 @@ struct ManualScheduleInputView: View {
                             selectedTag: $viewModel.form.alarmRule
                         )
                         .padding(.bottom, 5)
-                        .onChange(of: viewModel.form.isAlarmOn) { newValue in
-                            isKeyboardVisible = false
+                        .onChange(of: viewModel.form.isAlarmOn) { isOn in
+                            currentFocus = nil
+                            guard isOn else { return }
+                            // 권한 상태 먼저 조회
+                            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                                switch settings.authorizationStatus {
+                                case .notDetermined:
+                                    // 아직 묻지 않았다면 요청
+                                    DispatchQueue.main.async {
+                                        viewModel.form.isAlarmOn = false
+                                        showNotificationAlert = true
+                                    }
+                                case .denied:
+                                    // 사용자가 거부한 상태
+                                    DispatchQueue.main.async {
+                                        viewModel.form.isAlarmOn = false
+                                        showNotificationAlert = true
+                                    }
+
+                                case .authorized, .provisional, .ephemeral:
+                                    // 허용됨 → 스케줄 등록 등 진행
+                                    break
+
+                                @unknown default:
+                                    break
+                                }
+                            }
                         }
                         HStack {
-                            Text("배경색")
+                            Text("색상")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
 
                             Button {
                                 showColorPickerSheet = true
-                                isKeyboardVisible = false
+                                currentFocus = nil
                             } label: {
-                                ColorPicker("배경 색상 선택", selection: $viewModel.previewColor)
+                                ColorPicker("팔레트 선택", selection: $viewModel.previewColor)
                                     .labelsHidden()
                                     .disabled(true)
+                                    .padding(.leading, 8)
+                            }
+                            .popover(isPresented: $showColorPickerSheet,
+                                     attachmentAnchor: .rect(.bounds),
+                                     arrowEdge: .trailing) {
+                                let content = ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
+                                #if os(iOS)
+                                if UIDevice.current.userInterfaceIdiom == .pad {
+                                    content
+                                        .frame(width: 320, height: 200)
+                                        .padding(.bottom, 8)
+                                } else {
+                                    if #available(iOS 16.4, *) {
+                                        content
+                                            .presentationDetents([.fraction(0.3)])
+
+                                    } else {
+                                        content
+                                    }
+                                }
+                                #else
+                                content
+                                #endif
+
                             }
                         }
-                        .sheet(isPresented: $showColorPickerSheet) {
-                            ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
-                                .presentationDetents([.fraction(0.3)])
-
-                        }
+                        .padding(.bottom, 5)
                         .onChange(of: viewModel.form.selectedColorName) { newName in
                             viewModel.updateColorName(newName)
                         }
+                        DisclosureGroup(isExpanded: $isNoteExpanded) {
+                            noteTextField
+                        } label: {
+                            Text("메모")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+
+                        }
+                        .tint(colorScheme == .dark ? .white : .black )
                         Spacer()
                     }
                     .padding()
                 }
-                .padding(.bottom, 30)
+                .padding(.bottom, 80)
                 .task {
                     await viewModel.loadIfNeeded()
-                }
-                .onAppear {
-                    if selectedTab == .plan {
-                        let selectedDate = planVM.combine(
-                            date: planVM.selectedDate
-                        )?.roundedUpToFiveMinutes() ?? Date()
-                        viewModel.setDefaultDate(for: selectedDate)
-                    } else {
-                        viewModel.setDefaultDate(for: Date())
+                    if viewModel.isEditMode {
+                        currentFocus = nil
+                        if !viewModel.form.detail.isEmpty {
+                            isNoteExpanded = true
+                        }
                     }
                 }
+                .onAppear {
+                    guard !didInit else { return }
+                    if selectedTab == .plan {
+                        // 플랜탭일 때.
+                        let selectedDate = viewModel.combine(date: planVM.selectedDate)?.roundedUpToFiveMinutes() ?? Date()
+                        viewModel.setDefaultDate(for: selectedDate)
+                    }
+                    didInit = true
+                }
                 .onDisappear {
-                    isKeyboardVisible = false
+                    currentFocus = nil
+                }
+                .onChange(of: viewModel.form.startDate) { _ in
+                    currentFocus = nil
+                }
+                .onChange(of: viewModel.form.endDate) { _ in
+                    currentFocus = nil
                 }
                 .navigationTitle(viewModel.navigationBarTitle)
                 .scrollDismissesKeyboard(.interactively)
@@ -139,35 +237,134 @@ struct ManualScheduleInputView: View {
                         }
                     }
                 }
+                .alert("알림 권한이 필요합니다.", isPresented: $showNotificationAlert) {
+                    Button("앱 설정으로 이동") {
+                        dismiss()
 
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                selectedTab = .settings
+                            }
+                        }
+                    }
+                    Button("취소", role: .cancel) { }
+                } message: {
+                    Text("앱 설정에서 알림을 켜주세요.")
+                }
             }
             .overlay(alignment: .bottom) {
                 VStack(spacing: 0) {
                     // 버튼 위로 덮일 페이드
                     LinearGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
-                            .init(color:colorScheme == .dark ? .black : .white, location: 1.0),
-                        ]),
+                        colors: [
+                            colorScheme == .dark
+                                ? .black.opacity(0.0)
+                                : .white.opacity(0.0),
+                            colorScheme == .dark
+                                ? .black.opacity(1.0)
+                                : .white.opacity(1.0),
+                        ],
                         startPoint: .top, endPoint: .bottom
                     )
-                    .frame(height: 28)
+                    .frame(height: 80)
 
-                    // 버튼
-                    FilledButton(title: viewModel.primaryButtonTitle, disabled: viewModel.form.isTextEmpty) {
-                        Task {
-                            try await viewModel.saveSchedule()
+                    ZStack(alignment: .bottom) {
+                        // 버튼
+                        FilledButton(title: viewModel.primaryButtonTitle,
+                                     disabled: viewModel.form.isTextEmpty) {
+                            // 편집 모드일 때
+                            if viewModel.isEditMode {
+
+                                // 반복 아이탬일 경우
+                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
+
+                                if viewModel.form.isRepeated || isChangedRepeatRule {
+                                    withAnimation {
+                                        // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                        showOnlySeriesItemEditMenu.toggle()
+                                    }
+                                }
+                                // 반복 아이탬이 아니며, 수정된 내용이 반복 규칙이 아닌 경우
+                                else {
+                                    Task {
+                                        // 단순 스케줄 업데이트
+                                        try await viewModel.saveSchedule()
+                                        currentFocus = nil
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        dismiss()
+                                    }
+                                }
+                            } else {
+                                Task {
+                                    try await viewModel.saveSchedule()
+                                    currentFocus = nil
+                                    selectedTab = .plan
+                                    selectedCreationType = nil
+                                    dismiss()
+                                }
+                            }
                         }
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                        if showOnlySeriesItemEditMenu {
+                            VStack(spacing: 0) {
+                                Section(header:
+                                    Text("반복되는 이벤트입니다.")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                        .padding(.vertical, 6)
+
+                                ) {
+                                    Divider()
+                                    Button("이후 이벤트에 대해 저장") {
+                                        // 반복 이벤트로 바뀜
+                                        if isChangedRepeatRule {
+                                            Task {
+                                                try await viewModel.updateRepeatRule()
+                                            }
+                                        } else {
+                                            // 반복 이벤트에 대해서 전부 수정
+                                            Task {
+                                                try await viewModel.updateRepeatSeries()
+                                            }
+                                        }
+                                        showOnlySeriesItemEditMenu = false
+                                        selectedTab = .plan
+                                        selectedCreationType = nil
+                                        currentFocus = nil
+                                        dismiss()
+                                    }
+                                    .padding()
+                                }
+                            }
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                            .background(RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemBackground))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(
+                                                        colorScheme == .dark
+                                                        ? Color.white.opacity(0.18)   // 다크: 은은한 흰색 보더
+                                                        : Color.black.opacity(0.18),  // 라이트: 얕은 검정 보더
+                                                        lineWidth: 0.8
+                                                    )
+                                            ))
+                            .shadow(radius: 0.5)
+                            .frame(width: 200)
+                            .offset(y: -70)
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.9, anchor: .bottom).combined(with: .opacity),
+                                removal:   .opacity
+                            ))
+                        }
                     }
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity)
-                    .background(colorScheme == .dark ? Color.black.ignoresSafeArea(edges: .bottom) : Color.white.ignoresSafeArea(edges: .bottom))
+                    .animation(.spring(response: 0.22, dampingFraction: 0.85), value: showMenu)
+
                 }
             }
             .padding(.bottom, 8)
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
 
         }
     }
@@ -178,16 +375,16 @@ struct ManualScheduleInputView: View {
             FocusableTextField(
                 text: $viewModel.form.title,
                 placeholder: "일정을 입력하세요.",
-                isFirstResponder: isKeyboardVisible,
+                isFirstResponder: currentFocus == .title,
                 returnKeyType: .next,
                 keyboardType: .default,
                 onReturn: {
                     showLocationSearchSheet = true
-                    isKeyboardVisible = false
+                    currentFocus = nil
                 },
                 onEditing: {
-                    if !isKeyboardVisible {
-                        isKeyboardVisible = true
+                    if currentFocus != .title {
+                        currentFocus = .title
                     }
                 }
             )
@@ -200,7 +397,7 @@ struct ManualScheduleInputView: View {
         HStack {
             Button {
                 showLocationSearchSheet = true
-                isKeyboardVisible = false
+                currentFocus = nil
             } label: {
                 HStack {
                     Text(viewModel.form.location.isEmpty ? "장소" : viewModel.form.location)
@@ -227,15 +424,35 @@ struct ManualScheduleInputView: View {
     }
 
     @ViewBuilder
+    private var noteTextField: some View {
+        HStack {
+            FocusableTextField(
+                text: $viewModel.form.detail,
+                placeholder: "메모를 입력하세요.",
+                isFirstResponder: currentFocus == .note,
+                returnKeyType: .done,
+                keyboardType: .default,
+                onReturn: {
+                    currentFocus = nil
+                },
+                onEditing: {
+                    if currentFocus != .note {
+                        currentFocus = .note
+                    }
+                }
+            )
+            .padding(.top, 8)
+        }
+        Divider()
+    }
+    @ViewBuilder
     private var closeTapBarButton: some View {
         Button {
+            currentFocus = nil
             selectedCreationType = nil
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 15, height: 15)
                 .foregroundColor(.wellnestOrange)
         }
     }
@@ -243,59 +460,88 @@ struct ManualScheduleInputView: View {
     @ViewBuilder
     private var deleteRepeatScheduleTapBarButton: some View {
         Menu {
-            Section("반복 이벤트 삭제 옵션") {
+            Section("반복되는 이벤트입니다.") {
                 Button("이 이벤트만 삭제") {
-                    Task {
-                        try await viewModel.delete()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteAlert = true
+                    currentFocus = nil
                 }
+
                 Button("이후 모든 이벤트 삭제") {
-                    Task {
-                        try await viewModel.deleteFollowingInSeries()
-                        selectedTab = .plan
-                        selectedCreationType = nil
-                        dismiss()
-                    }
+                    showDeleteSeriesAlert = true
+                    currentFocus = nil
                 }
             }
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
+        }
+        .tint(colorScheme == .dark ? .white : .black)
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteSeriesAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteSeriesAlert = false
+                currentFocus = nil
+                Task {
+                    try await viewModel.deleteFollowingInSeries()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+                currentFocus = nil
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
         }
     }
 
     @ViewBuilder
     var deleteTapBarButton: some View {
         Button {
-            Task {
-                try await viewModel.delete()
-                selectedTab = .plan
-                selectedCreationType = nil
-                dismiss()
-            }
+            showDeleteAlert = true
+            currentFocus = nil
         } label: {
             Image(systemName: "trash")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
                 .foregroundColor(.red)
         }
+        .alert("정말로 삭제하시겠습니까?", isPresented: $showDeleteAlert) {
+            Button("삭제", role: .destructive) {
+                showDeleteAlert = false
+                currentFocus = nil
+                Task {
+                    try await viewModel.delete()
+                    selectedTab = .plan
+                    selectedCreationType = nil
+                    dismiss()
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("이 작업은 되돌릴 수 없습니다.")
+        }
     }
-
 }
 
 extension ManualScheduleInputView {
     @MainActor
     func saveSchedule() {
         Task {
-            let id = try await viewModel.saveSchedule()
+            let _ = try await viewModel.saveSchedule()
         }
+        currentFocus = nil
         selectedTab = .plan
         selectedCreationType = nil
         dismiss()

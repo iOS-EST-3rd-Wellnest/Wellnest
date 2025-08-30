@@ -13,98 +13,111 @@ struct ExerciseStatChartCardView: View {
     @State private var selectedPeriod: ChartPeriod = .week
 
     var body: some View {
-        RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
-            .frame(minHeight: 360)
-            .defaultShadow()
-            .overlay(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: Spacing.content) {
-                    HStack {
-                        HStack(spacing: Spacing.content) {
-                            Image(systemName: "figure.walk")
-                                .font(.title2)
-                                .foregroundColor(.orange)
-                            Text("운동")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
+        VStack(alignment: .leading, spacing: Spacing.content) {
+            HStack {
+                HStack(spacing: Spacing.content) {
+                    Image(systemName: "figure.walk")
+                        .font(.title2)
+                        .foregroundColor(.orange)
+                    
+                    Text("운동")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
 
-                        Spacer()
+                Spacer()
 
-                        Picker("기간", selection: $selectedPeriod) {
-                            ForEach(ChartPeriod.allCases, id: \.self) { period in
-                                Text(period.rawValue).tag(period)
-                            }
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .frame(width: 150)
-                    }
-
-                    HStack(spacing: Spacing.layout * 2) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("걸음 수")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text(formatStepsDisplay())
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text(getStepsLabel())
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            HStack(spacing: Spacing.inline) {
-                                Image(systemName: getStepsChangeIcon())
-                                    .font(.caption)
-                                    .foregroundColor(getStepsChangeColor())
-                                Text(getStepsChangeText())
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(getStepsChangeColor())
-                            }
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("칼로리")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            HStack(alignment: .bottom, spacing: Spacing.inline) {
-                                Text(formatCaloriesDisplay())
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text(getCaloriesLabel())
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            HStack(spacing: Spacing.inline) {
-                                Image(systemName: getCaloriesChangeIcon())
-                                    .font(.caption)
-                                    .foregroundColor(getCaloriesChangeColor())
-                                Text(getCaloriesChangeText())
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(getCaloriesChangeColor())
-                            }
-                        }
-                        Spacer()
-                    }
-
-                    VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
-                        Text(getChartTitle())
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        BarChartView(
-                            data: currentChartData,
-                            color: .orange,
-                            period: selectedPeriod,
-                            dataType: .steps
-                        )
-                        .frame(height: 140)
+                Picker("기간", selection: $selectedPeriod) {
+                    ForEach(ChartPeriod.allCases, id: \.self) { period in
+                        Text(period.rawValue).tag(period)
                     }
                 }
-                .padding(16)
+                .pickerStyle(SegmentedPickerStyle())
+                .frame(width: 150)
             }
+
+            HStack(spacing: Spacing.layout * 2) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("걸음 수")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(alignment: .bottom, spacing: Spacing.inline) {
+                        Text(formatStepsDisplay())
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text(getStepsLabel())
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: Spacing.inline) {
+                        Image(systemName: getStepsChangeIcon())
+                            .font(.caption)
+                            .foregroundColor(getStepsChangeColor())
+                        
+                        Text(getStepsChangeText())
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(getStepsChangeColor())
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("칼로리")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(alignment: .bottom, spacing: Spacing.inline) {
+                        Text(formatCaloriesDisplay())
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text(getCaloriesLabel())
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: Spacing.inline) {
+                        Image(systemName: getCaloriesChangeIcon())
+                            .font(.caption)
+                            .foregroundColor(getCaloriesChangeColor())
+                        
+                        Text(getCaloriesChangeText())
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(getCaloriesChangeColor())
+                    }
+                }
+                
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
+                Text(getChartTitle())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                BarChartView(
+                    data: currentChartData,
+                    color: .orange,
+                    period: selectedPeriod,
+                    dataType: .steps
+                )
+                .frame(height: 140)
+            }
+            
+            Spacer()
+        }
+        .frame(maxHeight: 350)
+        .padding()
+        .roundedBorder(cornerRadius: CornerRadius.large)
+        .defaultShadow()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .fill(.wellnestBackgroundCard)
+        )
     }
 
     private var currentChartData: [Double] {
@@ -118,10 +131,11 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
+    #warning("이거 지금 실데이터로 매핑하기 어려움")
     private func generateTodayData() -> [Double] {
         // 오늘의 시간대별 걸음수 (현실적인 패턴)
         let totalSteps = Double(exerciseData.averageSteps)
-        let hourlyDistribution = [0.02, 0.08, 0.12, 0.18, 0.20, 0.25, 0.15] // 더 현실적인 분포
+        let hourlyDistribution = [0.03, 0.10, 0.07, 0.05, 0.25, 0.50, 0.15] // 더 현실적인 분포
         return hourlyDistribution.map { $0 * totalSteps }
     }
 
@@ -157,8 +171,16 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
+    #warning("이것 임의로 동작하도록 설정 해 둠")
     private func formatCaloriesDisplay() -> String {
-        "\(exerciseData.averageCalories)"
+        switch selectedPeriod {
+        case .today:
+            return "\(exerciseData.averageCalories)"
+        case .week:
+            return "\(Int(Double(exerciseData.averageCalories) * (1.0 + 0.1)))"
+        case .month:
+            return "\(Int(Double(exerciseData.averageCalories) * (1.0 - 0.1)))"
+        }
     }
 
     private func getStepsLabel() -> String {

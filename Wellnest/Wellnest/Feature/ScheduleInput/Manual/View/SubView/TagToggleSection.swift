@@ -47,7 +47,7 @@ struct TagToggleSection<Model: TagModel & Equatable, Detail: View>: View {
             if isOn {
                 HStack {
                     FlexibleView(data: tags, spacing: Spacing.content, alignment: .leading) { tag in
-                        TagView(tag: tag, isSelected: tag == selectedTag)
+                        TagView(tag: tag, isSelected: tag.name == selectedTag?.name)
                             .onTapGesture {
                                 selectedTag = tag
                                 onTagTap?(tag)
@@ -93,3 +93,4 @@ protocol TagModel: Identifiable, Hashable, Equatable {
 extension TagModel {
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
 }
+

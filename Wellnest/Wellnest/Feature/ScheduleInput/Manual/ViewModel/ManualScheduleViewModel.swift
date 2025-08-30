@@ -11,18 +11,19 @@ import CoreData
 final class ManualScheduleViewModel: ObservableObject {
     @Published var todaySchedules: [ScheduleItem] = []
 
-    private let store: CoreDataStore
+    private let service: CoreDataService
 
-    init(store: CoreDataStore) {
-        self.store = store
+    init(service: CoreDataService = .shared) {
+        self.service = service
     }
 
     // MARK: - Load
     /// 오늘 날짜에 해당하는 일정 목록 조회하여 todaySchedules에 초기화
     func loadTodaySchedules() {
-        Task { await loadTodaySchedules() } // 위의 async 버전을 재사용
+        Task { await loadTodaySchedules() } // async 버전 재사용
     }
 
+    @MainActor
     private func loadTodaySchedules() async {
         let (now, startOfTomorrow) = Self.todayBounds()
 
@@ -31,15 +32,19 @@ final class ManualScheduleViewModel: ObservableObject {
             now as NSDate,
             startOfTomorrow as NSDate
         )
-        let sort = NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true)
+        let sort = [
+            NSSortDescriptor(keyPath: \ScheduleEntity.startDate, ascending: true),
+            NSSortDescriptor(keyPath: \ScheduleEntity.endDate,   ascending: true)
+        ]
 
         do {
-            // actor 내부에서 Entity -> DTO 변환
-            let items = try await store.fetchDTOs(
+            let entities: [ScheduleEntity] = try service.fetch(
                 ScheduleEntity.self,
                 predicate: predicate,
-                sortDescriptors: [sort]
-            ) { e in
+                sortDescriptors: sort
+            )
+
+            let items = entities.map { e in
                 ScheduleItem(
                     id: e.id ?? UUID(),
                     title: e.title ?? "",
@@ -53,15 +58,13 @@ final class ManualScheduleViewModel: ObservableObject {
                     hasRepeatEndDate: e.hasRepeatEndDate,
                     repeatEndDate: e.repeatEndDate,
                     isCompleted: e.isCompleted?.boolValue ?? false,
-                    eventIdentifier: nil, 
-                    location: e.location ?? "",
-                    alarm: e.alarm ?? nil
+                    eventIdentifier: nil,
+                    location: e.location ?? nil,
+                    alarm: e.alarm ?? nil,
+                    memo: e.detail ?? nil
                 )
             }
-
-            await MainActor.run {
-                self.todaySchedules = items
-            }
+            self.todaySchedules = items
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
         }
@@ -70,28 +73,32 @@ final class ManualScheduleViewModel: ObservableObject {
     // MARK: - Update Completed
     /// 일정 완료 상태 토글
     func updateCompleted(item: ScheduleItem) {
-        Task { await updateCompleted(item: item) } // 위의 async 버전을 재사용
+        Task { await updateCompleted(item: item) } // async 버전 재사용
     }
 
+    @MainActor
     private func updateCompleted(item: ScheduleItem) async {
-        // UUID로 해당 엔티티의 ObjectID 조회
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
+
         do {
-            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
-            guard let objectID = ids.first else {
+            let entities: [ScheduleEntity] = try service.fetch(
+                ScheduleEntity.self,
+                predicate: predicate,
+                sortDescriptors: nil
+            )
+            guard let entity = entities.first else {
                 print("📛 대상 일정 ID 조회 실패")
                 return
             }
 
-            try await store.update(id: objectID) { (e: ScheduleEntity) in
-                let current = e.isCompleted?.boolValue ?? false
-                e.isCompleted = NSNumber(value: !current)
-                e.updatedAt = Date()
-            }
-            await MainActor.run {
-                if let idx = self.todaySchedules.firstIndex(where: { $0.id == item.id }) {
-                    self.todaySchedules[idx].isCompleted.toggle()
-                }
+            let current = entity.isCompleted?.boolValue ?? false
+            entity.isCompleted = NSNumber(value: !current)
+            entity.updatedAt = Date()
+
+            try service.saveContext()
+
+            if let idx = self.todaySchedules.firstIndex(where: { $0.id == item.id }) {
+                self.todaySchedules[idx].isCompleted.toggle()
             }
         } catch {
             print("❌ 일정 완료 토글 실패:", error.localizedDescription)
@@ -101,22 +108,26 @@ final class ManualScheduleViewModel: ObservableObject {
     // MARK: - Delete
     /// 일정 삭제
     func deleteSchedule(item: ScheduleItem) {
-        Task { await deleteSchedule(item: item) } // 위의 async 버전을 재사용
+        Task { await deleteSchedule(item: item) } // async 버전 재사용
     }
 
-    func deleteSchedule(item: ScheduleItem) async {
+    @MainActor
+    private func deleteSchedule(item: ScheduleItem) async {
         let predicate = NSPredicate(format: "id == %@", item.id as CVarArg)
+
         do {
-            let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil, fetchLimit: 1)
-            guard let objectID = ids.first else {
+            let entities: [ScheduleEntity] = try service.fetch(
+                ScheduleEntity.self,
+                predicate: predicate,
+                sortDescriptors: nil
+            )
+            guard let entity = entities.first else {
                 print("📛 대상 일정 ID 조회 실패")
                 return
             }
 
-            try await store.delete(id: objectID)
-            await MainActor.run {
-                self.todaySchedules.removeAll { $0.id == item.id }
-            }
+            try service.delete(entity)
+            self.todaySchedules.removeAll { $0.id == item.id }
         } catch {
             print("❌ 일정 삭제 실패:", error.localizedDescription)
         }
@@ -135,8 +146,7 @@ final class ManualScheduleViewModel: ObservableObject {
 
 enum ManualScheduleVMFactory {
     static func make() -> ManualScheduleViewModel {
-        let container = CoreDataStack.shared.container
-        let store = CoreDataStore(container: container)
-        return ManualScheduleViewModel(store: store)
+        let service = CoreDataService.shared
+        return ManualScheduleViewModel(service: service)
     }
 }

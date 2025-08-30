@@ -8,95 +8,150 @@
 import SwiftUI
 
 struct SecondIntroductionTabView: View {
+    @State private var showSections = [false, false, false]
+
     @Binding var currentPage: Int
     @Binding var title: String
 
+    let isIPad = OnboardingCardLayout.isIPad
+
     var body: some View {
-        VStack {
-//            Image("secondIntroduction")
-//                .resizable()
-//                .scaledToFit()
-//                .frame(width: 200)
+        ZStack {
+            Color(.systemBackground)
+                .ignoresSafeArea()
 
-            HStack {
-                VStack(alignment: .leading) {
-                    VStack(alignment: .leading) {
-                        Text("하루 계획,")
-                        Text("이제 AI에게 맡기세요")
-                    }
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .padding(.top, 70)
-                    .padding(.bottom, Spacing.content)
+            GeometryReader { proxy in
+                let height = proxy.size.height
 
-                    VStack(alignment: .leading) {
-                        Text("바쁜 하루 속에서도, 운동부터 휴식까지")
-                        Text("당신에게 꼭 맞는 일정을 생성해줘요")
+                VStack {
+                    Spacer()
+
+                    VStack(spacing: height * 0.12) {
+                        if showSections[0] {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("하루 계획,")
+                                        HStack {
+                                            Text("이제 AI에게 맡기세요")
+                                            Image("secondIntroAI")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: isIPad ? 40 : 28, height: isIPad ? 40 : 28)
+                                        }
+                                    }
+                                    .font(isIPad ? .system(size: 35) : .title2)
+                                    .fontWeight(.semibold)
+                                    .padding(.bottom, Spacing.content)
+
+                                    VStack(alignment: .leading) {
+                                        Text("바쁜 하루 속에서도, 운동부터 휴식까지")
+                                        Text("당신에게 꼭 맞는 일정을 생성해줘요")
+                                    }
+                                    .font(isIPad ? .title2 : .body)
+                                    .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+                            }
+                            .opacity(showSections[0] ? 1 : 0)
+                            .blur(radius: showSections[0] ? 0 : 10)
+                            .animation(.easeOut(duration: 0.7), value: showSections[0])
+                        }
+
+                        if showSections[1] {
+                            HStack {
+                                Spacer()
+
+                                VStack(alignment: .trailing) {
+                                    VStack(alignment: .trailing) {
+                                        HStack {
+                                            Image("secondIntroRecommand")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: isIPad ? 48 : 32, height: isIPad ? 48 : 32)
+                                                .padding(.trailing, isIPad ? Spacing.inline : 0)
+                                            Text("당신을 위한 맞춤 추천")
+                                        }
+                                    }
+                                    .font(isIPad ? .system(size: 35) : .title2)
+                                    .fontWeight(.semibold)
+                                    .padding(.bottom, Spacing.content)
+
+                                    VStack(alignment: .trailing) {
+                                        Text("나이, 신체 정보, 라이프스타일 등을 기반으로")
+                                        Text("가장 알맞은 영상과 활동을 제안해줘요")
+                                    }
+                                    .font(isIPad ? .title2 : .body)
+                                    .foregroundColor(.secondary)
+                                }
+                            }
+                            .opacity(showSections[1] ? 1 : 0)
+                            .blur(radius: showSections[1] ? 0 : 10)
+                            .animation(.easeOut(duration: 0.7), value: showSections[1])
+                        }
+
+                        if showSections[2] {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("오늘의 나보다")
+                                        HStack {
+                                            Text("더 건강한 내일을 위해")
+                                            Image("secondIntroGrowth")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: isIPad ? 43 : 28, height: isIPad ? 43 : 28)
+                                        }
+                                    }
+                                    .font(isIPad ? .system(size: 35) : .title2)
+                                    .fontWeight(.semibold)
+                                    .padding(.bottom, Spacing.content)
+
+                                    VStack(alignment: .leading) {
+                                        Text("웰니스 목표를 세우고")
+                                        Text("작은 성취를 쌓아가며 꾸준히 성장해보세요")
+                                    }
+                                    .font(isIPad ? .title2 : .body)
+                                    .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+                            }
+                            .opacity(showSections[2] ? 1 : 0)
+                            .blur(radius: showSections[2] ? 0 : 10)
+                            .animation(.easeOut(duration: 0.7), value: showSections[2])
+                        }
                     }
-                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, height * 0.12)
+
+                    Spacer()
                 }
-                .padding(.leading, 30)
+                .frame(height: height)
 
-                Spacer()
-            }
-
-            HStack {
-                Spacer()
-
-                VStack(alignment: .trailing) {
-                    VStack(alignment: .trailing) {
-                        Text("당신을 위한 맞춤 추천")
-                    }
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .padding(.top, 70)
-                    .padding(.bottom, Spacing.content)
-
-                    VStack(alignment: .trailing) {
-                        Text("나이, 신체 정보, 라이프스타일 등을 기반으로")
-                        Text("가장 알맞은 영상과 활동을 제안해줘요")
-                    }
-                    .foregroundColor(.secondary)
+                VStack {
+                    Spacer()
+                    OnboardingButton(
+                        title: "다음",
+                        isDisabled: false,
+                        action: {
+                            withAnimation { currentPage += 1 }
+                        },
+                        currentPage: $currentPage
+                    )
                 }
-                .padding(.trailing, 30)
             }
-
-            HStack {
-                VStack(alignment: .leading) {
-                    VStack(alignment: .leading) {
-                        Text("오늘의 나보다")
-                        Text("더 건강한 내일을 위해")
-                    }
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .padding(.top, 70)
-                    .padding(.bottom, Spacing.content)
-
-                    VStack(alignment: .leading) {
-                        Text("웰니스 목표를 세우고")
-                        Text("작은 성취를 쌓아가며 꾸준히 성장해보세요")
-                    }
-                    .foregroundColor(.secondary)
-                }
-                .padding(.leading, 30)
-
-                Spacer()
-            }
-        }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color(.systemBackground))
-        .safeAreaInset(edge: .bottom) {
-            OnboardingButton(
-                title: "다음",
-                isDisabled: false,
-                action: {
-                    withAnimation { currentPage += 1 }
-                },
-                currentPage: $currentPage
-            )
         }
         .onAppear {
             title = ""
+            for i in 0..<showSections.count {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4 + Double(i) * 0.8) {
+                    withAnimation {
+                        showSections[i] = true
+                    }
+                }
+            }
         }
     }
 }

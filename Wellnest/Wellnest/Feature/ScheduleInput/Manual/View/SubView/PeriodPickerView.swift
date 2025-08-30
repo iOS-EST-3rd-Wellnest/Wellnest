@@ -8,17 +8,16 @@
 import SwiftUI
 
 struct PeriodPickerView: View {
-    var text: String = ""
-
     @Binding var startDate: Date
     @Binding var endDate: Date
     @Binding var isAllDay: Bool
 
-    @State var date: Date = Date()
     @State private var showCalendar = false
     @State private var showTimePicker = false
     @State private var isStartPickerOpen = false
     @State private var isEndPickerOpen = false
+
+    var onButtonTap: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -26,16 +25,16 @@ struct PeriodPickerView: View {
                 Text("하루 종일")
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .onChange(of: isAllDay) { newValue in
-                        UIApplication.hideKeyboard()
-                    }
             }
             .tint(.wellnestOrange)
             DatePickerView(
                 text: "시작",
                 date: $startDate,
                 isAllDay: $isAllDay,
-                isPresented: $isStartPickerOpen
+                isPresented: $isStartPickerOpen,
+                onButtonTap: {
+                    onButtonTap?()
+                }
             )
             .tint(.wellnestOrange)
             .padding(.top, 5)
@@ -44,6 +43,7 @@ struct PeriodPickerView: View {
                 endDate = newValue.addingTimeInterval(3600)
             }
             .onChange(of: isStartPickerOpen) { newValue in
+                onButtonTap?()
                 if newValue {
                     if isEndPickerOpen {
                         isEndPickerOpen = false
@@ -54,7 +54,10 @@ struct PeriodPickerView: View {
                 text: "종료",
                 date: $endDate,
                 isAllDay: $isAllDay,
-                isPresented: $isEndPickerOpen
+                isPresented: $isEndPickerOpen,
+                onButtonTap: {
+                    onButtonTap?()
+                }
             )
             .tint(.wellnestOrange)
             .onChange(of: endDate) { newValue in

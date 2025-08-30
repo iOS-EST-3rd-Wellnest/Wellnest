@@ -26,7 +26,6 @@ struct WeatherPreferenceTabView: View {
             OnboardingTitleDescription(description: "평소에 어떤 날씨를 좋아하시나요?")
             OnboardingCardContent(items: $viewModel.weatherPreferences)
         }
-        .background(Color(.systemBackground))
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
             OnboardingButton(

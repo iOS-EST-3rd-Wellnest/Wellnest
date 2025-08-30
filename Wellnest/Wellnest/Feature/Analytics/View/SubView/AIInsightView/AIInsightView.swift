@@ -7,14 +7,19 @@
 
 import SwiftUI
 
-struct AIInsightCardView: View {
+struct AIInsightView: View {
     @Environment(\.colorScheme) private var colorScheme
-    let insight: AIInsightData
+    @StateObject private var viewModel: AIInsightViewModel
+    
+    init() {
+        _viewModel = StateObject(wrappedValue: AIInsightViewModel())
+    }
 
     var body: some View {
         RoundedRectangle(cornerRadius: CornerRadius.large)
-            .fill(colorScheme == .dark ? Color(.systemGray6) : .white)
+            .fill(.wellnestBackgroundCard)
             .frame(minHeight: 80)
+            .roundedBorder(cornerRadius: CornerRadius.large)
             .defaultShadow()
             .overlay(alignment: .leading) {
                 HStack(spacing: Spacing.content) {
@@ -27,8 +32,8 @@ struct AIInsightCardView: View {
                         Text("AI 인사이트")
                             .font(.footnote)
                             .foregroundColor(.secondary)
-                        Text(insight.message)
-                            .font(.caption)
+                        Text(viewModel.insightText ?? "")
+                            .font(.callout)
                             .fontWeight(.medium)
                             .fixedSize(horizontal: false, vertical: true)
                     }

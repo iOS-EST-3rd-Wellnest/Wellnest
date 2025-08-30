@@ -31,15 +31,15 @@ struct SettingList: View {
                         } label: {
                             SettingsRow(icon: "heart",
                                         title: "건강 앱 연동")
-                            .foregroundStyle(darkMode == .dark ? .white : .black)
+                            .foregroundStyle(Color(.label))
                         }
                         
-                        NavigationLink {
-                            CalendarInterworkView()
-                        } label: {
-                            SettingsRow(icon: "calendar", title: "캘린더 앱 연동")
-                                .foregroundStyle(darkMode == .dark ? .white : .black)
-                        }
+//                        NavigationLink {
+//                            CalendarInterworkView()
+//                        } label: {
+//                            SettingsRow(icon: "calendar", title: "캘린더 앱 연동")
+//                                .foregroundStyle(darkMode == .dark ? .white : .black)
+//                        }
                         
                         NavigationLink {
                             ResetDataView()
@@ -64,7 +64,7 @@ struct SettingList: View {
                                 showSurvey = true
                             } label: {
                                 SettingsRow(icon: "ecg.text.page", title: "설문 수정")
-                                    .foregroundStyle(darkMode == .dark ? .white : .black)
+                                    .foregroundStyle(Color(.label))
                             }
                         }
                         .fullScreenCover(isPresented: $showSurvey) {

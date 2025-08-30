@@ -1,5 +1,5 @@
 //
-//  CalendarLayoutView.swift
+//  CalendarMonthView.swift
 //  Wellnest
 //
 //  Created by 박동언 on 8/5/25.
@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-struct CalendarLayoutView: View {
+struct CalendarMonthView: View {
     @ObservedObject var planVM: PlanViewModel
     let calendar = Calendar.current
 
     let month: Date
     var body: some View {
-        CalendarLayout {
-            ForEach(month.filledDatesOfMonth(), id: \.self) { date in
-                dateCell(date: date)
-            }
-        }
+        CalendarLayout(mode: .fixedSlots(slots: 6, aspectRatio: 0.9)) {
+               ForEach(month.filledDatesOfMonth(), id: \.self) { date in
+                   dateCell(date: date)
+               }
+           }
     }
 
     @ViewBuilder
@@ -27,10 +27,10 @@ struct CalendarLayoutView: View {
         let isSelected = isCurrentMonth && isSameDay
         let isToday = date.isToday
 
-        let scheduleItems = planVM.scheduleStore.scheduleItems(for: date)
+        let scheduleItems = planVM.items(for: date)
         let scheduleCount = scheduleItems.count
 
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Text("\(date.dayNumber)")
                 .font(.system(size: 16))
                 .foregroundStyle(isSelected ? .white : (isCurrentMonth ? date.weekdayColor : .secondary))
@@ -71,10 +71,11 @@ struct CalendarLayoutView: View {
                     .foregroundStyle(.clear)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.top, Spacing.content)
     }
 }
 
 #Preview {
-    CalendarLayoutView(planVM: PlanViewModel(), month: Date().startOfMonth)
+    CalendarMonthView(planVM: PlanViewModel(), month: Date().startOfMonth)
 }

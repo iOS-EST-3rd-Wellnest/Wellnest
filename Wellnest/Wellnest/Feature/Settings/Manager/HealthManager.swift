@@ -8,6 +8,11 @@
 import SwiftUI
 import HealthKit
 
+enum HealthKitError: Error {
+    case notAvailable
+    case unknown(Error)
+}
+
 enum HealthAuthError: Error {
     case notAvailable
     case unknown(Error)
@@ -257,6 +262,7 @@ final class HealthManager {
                 options: .cumulativeSum
             ) { _, result, error in
                 if let error {
+                    print("‼️ 오늘의 걸음 수 가져오기 실패")
                     print(error)
                 } else {
                     let count = result?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0
@@ -285,6 +291,7 @@ final class HealthManager {
                 options: .cumulativeSum
             ) { _, result, error in
                 if let error {
+                    print("‼️ 오늘 소모 칼로리 가져오기 실패")
                     print(error)
                 }
                 
@@ -318,7 +325,7 @@ final class HealthManager {
                 sortDescriptors: [sortDescriptor]
             ) { _, results, error in
                 guard error == nil else {
-                    print("Sleep fetch error: \(error!)")
+                    print("‼️ 오늘 수면시간 가져오기 실패")
                     continuation.resume(returning: 0)
                     return
                 }
@@ -360,7 +367,7 @@ final class HealthManager {
                 options: .discreteAverage  // 평균 심박수
             ) { _, result, error in
                 guard error == nil else {
-                    print("심박수 오류:", error!)
+                    print("‼️ 오늘 심박수 가져오기 실패")
                     continuation.resume(returning: 0)
                     return
                 }
@@ -384,7 +391,7 @@ final class HealthManager {
             
             let query = HKSampleQuery(sampleType: bmiType, predicate: nil, limit: 1, sortDescriptors: [sortDescriptor]) { _, result, error in
                 if let error {
-                    print("BMI Error:", error)
+                    print("‼️ 오늘 BMI 가져오기 실패")
                     return
                 }
                 
@@ -412,7 +419,7 @@ final class HealthManager {
             
             let query = HKSampleQuery(sampleType: bodyFatType, predicate: nil, limit: 1, sortDescriptors: [sortDescriptor]) { _, result, error in
                 if let error {
-                    print("Body Fat Error:", error)
+                    print("‼️ 최근 체지방률 가져오기 실패")
                 }
                 
                 guard let smaple = result?.first as? HKQuantitySample else {

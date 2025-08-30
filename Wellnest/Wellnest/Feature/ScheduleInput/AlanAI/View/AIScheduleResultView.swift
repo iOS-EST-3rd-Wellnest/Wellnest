@@ -10,9 +10,11 @@ import SwiftUI
 struct AIScheduleResultView: View {
     @ObservedObject var viewModel: AIScheduleViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
     let parentDismiss: DismissAction
+    private let isDevicePad = UIDevice.current.userInterfaceIdiom == .pad
 
     var body: some View {
         NavigationView {
@@ -68,10 +70,24 @@ struct AIScheduleResultView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 if viewModel.currentViewState == .content, let _ = viewModel.healthPlan {
-                    saveButtonsSection
-                        .padding()
-                        .background(.white)
-                        .ignoresSafeArea(.keyboard, edges: .bottom)
+                    VStack(spacing: 0) {
+                        // 버튼 위로 덮일 페이드
+                        LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: colorScheme == .dark ? .black.opacity(0.0) : .white.opacity(0.0), location: 0.0),
+                                .init(color: colorScheme == .dark ? .black : .white, location: 1.0),
+                            ]),
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .frame(height: 28)
+                        
+                        saveButtonsSection
+                            .padding()
+                            .background(colorScheme == .dark
+                                        ? Color.black.ignoresSafeArea(edges: .bottom)
+                                        : Color.white.ignoresSafeArea(edges: .bottom))
+                    }
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
             }
             .alert("저장 완료", isPresented: $viewModel.saveSuccess) {
@@ -91,6 +107,8 @@ struct AIScheduleResultView: View {
             } message: {
                 Text("플랜 저장 중 오류가 발생했습니다: \(viewModel.saveError)")
             }
+            .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
+
         }
     }
 

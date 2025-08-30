@@ -27,117 +27,109 @@ enum ScheduleRepoError: Error {
     case underlying(Error)
 }
 
-class CoreDataScheduleRepository: ScheduleRepository {
-    private let store: CoreDataStore
-    private let viewContext: NSManagedObjectContext
+final class CoreDataScheduleRepository: ScheduleRepository {
+    private let service: CoreDataService
     private let notifier: LocalNotifying?
 
-    init(
-        store: CoreDataStore,
-        viewContext: NSManagedObjectContext,
-        notifier: LocalNotifying?
-    ) {
-        self.store = store
-        self.viewContext = viewContext
+    init(service: CoreDataService = .shared, notifier: LocalNotifying?) {
+        self.service = service
         self.notifier = notifier
     }
 
+    // MARK: - Create
+    @MainActor
     func create(with input: ScheduleInput) async throws -> [NSManagedObjectID] {
         let frequency = RepeatRuleParser.frequency(from: input.repeatRuleName)
         let duration = input.endDate.timeIntervalSince(input.startDate)
 
+        print("frequency: \(frequency)")
+        let endInclusive = input.hasRepeatEndDate ? input.repeatEndDate?.endOfDay() : nil
         let occurrences: [Date] = {
             guard let frequency else { return [input.startDate] }
-            let end = input.hasRepeatEndDate ? input.repeatEndDate : nil
-            return RepeatRuleParser.generateOccurrences(start: input.startDate, end: end, frequency: frequency)
+            return RepeatRuleParser.generateOccurrences(start: input.startDate,
+                                                        end: endInclusive,
+                                                        frequency: frequency)
         }()
 
+        print("occurrences: \(occurrences)")
+
         let seriesId = UUID()
-        var createdIds: [NSManagedObjectID] = []
+        var created: [ScheduleEntity] = []
+        created.reserveCapacity(occurrences.count)
 
         for (index, occurrenceStart) in occurrences.enumerated() {
             let occurrenceEnd = Date(timeInterval: duration, since: occurrenceStart)
-            let id = try await store.create(ScheduleEntity.self) { entity in
-                entity.id = UUID()
-                entity.title = input.title
-                entity.location = input.location
-                entity.detail = input.detail
-                entity.startDate = occurrenceStart
-                entity.endDate = occurrenceEnd
-                entity.isAllDay = NSNumber(value: input.isAllDay)
-                entity.isCompleted = NSNumber(value: input.isCompleted)
-                entity.backgroundColor = input.backgroundColorName
-                entity.repeatRule = input.repeatRuleName
-                entity.hasRepeatEndDate = input.hasRepeatEndDate
-                entity.repeatEndDate = input.repeatEndDate
-                entity.alarm = input.alarmRuleName
-                entity.scheduleType = "manual"
-                entity.createdAt = Date()
-                entity.updatedAt = Date()
-                entity.seriesId = seriesId
-                entity.occurrenceIndex = Int64(index)
-            }
-            createdIds.append(id)
+            let e: ScheduleEntity = service.create(ScheduleEntity.self)
+            e.id                = UUID()
+            e.title             = input.title
+            e.location          = input.location
+            e.detail            = input.detail
+            e.startDate         = occurrenceStart
+            e.endDate           = occurrenceEnd
+            e.isAllDay          = NSNumber(value: input.isAllDay)
+            e.isCompleted       = NSNumber(value: input.isCompleted)
+            e.backgroundColor   = input.backgroundColorName
+            e.repeatRule        = input.repeatRuleName
+            e.hasRepeatEndDate  = input.hasRepeatEndDate
+            e.repeatEndDate     = input.repeatEndDate
+            e.alarm             = input.alarmRuleName
+            e.scheduleType      = "manual"
+            e.createdAt         = Date()
+            e.updatedAt         = Date()
+            e.seriesId          = seriesId
+            e.occurrenceIndex   = Int64(index)
+            created.append(e)
         }
+
+        try service.saveContext()
 
         if input.isAlarmOn, let notifier {
-            let idsSnapshot = createdIds
-            await MainActor.run {
-                for id in idsSnapshot {
-                    if let obj = try? viewContext.existingObject(with: id) as? ScheduleEntity {
-                        notifier.scheduleLocalNotification(for: obj)
-                    }
-                }
+            for obj in created {
+                notifier.scheduleLocalNotification(for: obj)
             }
         }
-        return createdIds
+
+        return created.map { $0.objectID }
     }
 
+    // MARK: - Read (by UUID)
+    @MainActor
     func fetch(by uuid: UUID) async throws -> ScheduleSnapshot {
         let predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        guard let e = items.first else { throw ScheduleRepoError.notFound }
 
-        let snaps: [ScheduleSnapshot] = try await store.fetchDTOs(
-            ScheduleEntity.self,
-            predicate: predicate
-        ) { e in
-            ScheduleSnapshot(
-                id: e.objectID,
-                title: e.title ?? "",
-                location: e.location ?? "",
-                detail: e.detail ?? "",
-                startDate: e.startDate ?? Date(),
-                endDate: e.endDate ?? Date(),
-                isAllDay: e.isAllDay?.boolValue ?? false,
-                backgroundColorName: e.backgroundColor ?? "wellnestBlue",
-                repeatRuleName: e.repeatRule,
-                repeatEndDate: e.hasRepeatEndDate ? e.repeatEndDate : nil,
-                alarmRuleName: e.alarm,
-                isAlarmOn: e.alarm != nil,
-                isCompleted: e.isCompleted?.boolValue ?? false,
-                seriesId: e.seriesId
-            )
-        }
-
-        guard let snap = snaps.first else { throw ScheduleRepoError.notFound }
-        return snap
+        return ScheduleSnapshot(
+            id: e.objectID,
+            title: e.title ?? "",
+            location: e.location ?? "",
+            detail: e.detail ?? "",
+            startDate: e.startDate ?? Date(),
+            endDate: e.endDate ?? Date(),
+            isAllDay: e.isAllDay?.boolValue ?? false,
+            backgroundColorName: e.backgroundColor ?? "wellnestBlue",
+            repeatRuleName: e.repeatRule,
+            repeatEndDate: e.hasRepeatEndDate ? e.repeatEndDate : nil,
+            alarmRuleName: e.alarm,
+            isAlarmOn: e.alarm != nil,
+            isCompleted: e.isCompleted?.boolValue ?? false,
+            seriesId: e.seriesId
+        )
     }
 
-    private func apply(
-        _ input: ScheduleInput,
-        to entity: ScheduleEntity,
-        updateDates: Bool
-    ) {
+    // 공통 적용
+    private func apply(_ input: ScheduleInput, to entity: ScheduleEntity, updateDates: Bool) {
         entity.title      = input.title
         entity.location   = input.location
         entity.detail     = input.detail
-        
+
         if updateDates {
             entity.startDate = input.startDate
             entity.endDate   = input.endDate
         }
-        
-        entity.isAllDay = NSNumber(value: input.isAllDay)
-        entity.isCompleted = NSNumber(value: input.isCompleted)
+
+        entity.isAllDay        = NSNumber(value: input.isAllDay)
+        entity.isCompleted     = NSNumber(value: input.isCompleted)
         entity.backgroundColor = input.backgroundColorName
         entity.repeatRule      = input.repeatRuleName
         entity.alarm           = input.alarmRuleName
@@ -153,92 +145,67 @@ class CoreDataScheduleRepository: ScheduleRepository {
         entity.updatedAt = Date()
     }
 
-    // MARK: - 단일 아이템 업데이트 (날짜 포함 갱신)
+    // MARK: - Update single (by id)
+    @MainActor
     func update(id uuid: UUID, with input: ScheduleInput) async throws -> NSManagedObjectID {
-        let ids = try await store.fetchIDs(
-            ScheduleEntity.self,
-            predicate: NSPredicate(format: "id == %@", uuid as CVarArg),
-            fetchLimit: 1
-        )
-        guard let oid = ids.first else { throw ScheduleRepoError.notFound }
+        let predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        guard let obj = items.first else { throw ScheduleRepoError.notFound }
 
-        try await store.update(id: oid) { (obj: ScheduleEntity) in
-            self.apply(input, to: obj, updateDates: true)
-        }
-        return oid
+        apply(input, to: obj, updateDates: true)
+        try service.saveContext()
+        return obj.objectID
     }
 
-    // MARK: - 시리즈 단위 일괄 업데이트 (start/end 보존)
+    // MARK: - Update series (keep start/end)
+    @MainActor
     func update(seriesId uuid: UUID, with input: ScheduleInput) async throws -> [NSManagedObjectID] {
-        let ids = try await store.fetchIDs(
-            ScheduleEntity.self,
-            predicate: NSPredicate(format: "seriesId == %@", uuid as CVarArg)
-        )
-        guard !ids.isEmpty else { throw ScheduleRepoError.notFound }
+        let predicate = NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        guard !items.isEmpty else { throw ScheduleRepoError.notFound }
 
-        for oid in ids {
-            try await store.update(id: oid) { (obj: ScheduleEntity) in
-                self.apply(input, to: obj, updateDates: false)
-            }
+        for obj in items {
+            apply(input, to: obj, updateDates: false)
         }
-        return ids
+        try service.saveContext()
+        return items.map { $0.objectID }
     }
-    
-    // MARK: - UUID로 단일 삭제
+
+    // MARK: - Delete single (by uuid)
+    @MainActor
     func delete(id: UUID) async throws {
-        let ids = try await store.fetchIDs(
-            ScheduleEntity.self,
-            predicate: NSPredicate(format: "id == %@", id as CVarArg),
-            fetchLimit: 1
-        )
-        guard let oid = ids.first else {
-            throw ScheduleRepoError.notFound
-        }
+        let predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        guard let obj = items.first else { throw ScheduleRepoError.notFound }
 
-        try await store.delete(id: oid)
+        try service.delete(obj)
     }
 
-
-    // MARK: - 시리즈 단위 일괄 삭제
+    // MARK: - Delete all in series
+    @MainActor
     func deleteAll(seriesId uuid: UUID) async throws -> [NSManagedObjectID] {
-        // 1. 해당 seriesId를 가진 모든 엔티티의 objectID 가져오기
-        let ids = try await store.fetchIDs(
-            ScheduleEntity.self,
-            predicate: NSPredicate(format: "seriesId == %@", uuid as CVarArg)
-        )
-        guard !ids.isEmpty else {
-            throw ScheduleRepoError.notFound
-        }
+        let predicate = NSPredicate(format: "seriesId == %@", uuid as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        guard !items.isEmpty else { throw ScheduleRepoError.notFound }
 
-        // 2. 반복문 돌면서 하나씩 삭제
-        for oid in ids {
-            try await store.delete(id: oid)
+        let ids = items.map { $0.objectID }
+        for obj in items {
+            try service.delete(obj)
         }
-
-        // 3. 삭제한 objectID 배열 리턴
         return ids
     }
 
-    func deleteSeriesOccurrences(seriesId: UUID,
-                                 after anchor: Date,
-                                 includeAnchor: Bool) async throws {
+    // MARK: - Delete occurrences after anchor
+    @MainActor
+    func deleteSeriesOccurrences(seriesId: UUID, after anchor: Date, includeAnchor: Bool) async throws {
         let op = includeAnchor ? ">=" : ">"
-        let predicate = NSPredicate(
-            format: "seriesId == %@ AND startDate \(op) %@",
-            seriesId as CVarArg, anchor as CVarArg
-        )
-
-        // IDs만 가져와서
-        let ids = try await store.fetchIDs(ScheduleEntity.self, predicate: predicate)
-
-        // 개별 삭제
-        for id in ids {
-            try await store.delete(id: id)
+        let predicate = NSPredicate(format: "seriesId == %@ AND startDate \(op) %@",
+                                    seriesId as CVarArg, anchor as CVarArg)
+        let items: [ScheduleEntity] = try service.fetch(ScheduleEntity.self, predicate: predicate, sortDescriptors: nil)
+        for obj in items {
+            try service.delete(obj)
         }
     }
-
-    
-
 }
 
 struct ScheduleSnapshot {
@@ -256,4 +223,11 @@ struct ScheduleSnapshot {
     let isAlarmOn: Bool
     let isCompleted: Bool
     let seriesId: UUID?
+}
+
+extension Date {
+    func endOfDay(in calendar: Calendar = .current) -> Date {
+        let sod = calendar.startOfDay(for: self)
+        return calendar.date(byAdding: DateComponents(day: 1, second: -1), to: sod)!
+    }
 }
