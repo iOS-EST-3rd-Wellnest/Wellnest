@@ -60,7 +60,7 @@ struct ScheduleSheetView: View {
                     if planVM.selectedDateScheduleItems.isEmpty {
                         emptyStateView
                     } else {
-                        ForEach(planVM.selectedDateScheduleItems, id: \.self) { item in
+                        ForEach(planVM.selectedDateScheduleItems, id: \.id) { item in
                             ScheduleItemView(
                                 schedule: item,
                                 contextDate: planVM.selectedDate,

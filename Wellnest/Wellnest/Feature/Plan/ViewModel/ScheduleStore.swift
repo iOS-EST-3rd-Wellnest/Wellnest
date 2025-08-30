@@ -66,11 +66,27 @@ final class ScheduleStore: ObservableObject {
         var byDay: [Date: [ScheduleItem]] = [:]
         buildByDay(rangeStart: start, rangeEnd: end, items: fetched, into: &byDay)
 
-        monthCache[key] = MonthBucket(items: fetched, byDay: byDay, lastFetched: .now)
+//        monthCache[key] = MonthBucket(items: fetched, byDay: byDay, lastFetched: .now)
+//
+//        for (day, list) in byDay { dayIndex[day] = list }
+//
+//        objectWillChange.send()
 
-        for (day, list) in byDay { dayIndex[day] = list }
+        // ① monthCache 갱신을 준비
+        var newMonthCache = monthCache
+        newMonthCache[key] = MonthBucket(items: fetched, byDay: byDay, lastFetched: .now)
 
-        objectWillChange.send()
+        // ② dayIndex도 임시로 합친 뒤
+        var newDayIndex = dayIndex
+        var day = start
+        while day < end {
+            newDayIndex[day.startOfDay] = byDay[day.startOfDay] ?? []
+            day = calendar.date(byAdding: .day, value: 1, to: day)!
+        }
+
+        // ③ 한 번에 스왑(퍼블리시 1회)
+        monthCache = newMonthCache
+        dayIndex   = newDayIndex
     }
 
     func items(on day: Date) -> [ScheduleItem] {
@@ -216,18 +232,18 @@ final class ScheduleStore: ObservableObject {
 
         if affectedMonths.isEmpty { return }
 
-        for m in affectedMonths {
-            if monthCache.removeValue(forKey: m) != nil {
-                var day = m.startOfMonth
-                let end = calendar.date(byAdding: .month, value: 1, to: day)!
-                while day < end {
-                    dayIndex.removeValue(forKey: day.startOfDay)
-                    guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                    day = next
-                }
-            }
-        }
-
+//        for m in affectedMonths {
+//            if monthCache.removeValue(forKey: m) != nil {
+//                var day = m.startOfMonth
+//                let end = calendar.date(byAdding: .month, value: 1, to: day)!
+//                while day < end {
+//                    dayIndex.removeValue(forKey: day.startOfDay)
+//                    guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+//                    day = next
+//                }
+//            }
+//        }
+//
         Task { [weak self] in
             guard let self else { return }
 
@@ -236,6 +252,39 @@ final class ScheduleStore: ObservableObject {
                     group.addTask { await self.ensureMonthLoaded(m) }
                 }
             }
+        }
+        Task { [weak self] in
+            guard let self else { return }
+
+            var newMonthCache = self.monthCache
+            var newDayIndex   = self.dayIndex
+
+            for m in affectedMonths {
+                let start = m.startOfMonth
+                let end   = calendar.date(byAdding: .month, value: 1, to: start)!
+
+                let fetched: [ScheduleItem] = await withCheckedContinuation { [weak self] cont in
+                    guard let self else { return }
+                    self.viewContext.perform {
+                        let items = self.fetchFromCoreData(start: start, end: end)
+                        cont.resume(returning: items)
+                    }
+                }
+
+                var byDay: [Date: [ScheduleItem]] = [:]
+                self.buildByDay(rangeStart: start, rangeEnd: end, items: fetched, into: &byDay)
+
+                newMonthCache[m] = MonthBucket(items: fetched, byDay: byDay, lastFetched: .now)
+
+                var day = start
+                while day < end {
+                    newDayIndex[day.startOfDay] = byDay[day.startOfDay] ?? []
+                    day = calendar.date(byAdding: .day, value: 1, to: day)!
+                }
+            }
+
+            self.monthCache = newMonthCache
+            self.dayIndex   = newDayIndex
         }
     }
 }
