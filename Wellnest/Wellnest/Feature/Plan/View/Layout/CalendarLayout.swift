@@ -12,16 +12,12 @@ struct CalendarLayoutCache {
 }
 struct CalendarLayout: Layout {
     enum Mode {
-        /// 서브뷰 intrinsic 높이에 맞춰 계산(요일 헤더 등)
         case intrinsic
-        /// 총 높이는 `slots`(예: 6) 기준으로 계산.
-        /// 실제 rows(4/5/6)는 전체를 꽉 채우며 Top 정렬.
-        /// aspectRatio: nil=정사각형, 값이면 itemHeight = itemWidth * ratio
         case fixedSlots(slots: Int, aspectRatio: CGFloat? = nil)
     }
 
     let columns: Int
-    let spacing: CGFloat           // 가로/세로 동일 간격
+    let spacing: CGFloat
     let mode: Mode
 
     init(columns: Int = 7, spacing: CGFloat = 4, mode: Mode) {
@@ -30,7 +26,6 @@ struct CalendarLayout: Layout {
         self.mode = mode
     }
 
-    // MARK: - size
     func sizeThatFits(
         proposal: ProposedViewSize,
         subviews: Subviews,
@@ -47,7 +42,6 @@ struct CalendarLayout: Layout {
         switch mode {
         case .intrinsic:
             let rows = Int(ceil(Double(subviews.count) / Double(columns)))
-            // 첫 행의 최대 intrinsic 높이로 행 높이 추정
             let firstRowMax = (0..<min(columns, subviews.count)).reduce(CGFloat.zero) { acc, i in
                 max(acc, subviews[i].sizeThatFits(.init(width: itemWidth, height: nil)).height)
             }
@@ -55,14 +49,12 @@ struct CalendarLayout: Layout {
             return .init(width: width, height: height)
 
         case .fixedSlots(let slots, let aspect):
-            // 총 높이는 항상 slots(예: 6) 기준
             let itemHeight = (aspect ?? 1.0) * itemWidth
             let height = itemHeight * CGFloat(slots) + spacing * CGFloat(slots - 1)
             return .init(width: width, height: height)
         }
     }
 
-    // MARK: - place
     func placeSubviews(
         in bounds: CGRect,
         proposal: ProposedViewSize,
@@ -75,22 +67,17 @@ struct CalendarLayout: Layout {
         let itemWidth = (bounds.width - totalSpacingW) / CGFloat(columns)
         let rows = Int(ceil(Double(subviews.count) / Double(columns)))
 
-        // 행 높이 계산
         let rowHeight: CGFloat = {
             switch mode {
             case .intrinsic:
-                // intrinsic에서도 전체를 꽉 채우며 Top 정렬
                 let contentH = bounds.height - spacing * CGFloat(max(0, rows - 1))
                 return contentH / CGFloat(rows)
             case .fixedSlots:
-                // 총 높이는 6줄 기준으로 잡혀 있지만,
-                // 실제 rows로 "전체를 꽉 채우며" Top 정렬
                 let contentH = bounds.height - spacing * CGFloat(max(0, rows - 1))
                 return contentH / CGFloat(rows)
             }
         }()
 
-        // ⬇️ Top 정렬: 각 셀을 좌상단(anchor: .topLeading)에 배치
         var y = bounds.minY
         var idx = 0
         for r in 0..<rows {
@@ -107,5 +94,23 @@ struct CalendarLayout: Layout {
             }
             y += rowHeight + (r < rows - 1 ? spacing : 0)
         }
+    }
+}
+
+extension CalendarLayout {
+    static func fixedHeight(
+        for width: CGFloat,
+        columns: Int = 7,
+        spacing: CGFloat = 4,
+        slots: Int = 6,
+        aspect: CGFloat = 0.9
+    ) -> CGFloat {
+        guard width > 0, columns > 0, slots > 0 else { return 0 }
+
+        let totalSpacingW = spacing * CGFloat(columns - 1)
+        let itemWidth = (width - totalSpacingW) / CGFloat(columns)
+        let itemHeight = aspect * itemWidth
+        let totalSpacingH = spacing * CGFloat(slots - 1)
+        return itemHeight * CGFloat(slots) + totalSpacingH
     }
 }

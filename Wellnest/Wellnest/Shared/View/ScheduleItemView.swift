@@ -81,6 +81,8 @@ struct ScheduleItemView: View {
             Spacer()
 
             if showOnlyPlanView {
+                let shouldDisable = showOnlyPlanView && isUpcomingGroup && !isAllDay
+
                 Button {
                     onToggleComplete?(schedule)
                 } label: {
@@ -91,13 +93,18 @@ struct ScheduleItemView: View {
                                 .frame(width: 28, height: 28)
                         } else {
                             Circle()
-                                .stroke(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray, lineWidth: 1)
+                                .stroke(schedule.isCompleted ? Color.scheduleSolid(color: schedule.backgroundColor) : (shouldDisable ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray),
+                                        lineWidth: 1)
                                 .frame(width: 28, height: 28)
                         }
-                        
+
                         Image(systemName: "checkmark")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(schedule.isCompleted ? .white : .gray)
+                            .foregroundStyle(
+                                schedule.isCompleted
+                                    ? .white
+                                    : (shouldDisable ? Color.scheduleSolid(color: schedule.backgroundColor) : .gray)
+                            )
                     }
                 }
                 .buttonStyle(.plain)
@@ -115,8 +122,8 @@ struct ScheduleItemView: View {
                     RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
                         .stroke(Color.scheduleSolid(color: schedule.backgroundColor), lineWidth: 1)
                 } else {
-                    RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-                        .stroke(.secondary.opacity(0.5), lineWidth: 0.5)
+                        RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
+                            .stroke(.secondary.opacity(0.5), lineWidth: 0.5)
                 }
             }
         }

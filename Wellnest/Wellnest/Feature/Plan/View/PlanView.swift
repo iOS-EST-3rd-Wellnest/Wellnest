@@ -64,10 +64,10 @@ struct PlanView: View {
                 .ignoresSafeArea(edges: .bottom)
             } else {
                 ZStack {
+                    
                     VStack(spacing: 0) {
                         if isSheetExpanded {
                             CalendarWeekView(planVM: planVM)
-                                .padding(.bottom, Spacing.content)
                         } else {
                             CalendarPagingView(planVM: planVM)
                         }

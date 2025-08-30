@@ -20,6 +20,9 @@ struct ScheduleSheetView: View {
     @Binding var selectedTab: TabBarItem
     @Binding var selectedCreationType: ScheduleCreationType?
 
+    @State private var forecastByDay: [Date: WeatherItem] = [:]
+    @State private var currentWeather: WeatherItem?
+
     var asSidePanel: Bool = false
 
     var body: some View {
@@ -32,15 +35,28 @@ struct ScheduleSheetView: View {
                 .animation(.spring, value: isDragging)
                 .opacity(asSidePanel ? 0 : 1)
 
-            Text(planVM.selectedDate.dateFormat("M월 d일 E요일"))
-                .font(.headline)
-                .padding(.horizontal)
-                .opacity(asSidePanel ? 1.0 : (isDragging ? 0.7 : 1.0))
+            HStack {
+                Text(planVM.selectedDate.dateFormat("M월 d일 E요일"))
+                    .font(.headline)
+                    .opacity(asSidePanel ? 1.0 : (isDragging ? 0.7 : 1.0))
 
-            ScrollView {
+                Spacer()
+
+                if let currentWeather {
+                    WeatherBadge(
+                        item: currentWeather,
+                        showCurrentOnly: Calendar.current.isDateInToday(planVM.selectedDate)
+                    )
+                        .transition(.opacity)
+                }
+            }
+            .frame(height: 40)
+            .padding(.horizontal)
+
+            ScrollView(showsIndicators: false) {
                 let upcomingIDs = planVM.highlightedUpcomingIDs(on: planVM.selectedDate)
 
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 8) {
                     if planVM.selectedDateScheduleItems.isEmpty {
                         emptyStateView
                     } else {
@@ -59,7 +75,8 @@ struct ScheduleSheetView: View {
                         }
                     }
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top, Spacing.inline)
             }
             .safeAreaInset(edge: .bottom) {
                 Color.clear
@@ -92,6 +109,21 @@ struct ScheduleSheetView: View {
                 selectedCreationType: $selectedCreationType,
                 planVM: planVM
             )
+        }
+        .task {
+            let list = await WeatherCenter.shared.waitForForecast()
+
+            currentWeather = list.first { item in
+                Calendar.current.isDate(item.dt, inSameDayAs: planVM.selectedDate)
+            }
+        }
+        .onChange(of: planVM.selectedDate) { newValue in
+            Task { @MainActor in
+                let list = await WeatherCenter.shared.waitForForecast()
+                currentWeather = list.first { item in
+                    Calendar.current.isDate(item.dt, inSameDayAs: newValue)
+                }
+            }
         }
     }
 
