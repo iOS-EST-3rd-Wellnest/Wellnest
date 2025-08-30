@@ -20,18 +20,24 @@ struct CalendarPagingView: View {
 
     @State private var monthHeight: CGFloat = 0
 
+    @Environment(\.horizontalSizeClass) private var hSize
+    private var isRegularWidth: Bool { hSize == .regular }
+    private var dayFontSize: CGFloat { isRegularWidth ? 22 : 16 }
+    private var weekdayFont: Font { .system(size: dayFontSize, weight: .semibold) }
+    private var weekdayBottomPadding: CGFloat { isRegularWidth ? Spacing.layout + 4 : Spacing.layout }
+
     var body: some View {
         VStack(spacing: 0) {
             CalendarLayout(mode: .intrinsic) {
                 ForEach(Date.weekdays.indices, id: \.self) { idx in
                     Text(Date.weekdays[idx])
-                        .font(.subheadline)
+                        .font(weekdayFont)
                         .foregroundStyle(Date.weekdayColor(at: idx))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, Spacing.content)
+            .padding(.bottom, weekdayBottomPadding)
 
             TabView(selection: $selection) {
                 ForEach(pages.indices, id: \.self) { idx in
@@ -114,7 +120,7 @@ struct CalendarPagingView: View {
                 pages = planVM.generatePageMonths(center: centerMonth)
                 previousSelection = 3
 
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     isJumping = false
                 }
             }

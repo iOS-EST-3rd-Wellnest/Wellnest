@@ -12,59 +12,89 @@ struct CalendarWeekView: View {
 
     let calendar = Calendar.current
 
+    @Environment(\.horizontalSizeClass) private var hSize
+    private var isRegularWidth: Bool { hSize == .regular }
+
+    private var dayFontSize: CGFloat { isRegularWidth ? 22 : 16 }
+    private var weekdayFont: Font { .system(size: dayFontSize, weight: .semibold) }
+    private var dotSize: CGFloat { isRegularWidth ? 5 : 4 }
+
+
     @State private var weekHeight: CGFloat = 0
 
     var body: some View {
+        let dates = planVM.selectedDate.filledWeekDates()
+
+        VStack(spacing: Spacing.layout) {
             ZStack {
-                HStack(spacing: 4) {
-                    ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
-                        VStack(spacing: 0) {
-                            columnBackground(date: date)
-                        }
+                CalendarLayout(mode: .intrinsic) {
+                    ForEach(dates, id: \.self) { date in
+                        columnBackground(date: date)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                            .onTapGesture { planVM.selectDate(date) }
                     }
                 }
-                .padding(.horizontal)
 
-                VStack(spacing: Spacing.layout) {
-                    CalendarLayout(mode: .intrinsic) {
-                        ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
-                            let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
+                CalendarLayout(mode: .intrinsic) {
+                    ForEach(dates, id: \.self) { date in
+                        let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
 
+                        VStack(spacing: Spacing.layout) {
                             Text(Date.weekdays[date.weekdayIndex])
-                                .font(.subheadline)
-                                .foregroundStyle(isSelected ? Color.white : date.weekdayColor)
+                                .font(weekdayFont)
+                                .foregroundStyle(isSelected ? .white : date.weekdayColor)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .allowsHitTesting(false)
-                        }
-                    }
-
-                    CalendarLayout(mode: .intrinsic) {
-                        ForEach(planVM.selectedDate.filledWeekDates(), id: \.self) { date in
-
-                            let isSelected = calendar.isDate(date, inSameDayAs: planVM.selectedDate)
 
                             Text("\(date.dayNumber)")
-                                .font(.system(size: 16))
-                                .foregroundStyle(isSelected ? Color.white : date.weekdayColor)
+                                .font(.system(size: dayFontSize))
+                                .foregroundStyle(isSelected ? .white : date.weekdayColor)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .allowsHitTesting(false)
                         }
-                    }
-                }
-                .padding(.horizontal)
-                .allowsHitTesting(false)
-                .background {
-                    GeometryReader { geo in
-                        Color.clear
-                            .onAppear {
-                                if weekHeight == 0 {
-                                    weekHeight = geo.size.height
-                                }
-                            }
                     }
                 }
             }
-            .frame(height: weekHeight)
+            .padding(.horizontal, Spacing.layout)
+            .background {
+                GeometryReader { geo in
+                    Color.clear.onAppear {
+                        if weekHeight == 0 {
+                            weekHeight = geo.size.height
+                        }
+                    }
+                }
+            }
+            .frame(height: weekHeight == 0 ? nil : weekHeight)
+
+            CalendarLayout(mode: .intrinsic) {
+                ForEach(dates, id: \.self) { date in
+                    let scheduleItems = planVM.items(for: date)
+                    let scheduleCount = scheduleItems.count
+
+                    Group {
+                        if scheduleCount > 0  {
+                            HStack(spacing: 2) {
+                                ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
+                                    Circle()
+                                        .frame(width: dotSize, height: dotSize)
+                                        .foregroundStyle(
+                                            Color.scheduleDot(color: scheduleItems[index].backgroundColor)
+                                        )
+                                }
+                            }
+                        } else {
+                            Circle()
+                                .frame(width: dotSize, height: dotSize)
+                                .foregroundStyle(.clear)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+            .padding(.horizontal, Spacing.layout)
+        }
     }
 
     @ViewBuilder
