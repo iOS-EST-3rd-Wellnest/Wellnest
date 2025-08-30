@@ -33,7 +33,7 @@ struct SecondIntroductionTabView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("하루 계획,")
                                         HStack {
-                                            Text("이제 AI에게 맡기세요")
+                                            Text("이제 AI에게 맡기세요.")
                                             Image("secondIntroAI")
                                                 .resizable()
                                                 .scaledToFit()
@@ -46,7 +46,7 @@ struct SecondIntroductionTabView: View {
 
                                     VStack(alignment: .leading) {
                                         Text("바쁜 하루 속에서도, 운동부터 휴식까지")
-                                        Text("당신에게 꼭 맞는 일정을 생성해줘요")
+                                        Text("당신에게 꼭 맞는 일정을 생성해줘요.")
                                     }
                                     .font(isIPad ? .title2 : .body)
                                     .foregroundColor(.secondary)
@@ -80,7 +80,7 @@ struct SecondIntroductionTabView: View {
 
                                     VStack(alignment: .trailing) {
                                         Text("나이, 신체 정보, 라이프스타일 등을 기반으로")
-                                        Text("가장 알맞은 영상과 활동을 제안해줘요")
+                                        Text("가장 알맞은 영상과 활동을 제안해줘요.")
                                     }
                                     .font(isIPad ? .title2 : .body)
                                     .foregroundColor(.secondary)
@@ -110,7 +110,7 @@ struct SecondIntroductionTabView: View {
 
                                     VStack(alignment: .leading) {
                                         Text("웰니스 목표를 세우고")
-                                        Text("작은 성취를 쌓아가며 꾸준히 성장해보세요")
+                                        Text("작은 성취를 쌓아가며 꾸준히 성장해보세요.")
                                     }
                                     .font(isIPad ? .title2 : .body)
                                     .foregroundColor(.secondary)
