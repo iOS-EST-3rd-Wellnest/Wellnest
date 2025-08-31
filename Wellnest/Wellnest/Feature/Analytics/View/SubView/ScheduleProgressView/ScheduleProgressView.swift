@@ -25,11 +25,16 @@ struct ScheduleProgressView: View {
                 .padding(.leading, Spacing.content)
                 
             ProgressFooterView(viewModel: viewModel, scheduleProgressType: scheduleProgressType)
+                .padding(.bottom, Spacing.content)
+                .padding(.trailing, Spacing.inline)
         }
         .frame(maxWidth: .infinity, minHeight: 150)
-        .padding(.top, Spacing.inline)
+        .if(UIDevice.current.userInterfaceIdiom == .pad) { content  in
+            content
+                .padding(.top, Spacing.inline)
+        }
         .padding(.bottom)
-        .padding(.horizontal)
+        .padding(.horizontal, Spacing.content)
         .roundedBorder(cornerRadius: CornerRadius.large)
         .defaultShadow()
         .background(

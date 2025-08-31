@@ -68,10 +68,12 @@ struct AnalyticsView: View {
                 ForEach(ScheduleProgressType.allCases) {
                     ScheduleProgressView(scheduleProgressType: $0)
                         .padding(.horizontal)
+                        .padding(.bottom, Spacing.inline)
                 }
             }
             .tabViewStyle(.page)
-            .frame(minHeight: 180)
+            .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: colorScheme == .dark ? .never : .always))
+            .frame(minHeight: 200)
             
             Group {
                 AIInsightView()

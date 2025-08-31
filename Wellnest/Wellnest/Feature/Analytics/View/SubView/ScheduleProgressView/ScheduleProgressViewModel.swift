@@ -93,10 +93,6 @@ final class ScheduleProgressViewModel: NSObject, ObservableObject {
         fetchResultMonthlyController.delegate = self
         try? fetchResultMonthlyController.performFetch()
         
-        print("today:", fetchResultTodayController.fetchedObjects?.count ?? 0)
-        print("week:", fetchResultWeeklyController.fetchedObjects?.count ?? 0)
-        print("month:", fetchResultMonthlyController.fetchedObjects?.count ?? 0)
-        
         DispatchQueue.main.async { [weak self] in
             self?.todayItems = self?.fetchResultTodayController.fetchedObjects ?? []
             self?.weeklyItems = self?.fetchResultWeeklyController.fetchedObjects ?? []
@@ -201,7 +197,8 @@ extension ScheduleProgressViewModel {
     var progressInfo: (title: String, description: String) {
         if hasToday {
             var des = ""
-            if todayCompletionRate < 0.1 {
+            
+            if todayCompletionRate < 1 {
                 des = "오늘 일정이\n\(todayRemainCount)개 남았어요."
             } else {
                 des = "오늘 일정이\n모두 완료되었어요."
@@ -209,7 +206,6 @@ extension ScheduleProgressViewModel {
             
             return (
                 title: "\(Int(todayCompletionRate * 100))%",
-//                description: "오늘 일정이\n\(todayRemainCount)개 남았어요."
                 description: des
             )
         } else {
@@ -223,7 +219,8 @@ extension ScheduleProgressViewModel {
     var progressWeeklyInfo: (title: String, description: String) {
         if hasWeekly {
             var des = ""
-            if weeklyCompletionRate < 0.1 {
+            
+            if weeklyCompletionRate < 1 {
                 des = "이번주 일정이\n\(weeklyRemainCount)개 남았어요."
             } else {
                 des = "이번주 일정이\n모두 완료되었어요."
@@ -244,7 +241,8 @@ extension ScheduleProgressViewModel {
     var progressMonthlyInfo: (title: String, description: String) {
         if hasMonthly {
             var des = ""
-            if monthlyCompletionRate < 0.1 {
+            
+            if monthlyCompletionRate < 1 {
                 des = "이번달 일정이\n\(monthlyRemainCount)개 남았어요."
             } else {
                 des = "이번달 일정이\n모두 완료되었어요."
