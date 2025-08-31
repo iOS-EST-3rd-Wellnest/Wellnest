@@ -80,9 +80,11 @@ struct MainTabView: View {
                                 .ignoresSafeArea(edges: .bottom)
                             }
                         }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .zIndex(1)
+            .animation(.spring(duration: 0.22), value: hiddenTabBar.isHidden)
 
             if showScheduleMenu {
                 Rectangle()
