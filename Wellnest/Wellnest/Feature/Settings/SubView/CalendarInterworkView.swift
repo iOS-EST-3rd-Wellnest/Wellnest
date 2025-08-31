@@ -70,6 +70,7 @@ struct CalendarInterworkView: View {
                     await linkCalendar()
                 }
             }
+            .tabBarGlassBackground()
         }
         .padding(.horizontal)
         .padding(.bottom, Spacing.content)
@@ -137,6 +138,12 @@ extension CalendarInterworkView {
     }
 }
 
-#Preview {
-    CalendarInterworkView()
+#Preview("캘린더 연동됨") {
+    NavigationStack {
+        CalendarInterworkView()
+            .environmentObject(TabBarState())
+            .onAppear {
+                UserDefaultsManager.shared.isCalendarEnabled = true
+            }
+    }
 }
