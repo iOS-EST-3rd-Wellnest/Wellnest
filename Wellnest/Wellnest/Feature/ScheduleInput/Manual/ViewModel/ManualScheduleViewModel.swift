@@ -64,6 +64,12 @@ final class ManualScheduleViewModel: ObservableObject {
                     memo: e.detail ?? nil
                 )
             }
+            .sorted {
+                if $0.isAllDay == $1.isAllDay {
+                    return $0.startDate < $1.startDate
+                }
+                return $0.isAllDay && !$1.isAllDay
+            }
             self.todaySchedules = items
         } catch {
             print("📛 일정 로드 실패:", error.localizedDescription)
