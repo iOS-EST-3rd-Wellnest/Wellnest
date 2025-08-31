@@ -36,16 +36,16 @@ struct SleepStatChartCardView: View {
                 .frame(width: 150)
             }
 
-            HStack(spacing: Spacing.layout * 2) {
+            HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("수면 시간")
+                    Text(getSleepTitle())
                         .font(.caption)
                         .foregroundColor(.secondary)
 
                     HStack(alignment: .bottom, spacing: Spacing.inline) {
                         if sleepData.hasSleepTimeData {
                             Text(formatSleepTimeDisplay())
-                                .font(.title2)
+                                .font(.title3)
                                 .fontWeight(.semibold)
                             
                             Text(getSleepTimeLabel())
@@ -69,16 +69,17 @@ struct SleepStatChartCardView: View {
                             .foregroundColor(getSleepTimeChangeColor())
                     }
                 }
+                .frame(width: 100, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("수면 효율")
+                    Text(getSleepQualityTitle())
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
                     HStack(alignment: .bottom, spacing: Spacing.inline) {
                         if sleepData.hasSleepQualityData {
                             Text(formatSleepQualityDisplay())
-                                .font(.title2)
+                                .font(.title3)
                                 .fontWeight(.semibold)
                             Text("%")
                                 .font(.caption)
@@ -104,42 +105,45 @@ struct SleepStatChartCardView: View {
                             .foregroundColor(getSleepEfficiencyChangeColor())
                     }
                 }
+                .frame(width: 100, alignment: .leading)
 
                 Spacer()
             }
 
-            VStack(alignment: .leading, spacing: Spacing.layout + Spacing.section) {
+            VStack(alignment: .leading, spacing: 24) {
                 Text(getChartTitle())
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                ZStack {
-                    BarChartView(
-                        data: currentChartData,
-                        color: .blue,
-                        period: selectedPeriod,
-                        dataType: .sleep
-                    )
-                    .frame(height: 140)
-                    
-                    if !sleepData.hasSleepTimeData {
-                        Rectangle()
-                            .fill(.regularMaterial)
-                            .frame(height: 140)
-                            .overlay {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "chart.bar.xaxis")
-                                        .font(.title2)
-                                        .foregroundColor(.secondary)
-                                    
-                                    Text("데이터 없음")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
+                if sleepData.hasSleepTimeData {
+                    ZStack {
+                        BarChartView(
+                            data: currentChartData,
+                            color: .blue,
+                            period: selectedPeriod,
+                            dataType: .sleep
+                        )
+                        .frame(height: 140)
                     }
+                } else {
+                    RoundedRectangle(cornerRadius: CornerRadius.large, style: .continuous)
+                        .fill(.secondary.opacity(0.1))
+                        .frame(height: 140)
+                        .overlay {
+                            VStack(spacing: Spacing.content) {
+                                Image(systemName: "chart.bar.xaxis")
+                                    .font(.title2)
+                                    .foregroundStyle(.secondary)
+                                Text("해당 기간 데이터가 없어요")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .transition(.opacity)
                 }
+                
             }
+            .padding(.top, Spacing.content)
         }
         .frame(maxHeight: 400)
         .padding()
@@ -151,27 +155,22 @@ struct SleepStatChartCardView: View {
                 .fill(.wellnestBackgroundCard)
         )
         .overlay {
-            let shouldShowBlur = !sleepData.isHealthKitConnected || (!sleepData.hasSleepTimeData && !sleepData.hasSleepQualityData)
-            
-            if shouldShowBlur {
-                let isConnectionIssue = !sleepData.isHealthKitConnected
-                
+            // 건강앱 연동 안되어 있는 경우에만 블러 처리
+            if !sleepData.isHealthKitConnected {
                 RoundedRectangle(cornerRadius: CornerRadius.large)
                     .fill(.regularMaterial)
                     .overlay {
                         VStack(spacing: 16) {
-                            Image(systemName: isConnectionIssue ? "heart.text.square" : "bed.double.fill")
+                            Image(systemName: "heart.text.square" )
                                 .font(.system(size: 40))
                                 .foregroundColor(.secondary)
                             
                             VStack(spacing: 8) {
-                                Text(isConnectionIssue ? "건강 앱 연동 필요" : "수면 데이터 없음")
+                                Text("건강 앱 연동 필요")
                                     .font(.headline)
                                     .foregroundColor(.primary)
                                 
-                                Text(isConnectionIssue ? 
-                                     "설정에서 건강 앱을 연동하면\n수면 데이터를 확인할 수 있어요" :
-                                     "수면을 기록하면 수면 시간과 효율\n데이터를 확인할 수 있어요")
+                                Text("설정에서 건강 앱을 연동하면\n수면 데이터를 확인할 수 있어요" )
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -240,6 +239,28 @@ struct SleepStatChartCardView: View {
             return "일간 수면 시간"
         case .month:
             return "주간 수면 시간"
+        }
+    }
+    
+    private func getSleepTitle() -> String {
+        switch selectedPeriod {
+        case .today:
+            return "수면 시간"
+        case .week:
+            return "수면 시간(평균)"
+        case .month:
+            return "수면 시간(평균)"
+        }
+    }
+    
+    private func getSleepQualityTitle() -> String {
+        switch selectedPeriod {
+        case .today:
+            return "수면 효율"
+        case .week:
+            return "수면 효율(평균)"
+        case .month:
+            return "수면 효율(평균)"
         }
     }
 
