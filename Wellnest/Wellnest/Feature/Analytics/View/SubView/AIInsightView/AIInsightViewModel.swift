@@ -12,8 +12,6 @@ import HealthKit
 final class AIInsightViewModel: ObservableObject {
     @Published var insightText: AttributedString? = "AI가 응답을 생성중입니다..."
     
-    private let healthManager = HealthManager.shared
-    
     init() {
         Task { await loadAIInsight() }
     }
@@ -34,7 +32,15 @@ private extension AIInsightViewModel {
         do {
             let aiService = AIServiceProxy()
             let result = try await aiService.request(prompt: Self.insightPrompt(input: input))
-            return try? AttributedString(markdown: result.content)
+            
+            if let json = await aiService.extractJSONFromResponse(result.content),
+               let data = json.data(using: .utf8),
+               let decoded = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let sentence = decoded["sentence"] as? String {
+                return try? AttributedString(markdown: sentence)
+            } else {
+                return try? AttributedString(markdown: result.content)
+            }
         } catch {
             var text = AttributedString("AI 응답을 가져올 수 없습니다.")
             text.foregroundColor = .red
@@ -44,7 +50,7 @@ private extension AIInsightViewModel {
     
     static func insightPrompt(input: ExerciseData?) -> String {
         return """
-                \(input?.AIPrompt)
+                \(String(describing: input?.AIPrompt))
                 
                 위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 40자 제한, 한 문장으로 만들어줘.
                 응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘. 
@@ -82,6 +88,7 @@ private extension AIInsightViewModel {
             throw HealthKitError.notAvailable
         }
 
+        let healthManager = await MainActor.run { HealthManager.shared }
         let authCheck = await healthManager.finalAuthSnapshot()
         if !authCheck.missingCore.isEmpty {
             throw HealthKitError.notAvailable
