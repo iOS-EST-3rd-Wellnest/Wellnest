@@ -34,7 +34,10 @@ class AnalyticsViewModel: ObservableObject {
         monthlyStepsChange: -2,       // 지난달 대비 2% 감소
         dailyCaloriesChange: -5,      // 어제보다 5% 감소
         weeklyCaloriesChange: 3,      // 지난주 대비 3% 증가
-        monthlyCaloriesChange: 1      // 지난달 대비 1% 증가
+        monthlyCaloriesChange: 1,     // 지난달 대비 1% 증가
+        hasStepsData: false,
+        hasCaloriesData: false,
+        isHealthKitConnected: false
     )
     
     private static let deaultSleepData = SleepData(
@@ -55,7 +58,10 @@ class AnalyticsViewModel: ObservableObject {
         monthlySleepTimeChange: 0,   // 지난달과 비슷
         dailyQualityChange: 1,       // 전일 대비 +1%
         weeklyQualityChange: -2,     // 지난주 대비 -2%
-        monthlyQualityChange: 3      // 지난달 대비 +3%
+        monthlyQualityChange: 3,     // 지난달 대비 +3%
+        hasSleepTimeData: false,
+        hasSleepQualityData: false,
+        isHealthKitConnected: false
     )
 
     init() {
@@ -118,14 +124,20 @@ class AnalyticsViewModel: ObservableObject {
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        print("HealthKit 권한 상태:")
-        print("- 누락된 권한: \(authCheck.missingCore)")
-
-        if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return Self.defaultExerciseData
+        
+        // Exercise 관련 권한 확인
+        let stepTypeId = HKQuantityTypeIdentifier.stepCount.rawValue
+        let calorieTypeId = HKQuantityTypeIdentifier.activeEnergyBurned.rawValue
+        
+        let missingExerciseTypes = authCheck.missingCore.filter { type in
+            let identifier = type.identifier
+            return identifier == stepTypeId || identifier == calorieTypeId
         }
-
+        
+        let isHealthKitConnected = missingExerciseTypes.count < 2 // 둘 중 하나라도 있으면 연동됨
+        
+        var hasStepsData = false
+        var hasCaloriesData = false
         let todaySteps: Int
         let todayCalories: Int
 
@@ -192,17 +204,27 @@ class AnalyticsViewModel: ObservableObject {
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return Self.deaultSleepData
-        }
 
+        // Sleep 관련 권한 확인 (더 직접적인 방법)
+        let sleepTypeId = HKCategoryTypeIdentifier.sleepAnalysis.rawValue
+        
+        let missingSleepTypes = authCheck.missingCore.filter { type in
+            type.identifier == sleepTypeId
+        }
+        
+        let isHealthKitConnected = missingSleepTypes.isEmpty // 수면 권한이 있으면 연동됨
+        var hasSleepTimeData = false
+        var hasSleepQualityData = false
         let sleepDuration: TimeInterval
+        
         do {
             sleepDuration = try await healthManager.fetchSleepDuration()
-            print("수면 시간: \(sleepDuration)초 (약 \(sleepDuration/3600)시간)")
+            if sleepDuration >= 3600 {
+                hasSleepTimeData = true
+                hasSleepQualityData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("수면 시간 가져오기 실패: \(error)")
             sleepDuration = Self.deaultSleepData.defaultSleepDuration
         }
 

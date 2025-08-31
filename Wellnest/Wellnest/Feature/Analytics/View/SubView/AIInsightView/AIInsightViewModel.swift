@@ -141,7 +141,10 @@ private extension AIInsightViewModel {
             monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
             dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
             weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
-            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
+            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData),
+            hasStepsData: true,
+            hasCaloriesData: true,
+            isHealthKitConnected: true
         )
     }
     
