@@ -95,6 +95,7 @@ struct ManualScheduleInputView: View {
                         .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
                             if viewModel.isEditMode && viewModel.form.isRepeated {
                                 isChangedRepeatRule = true
+
                             }
                         }
                         TagToggleSection(
@@ -151,7 +152,6 @@ struct ManualScheduleInputView: View {
                                      attachmentAnchor: .rect(.bounds),
                                      arrowEdge: .trailing) {
                                 let content = ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
-                                #if os(iOS)
                                 if UIDevice.current.userInterfaceIdiom == .pad {
                                     content
                                         .frame(width: 320, height: 200)
@@ -165,9 +165,6 @@ struct ManualScheduleInputView: View {
                                         content
                                     }
                                 }
-                                #else
-                                content
-                                #endif
 
                             }
                         }
@@ -326,7 +323,7 @@ struct ManualScheduleInputView: View {
                                         } else {
                                             // 반복 이벤트에 대해서 전부 수정
                                             Task {
-                                                try await viewModel.updateRepeatSeries()
+                                                try await viewModel.editFollowingAndReseries()
                                             }
                                         }
                                         showOnlySeriesItemEditMenu = false
