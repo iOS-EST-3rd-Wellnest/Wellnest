@@ -77,19 +77,13 @@ private extension ExerciseData {
     
 private extension AIInsightViewModel {
     func loadExerciseData() async throws -> ExerciseData {
-        print("❤️ 운동 데이터 로드 시작")
 
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             throw HealthKitError.notAvailable
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        print("HealthKit 권한 상태:")
-        print(" - 누락된 권한: \(authCheck.missingCore)")
-
         if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
             throw HealthKitError.notAvailable
         }
 
@@ -98,26 +92,20 @@ private extension AIInsightViewModel {
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
-            print("오늘 걸음수: \(todaySteps)")
         } catch {
-            print("❤️ 걸음수 가져오기 실패: \(error)")
             throw HealthKitError.notAvailable
         }
 
         do {
             todayCalories = try await healthManager.fetchCalorieCount()
-            print("❤️ 오늘 칼로리: \(todayCalories)")
         } catch {
-            print("❤️ 칼로리 가져오기 실패: \(error)")
             throw HealthKitError.notAvailable
         }
 
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("❤️ 과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("❤️ 과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -125,9 +113,6 @@ private extension AIInsightViewModel {
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
 
-        print("계산된 변화율:")
-        print("- 걸음수 변화: \(stepsChange)%")
-        print("- 칼로리 변화: \(caloriesChange)%")
 
         return ExerciseData(
             averageSteps: todaySteps,
@@ -149,7 +134,6 @@ private extension AIInsightViewModel {
     }
     
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
-        print("❤️ Mock 연간 데이터 생성")
         let calendar = Calendar.current
         var data: [HealthManager.DailyMetric] = []
 

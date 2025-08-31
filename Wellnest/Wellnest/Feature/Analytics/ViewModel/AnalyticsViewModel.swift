@@ -81,8 +81,6 @@ class AnalyticsViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        print("건강 데이터 로드 시작")
-
         let userName = getUserName()
 
         async let exerciseData = loadExerciseData()
@@ -91,12 +89,6 @@ class AnalyticsViewModel: ObservableObject {
         let (exercise, sleep) = await (
             exerciseData, sleepData
         )
-
-        print("로드된 데이터:")
-        print("- 걸음수: \(exercise.averageSteps)")
-        print("- 칼로리: \(exercise.averageCalories)")
-        print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
-        print("- 수면 품질: \(sleep.sleepQuality)%")
 
         let aiInsight = generateAIInsight(
             exercise: exercise,
@@ -162,9 +154,7 @@ class AnalyticsViewModel: ObservableObject {
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -192,10 +182,7 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func loadSleepData() async -> SleepData {
-        print("수면 데이터 로드 시작")
-
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             return Self.deaultSleepData
         }
 
@@ -227,17 +214,10 @@ class AnalyticsViewModel: ObservableObject {
         let hours = sleepDuration / 3600
         let minutes = Int((sleepDuration.truncatingRemainder(dividingBy: 3600)) / 60)
 
-        if sleepDuration >= 7200 {
-            self.hasRealData = true
-            print("실제 수면 데이터 발견")
-        }
-
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("수면 과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("수면 과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -271,19 +251,12 @@ class AnalyticsViewModel: ObservableObject {
         hasRealData: Bool
     ) -> AIInsightData {
 
-        print("AI 인사이트 생성 중...")
-//        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
-        print("- 걸음수: \(exercise.averageSteps)")
-        print("- 수면: \(sleep.averageHours)시간")
-        print("- hasRealData: \(hasRealData)")
-
 //        if planCompletion.totalItems == 0 {
 //            print("일정이 없음 - 일정 추가 권유")
 //            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
 //        }
 
         if !hasRealData {
-            print("실제 데이터 없음 - 대기 메시지")
             return AIInsightData(message: "활동을 시작하면 맞춤 분석을 제공해드릴게요!")
         }
 
@@ -341,8 +314,6 @@ class AnalyticsViewModel: ObservableObject {
         }
 
         let selectedInsight = insights.randomElement() ?? insights[0]
-        print("생성된 AI 인사이트: \(selectedInsight)")
-
         return AIInsightData(message: selectedInsight)
     }
 
@@ -575,7 +546,6 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
-        print("Mock 연간 데이터 생성")
         let calendar = Calendar.current
         var data: [HealthManager.DailyMetric] = []
 
