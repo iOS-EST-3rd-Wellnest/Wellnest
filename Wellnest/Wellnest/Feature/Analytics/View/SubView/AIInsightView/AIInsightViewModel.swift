@@ -12,8 +12,6 @@ import HealthKit
 final class AIInsightViewModel: ObservableObject {
     @Published var insightText: AttributedString? = "AI가 응답을 생성중입니다..."
     
-    private let healthManager = HealthManager.shared
-    
     init() {
         Task { await loadAIInsight() }
     }
@@ -34,7 +32,15 @@ private extension AIInsightViewModel {
         do {
             let aiService = AIServiceProxy()
             let result = try await aiService.request(prompt: Self.insightPrompt(input: input))
-            return try? AttributedString(markdown: result.content)
+            
+            if let json = await aiService.extractJSONFromResponse(result.content),
+               let data = json.data(using: .utf8),
+               let decoded = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let sentence = decoded["sentence"] as? String {
+                return try? AttributedString(markdown: sentence)
+            } else {
+                return try? AttributedString(markdown: result.content)
+            }
         } catch {
             var text = AttributedString("AI 응답을 가져올 수 없습니다.")
             text.foregroundColor = .red
@@ -44,10 +50,13 @@ private extension AIInsightViewModel {
     
     static func insightPrompt(input: ExerciseData?) -> String {
         return """
-                \(input?.AIPrompt)
+                \(input?.AIPrompt ?? "건강 데이터가 없음")
                 
                 위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 40자 제한, 한 문장으로 만들어줘.
-                응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘. 
+                응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘.
+                
+                응답은 반드시 다음 JSON 형식으로 해줘:
+                {"sentence": "여기에 건강관리 문장"}
                 """
     }
 }
@@ -77,19 +86,14 @@ private extension ExerciseData {
     
 private extension AIInsightViewModel {
     func loadExerciseData() async throws -> ExerciseData {
-        print("❤️ 운동 데이터 로드 시작")
 
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             throw HealthKitError.notAvailable
         }
 
+        let healthManager = await MainActor.run { HealthManager.shared }
         let authCheck = await healthManager.finalAuthSnapshot()
-        print("HealthKit 권한 상태:")
-        print(" - 누락된 권한: \(authCheck.missingCore)")
-
         if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
             throw HealthKitError.notAvailable
         }
 
@@ -98,26 +102,20 @@ private extension AIInsightViewModel {
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
-            print("오늘 걸음수: \(todaySteps)")
         } catch {
-            print("❤️ 걸음수 가져오기 실패: \(error)")
             throw HealthKitError.notAvailable
         }
 
         do {
             todayCalories = try await healthManager.fetchCalorieCount()
-            print("❤️ 오늘 칼로리: \(todayCalories)")
         } catch {
-            print("❤️ 칼로리 가져오기 실패: \(error)")
             throw HealthKitError.notAvailable
         }
 
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("❤️ 과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("❤️ 과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -125,9 +123,6 @@ private extension AIInsightViewModel {
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
 
-        print("계산된 변화율:")
-        print("- 걸음수 변화: \(stepsChange)%")
-        print("- 칼로리 변화: \(caloriesChange)%")
 
         return ExerciseData(
             averageSteps: todaySteps,
@@ -141,12 +136,14 @@ private extension AIInsightViewModel {
             monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
             dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
             weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
-            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
+            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData),
+            hasStepsData: true,
+            hasCaloriesData: true,
+            isHealthKitConnected: true
         )
     }
     
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
-        print("❤️ Mock 연간 데이터 생성")
         let calendar = Calendar.current
         var data: [HealthManager.DailyMetric] = []
 

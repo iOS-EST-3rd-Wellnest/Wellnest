@@ -293,10 +293,12 @@ final class HealthManager {
                 if let error {
                     print("‼️ 오늘의 걸음 수 가져오기 실패")
                     print(error)
-                } else {
-                    let count = result?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0
-                    continuation.resume(returning: Int(count))
+                    continuation.resume(returning: 0)
+                    return
                 }
+                
+                let count = result?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0
+                continuation.resume(returning: Int(count))
             }
             
             store.execute(query)
@@ -323,10 +325,14 @@ final class HealthManager {
                 if let error {
                     print("‼️ 오늘 소모 칼로리 가져오기 실패")
                     print(error)
+                    continuation.resume(returning: 0)
+                    return
                 }
                 
                 if let calories = result?.sumQuantity()?.doubleValue(for: HKUnit.kilocalorie()) {
                     continuation.resume(returning: Int(calories))
+                } else {
+                    continuation.resume(returning: 0)
                 }
             }
             

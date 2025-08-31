@@ -36,11 +36,6 @@ final class HomeViewModel: ObservableObject {
     /// DailySummaryEntity를 조회하여 Alan을 활용한 컨텐츠 데이터 세팅
     @MainActor
     func fetchDailySummary() async {
-        // 사용자 정보 조회
-//        if let result = try? CoreDataService.shared.fetch(UserEntity.self).first {
-//            self.userInfo = result
-//        }
-        
         // 오늘 엔티티 확보(없으면 생성, 있으면 재사용)
         let entity = ensureTodayEntity()
         self.dailySummaryInfo = entity

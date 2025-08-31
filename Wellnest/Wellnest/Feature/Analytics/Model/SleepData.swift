@@ -21,6 +21,10 @@ struct SleepData {
     let dailyQualityChange: Int
     let weeklyQualityChange: Int
     let monthlyQualityChange: Int
+    
+    let hasSleepTimeData: Bool
+    let hasSleepQualityData: Bool
+    let isHealthKitConnected: Bool
 }
 
 extension SleepData {

@@ -28,6 +28,7 @@ struct HomeProfileView: View {
                 Text(homeVM.userInfo?.nickname ?? "")
                     .font(.title2)
                     .bold()
+                    .foregroundStyle(.wellnestOrange)
                 
                 if homeVM.hashtagList.isEmpty {
                     if let userInfo = homeVM.userInfo {

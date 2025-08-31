@@ -17,7 +17,7 @@ struct AnalyticsView: View {
     @Environment(\.managedObjectContext) private var context
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack {
                 SafeAreaBlurView(offsetY: $offsetY, space: .named("analyticsViewScroll"))
                 
@@ -39,10 +39,10 @@ struct AnalyticsView: View {
         VStack {
             HStack(spacing: 0) {
                 Group {
-                    Text("\(viewModel.healthData.userName)")
+                    Text("\(viewModel.getUserName())")
                         .foregroundColor(.wellnestOrange)
                     
-                    Text("님의 건강지표")
+                    Text(" 님의 건강지표")
                         .foregroundColor(.primary)
                 }
                 .font(.title2)
@@ -64,12 +64,24 @@ struct AnalyticsView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: Spacing.layout) {
-            ScheduleProgressView()
-            AIInsightView()
-            ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
-            SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+            TabView {
+                ForEach(ScheduleProgressType.allCases) {
+                    ScheduleProgressView(scheduleProgressType: $0)
+                        .padding(.horizontal)
+                        .padding(.bottom, Spacing.inline)
+                }
+            }
+            .tabViewStyle(.page)
+            .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: colorScheme == .dark ? .never : .always))
+            .frame(minHeight: 200)
+            
+            Group {
+                AIInsightView()
+                ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
+                SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
+            }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
         .padding(.top, Spacing.layout)
         .padding(.bottom, 100)
     }
@@ -81,10 +93,12 @@ struct AnalyticsView: View {
                 GridItem(.flexible(), spacing: Spacing.layout)
             ], spacing: Spacing.layout) {
                 VStack(alignment: .leading, spacing: Spacing.layout) {
-                    ScheduleProgressView()
+                    ScheduleProgressView(scheduleProgressType: .today)
+                    ScheduleProgressView(scheduleProgressType: .monthly)
                     ExerciseStatChartCardView(exerciseData: viewModel.healthData.exercise)
                 }
                 VStack(alignment: .leading, spacing: Spacing.layout) {
+                    ScheduleProgressView(scheduleProgressType: .weekly)
                     AIInsightView()
                     SleepStatChartCardView(sleepData: viewModel.healthData.sleep)
                 }
@@ -93,8 +107,4 @@ struct AnalyticsView: View {
         .padding(.horizontal, 32)
         .padding(.top, 20)
     }
-}
-
-#Preview {
-    AnalyticsView()
 }
