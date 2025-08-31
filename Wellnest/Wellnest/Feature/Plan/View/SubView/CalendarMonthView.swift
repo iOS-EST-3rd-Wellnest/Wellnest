@@ -11,13 +11,21 @@ struct CalendarMonthView: View {
     @ObservedObject var planVM: PlanViewModel
     let calendar = Calendar.current
 
+    @Environment(\.horizontalSizeClass) private var hSize
+    private var isRegularWidth: Bool { hSize == .regular }
+
+    private var dayFontSize: CGFloat { isRegularWidth ? 22 : 16 }
+    private var selectedCircleSize: CGFloat { isRegularWidth ? 34 : 28 }
+    private var dotSize: CGFloat { isRegularWidth ? 5 : 4 }
+    private var cellTopPadding: CGFloat { isRegularWidth ? Spacing.content + 2 : Spacing.content }
+
     let month: Date
     var body: some View {
         CalendarLayout(mode: .fixedSlots(slots: 6, aspectRatio: 0.9)) {
-               ForEach(month.filledDatesOfMonth(), id: \.self) { date in
-                   dateCell(date: date)
-               }
-           }
+            ForEach(month.filledDatesOfMonth(), id: \.self) { date in
+                dateCell(date: date)
+            }
+        }
     }
 
     @ViewBuilder
@@ -32,17 +40,17 @@ struct CalendarMonthView: View {
 
         VStack(spacing: 8) {
             Text("\(date.dayNumber)")
-                .font(.system(size: 16))
+                .font(.system(size: dayFontSize))
                 .foregroundStyle(isSelected ? .white : (isCurrentMonth ? date.weekdayColor : .secondary))
                 .background {
                     if isSelected {
                         Circle()
                             .fill(.wellnestOrange)
-                            .frame(width: 28, height: 28)
+                            .frame(width: selectedCircleSize, height: selectedCircleSize)
                     } else if isToday {
                         Circle()
-                            .stroke(.wellnestOrange)
-                            .frame(width: 28, height: 28)
+                            .stroke(.wellnestOrange, lineWidth: 1)
+                            .frame(width: selectedCircleSize, height: selectedCircleSize)
                     }
                 }
                 .contentShape(Rectangle())
@@ -61,18 +69,18 @@ struct CalendarMonthView: View {
                 HStack(spacing: 2) {
                     ForEach(0..<min(scheduleCount, 5), id: \.self) { index in
                         Circle()
-                            .frame(width: 4, height: 4)
+                            .frame(width: dotSize, height: dotSize)
                             .foregroundStyle(Color.scheduleDot(color: scheduleItems[index].backgroundColor))
                     }
                 }
             } else {
                 Circle()
-                    .frame(width: 4, height: 4)
+                    .frame(width: dotSize, height: dotSize)
                     .foregroundStyle(.clear)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, Spacing.content)
+        .padding(.top, cellTopPadding)
     }
 }
 

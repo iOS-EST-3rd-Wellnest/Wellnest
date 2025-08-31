@@ -11,21 +11,11 @@ import UserNotifications
 final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = LocalNotiManager()
     
-    /// 알림 설정 권한 확인
-//    func requestNotificationAuthorization() {
-//        let notificationCenter = UNUserNotificationCenter.current()
-//        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-//            if let error {
-//                print("알람 설정 에러: \(error)")
-//            }
-//            
-//            if granted {
-//                print("알람 설정 허용")
-//            } else {
-//                print("알람 설정 거부")
-//            }
-//        }
-//    }
+    // MARK: - 권한 요청
+    /// 사용자에게 로컬 알림 권한을 요청합니다.
+    /// - Parameter completion: 권한 부여 여부(`true`/`false`) 콜백. 메인 스레드에서 호출됩니다.
+    /// - Note: 시스템 알림창이 표시됩니다. 앱 최초 1회만 의미가 있으며,
+    ///         이후 상태는 설정 앱에서 변경할 수 있습니다.
     func requestNotificationAuthorization(completion: @escaping (Bool) -> Void) {
             let center = UNUserNotificationCenter.current()
             center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
@@ -40,7 +30,14 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
             }
         }
     
-    /// 알림 형태 구성
+    /// 주어진 `ScheduleEntity`를 기반으로 **단발성 로컬 알림**을 예약합니다.
+    /// - Parameter schedule: 알림에 사용할 일정 엔티티.
+    /// - Important: `schedule.title`, `schedule.startDate`, `schedule.alarm`가 유효해야 하며,
+    ///              `AlarmRule.tags`에서 `alarmName`과 일치하는 규칙을 찾을 수 있어야 합니다.
+    /// - Note:
+    ///   - 트리거 시각은 `startDate + alarmRule.timeOffset` 입니다.
+    ///   - 과거 시간(`triggerDate <= Date()`)이면 예약하지 않습니다.
+    ///   - 알림 식별자는 `schedule.id?.uuidString`을 사용하고, 없으면 새 UUID를 생성합니다.
     func scheduleLocalNotification(for schedule: ScheduleEntity) {
         guard let title = schedule.title,
               let startDate = schedule.startDate,
@@ -84,6 +81,12 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
     
+    /// 알림 본문 메시지를 생성합니다.
+    /// - Parameters:
+    ///   - title: 일정 제목.
+    ///   - startDate: 일정 시작 시각.
+    /// - Returns: “오늘/내일/날짜 시간” 규칙을 적용한 사용자 친화적 문자열.
+    /// - Note: 한국어 로케일/현재 타임존 포맷을 사용합니다.
     func alarmBody(title: String, startDate: Date) -> String {
         let cal = Calendar.current
         let timeFormatter = DateFormatter()
@@ -109,10 +112,18 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
         return "\(title) 일정이 \(when)에 시작됩니다."
     }
     
+    /// `UNUserNotificationCenter`의 delegate를 이 매니저로 설정합니다.
+    /// - Note: 보통 앱 시작 시(AppDelegate/SceneDelegate/Application 루트) 한 번 호출합니다.
     func localNotiDelegate() {
         UNUserNotificationCenter.current().delegate = self
     }
     
+    /// 앱이 **포그라운드** 상태일 때 도착한 알림의 표시 방식을 결정합니다.
+    /// - Parameters:
+    ///   - center: 알림 센터.
+    ///   - notification: 수신된 알림 객체.
+    ///   - completionHandler: 표시 옵션을 전달할 핸들러.
+    /// - Note: 여기서는 **배너 + 사운드**로 표시합니다. 필요 시 `.list`, `.badge` 등을 추가하세요.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,

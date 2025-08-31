@@ -21,7 +21,7 @@ struct FirstIntroductionTabView: View {
                 Text("Wellnest")
                     .font(isIPad ? .system(size: 65) : .system(size: 45))
                     .fontWeight(.semibold)
-                    .padding(.bottom)
+                    .padding(.bottom, Spacing.inline)
 
                 VStack {
                     Text("바쁜 일상 속에서도")
@@ -29,8 +29,7 @@ struct FirstIntroductionTabView: View {
                     Text("AI 라이프스타일 플래너")
                 }
                 .font(isIPad ? .title2 : .body)
-                .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .fontWeight(.medium)
                 .padding(.bottom, isIPad ? 50 : 30)
 
                 Image("firstIntro")
