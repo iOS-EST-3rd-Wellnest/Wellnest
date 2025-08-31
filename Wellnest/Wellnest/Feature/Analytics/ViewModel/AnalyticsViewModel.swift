@@ -17,6 +17,9 @@ class AnalyticsViewModel: ObservableObject {
     @Published var hasRealData: Bool = false
 
     private let healthManager = HealthManager.shared
+    private static var cachedData: (date: Date, healthData: HealthData)?
+    private static var isFirstLoad = true
+    private var refreshTimer: Timer?
     
     static let defaultExerciseData = ExerciseData(
         averageSteps: 8500,            // 하루 평균 8,500보
@@ -73,8 +76,88 @@ class AnalyticsViewModel: ObservableObject {
         )
 
         Task {
-            await loadHealthData()
+            await loadHealthDataWithCache()
+            await setupHealthKitObservers()
         }
+        
+        // HealthKit 데이터 변경 알림 관찰
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(healthDataDidUpdate),
+            name: .healthDataDidUpdate,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func healthDataDidUpdate() {
+        print("HealthKit 데이터 변경 감지 - 캐시 무효화")
+        Self.cachedData = nil
+        Task {
+            await updateHealthDataSilently()
+        }
+    }
+    
+    private func setupHealthKitObservers() async {
+        let healthManager = await MainActor.run { HealthManager.shared }
+        
+        if let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) {
+            healthManager.startObservingUpdates(for: stepType)
+        }
+        if let calorieType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            healthManager.startObservingUpdates(for: calorieType)
+        }
+        if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            healthManager.startObservingUpdates(for: sleepType)
+        }
+    }
+    
+    private func updateHealthDataSilently() async {
+        // isLoading을 true로 설정하지 않아서 UI 블러 방지
+        let userName = getUserName()
+
+        async let exerciseData = loadExerciseData()
+        async let sleepData = loadSleepData()
+
+        let (exercise, sleep) = await (exerciseData, sleepData)
+        let aiInsight = generateAIInsight(exercise: exercise, sleep: sleep, hasRealData: self.hasRealData)
+
+        await MainActor.run {
+            self.healthData = HealthData(
+                userName: userName,
+                aiInsight: aiInsight,
+                exercise: exercise,
+                sleep: sleep
+            )
+        }
+        
+        // 새 결과를 캐시에 저장
+        let today = Calendar.current.startOfDay(for: Date())
+        Self.cachedData = (date: today, healthData: healthData)
+        print("데이터 자동 업데이트 완료")
+    }
+    
+    private func loadHealthDataWithCache() async {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        // 오늘 날짜의 캐시된 데이터가 있으면 사용
+        if let cached = Self.cachedData,
+           Calendar.current.isDate(cached.date, inSameDayAs: today),
+           !Self.isFirstLoad {
+            print("캐시된 데이터 사용")
+            self.healthData = cached.healthData
+            return
+        }
+        
+        // 캐시가 없거나 오래된 경우 새로 로드
+        await loadHealthData()
+        
+        // 결과를 캐시에 저장
+        Self.cachedData = (date: today, healthData: healthData)
+        Self.isFirstLoad = false
     }
 
     private func loadHealthData() async {
@@ -593,6 +676,12 @@ class AnalyticsViewModel: ObservableObject {
 
     func refreshData() async {
         print("수동 새로고침 시작")
+        // 캐시 무효화하고 새로 로드
+        Self.cachedData = nil
         await loadHealthData()
+        
+        // 새 결과를 캐시에 저장
+        let today = Calendar.current.startOfDay(for: Date())
+        Self.cachedData = (date: today, healthData: healthData)
     }
 }
