@@ -43,13 +43,23 @@ struct ExerciseStatChartCardView: View {
                         .foregroundColor(.secondary)
                     
                     HStack(alignment: .bottom, spacing: Spacing.inline) {
-                        Text(formatStepsDisplay())
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text(getStepsLabel())
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if exerciseData.hasStepsData {
+                            Text(formatStepsDisplay())
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text(getStepsLabel())
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("--")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("걸음")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     HStack(spacing: Spacing.inline) {
@@ -70,13 +80,23 @@ struct ExerciseStatChartCardView: View {
                         .foregroundColor(.secondary)
                     
                     HStack(alignment: .bottom, spacing: Spacing.inline) {
-                        Text(formatCaloriesDisplay())
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text(getCaloriesLabel())
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if exerciseData.hasCaloriesData {
+                            Text(formatCaloriesDisplay())
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text(getCaloriesLabel())
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("--")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("kcal")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     HStack(spacing: Spacing.inline) {
@@ -99,13 +119,32 @@ struct ExerciseStatChartCardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                BarChartView(
-                    data: currentChartData,
-                    color: .orange,
-                    period: selectedPeriod,
-                    dataType: .steps
-                )
-                .frame(height: 140)
+                ZStack {
+                    BarChartView(
+                        data: currentChartData,
+                        color: .orange,
+                        period: selectedPeriod,
+                        dataType: .steps
+                    )
+                    .frame(height: 140)
+                    
+                    if !exerciseData.hasStepsData {
+                        Rectangle()
+                            .fill(.regularMaterial)
+                            .frame(height: 140)
+                            .overlay {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "chart.bar.xaxis")
+                                        .font(.title2)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text("데이터 없음")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                    }
+                }
             }
             
             Spacer()
@@ -118,6 +157,36 @@ struct ExerciseStatChartCardView: View {
             RoundedRectangle(cornerRadius: CornerRadius.large)
                 .fill(.wellnestBackgroundCard)
         )
+        .overlay {
+            let shouldShowBlur = !exerciseData.isHealthKitConnected || (!exerciseData.hasStepsData && !exerciseData.hasCaloriesData)
+            
+            if shouldShowBlur {
+                let isConnectionIssue = !exerciseData.isHealthKitConnected
+                
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .fill(.regularMaterial)
+                    .overlay {
+                        VStack(spacing: 16) {
+                            Image(systemName: isConnectionIssue ? "heart.text.square" : "figure.walk")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                            
+                            VStack(spacing: 8) {
+                                Text(isConnectionIssue ? "건강 앱 연동 필요" : "운동 데이터 없음")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(isConnectionIssue ? 
+                                     "설정에서 건강 앱을 연동하면\n운동 데이터를 확인할 수 있어요" :
+                                     "활동을 시작하면 걸음수와 칼로리\n데이터를 확인할 수 있어요")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                    }
+            }
+        }
     }
 
     private var currentChartData: [Double] {
@@ -131,7 +200,6 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
-    #warning("이거 지금 실데이터로 매핑하기 어려움")
     private func generateTodayData() -> [Double] {
         // 오늘의 시간대별 걸음수 (현실적인 패턴)
         let totalSteps = Double(exerciseData.averageSteps)
@@ -171,7 +239,6 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
-    #warning("이것 임의로 동작하도록 설정 해 둠")
     private func formatCaloriesDisplay() -> String {
         switch selectedPeriod {
         case .today:
@@ -303,8 +370,4 @@ struct ExerciseStatChartCardView: View {
             return exerciseData.monthlyCaloriesChange
         }
     }
-}
-
-#Preview {
-    AnalyticsView()
 }

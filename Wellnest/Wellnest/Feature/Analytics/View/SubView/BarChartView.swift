@@ -203,7 +203,3 @@ struct BarChartView: View {
         }
     }
 }
-
-#Preview {
-    AnalyticsView()
-}

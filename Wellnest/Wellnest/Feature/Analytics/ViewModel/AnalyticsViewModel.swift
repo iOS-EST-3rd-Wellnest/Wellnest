@@ -17,6 +17,9 @@ class AnalyticsViewModel: ObservableObject {
     @Published var hasRealData: Bool = false
 
     private let healthManager = HealthManager.shared
+    private static var cachedData: (date: Date, healthData: HealthData)?
+    private static var isFirstLoad = true
+    private var refreshTimer: Timer?
     
     static let defaultExerciseData = ExerciseData(
         averageSteps: 8500,            // 하루 평균 8,500보
@@ -34,7 +37,10 @@ class AnalyticsViewModel: ObservableObject {
         monthlyStepsChange: -2,       // 지난달 대비 2% 감소
         dailyCaloriesChange: -5,      // 어제보다 5% 감소
         weeklyCaloriesChange: 3,      // 지난주 대비 3% 증가
-        monthlyCaloriesChange: 1      // 지난달 대비 1% 증가
+        monthlyCaloriesChange: 1,     // 지난달 대비 1% 증가
+        hasStepsData: false,
+        hasCaloriesData: false,
+        isHealthKitConnected: false
     )
     
     private static let deaultSleepData = SleepData(
@@ -55,7 +61,10 @@ class AnalyticsViewModel: ObservableObject {
         monthlySleepTimeChange: 0,   // 지난달과 비슷
         dailyQualityChange: 1,       // 전일 대비 +1%
         weeklyQualityChange: -2,     // 지난주 대비 -2%
-        monthlyQualityChange: 3      // 지난달 대비 +3%
+        monthlyQualityChange: 3,     // 지난달 대비 +3%
+        hasSleepTimeData: false,
+        hasSleepQualityData: false,
+        isHealthKitConnected: false
     )
 
     init() {
@@ -67,15 +76,93 @@ class AnalyticsViewModel: ObservableObject {
         )
 
         Task {
-            await loadHealthData()
+            await loadHealthDataWithCache()
+            await setupHealthKitObservers()
         }
+        
+        // HealthKit 데이터 변경 알림 관찰
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(healthDataDidUpdate),
+            name: .healthDataDidUpdate,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func healthDataDidUpdate() {
+        print("HealthKit 데이터 변경 감지 - 캐시 무효화")
+        Self.cachedData = nil
+        Task {
+            await updateHealthDataSilently()
+        }
+    }
+    
+    private func setupHealthKitObservers() async {
+        let healthManager = await MainActor.run { HealthManager.shared }
+        
+        if let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) {
+            healthManager.startObservingUpdates(for: stepType)
+        }
+        if let calorieType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            healthManager.startObservingUpdates(for: calorieType)
+        }
+        if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            healthManager.startObservingUpdates(for: sleepType)
+        }
+    }
+    
+    private func updateHealthDataSilently() async {
+        // isLoading을 true로 설정하지 않아서 UI 블러 방지
+        let userName = getUserName()
+
+        async let exerciseData = loadExerciseData()
+        async let sleepData = loadSleepData()
+
+        let (exercise, sleep) = await (exerciseData, sleepData)
+        let aiInsight = generateAIInsight(exercise: exercise, sleep: sleep, hasRealData: self.hasRealData)
+
+        await MainActor.run {
+            self.healthData = HealthData(
+                userName: userName,
+                aiInsight: aiInsight,
+                exercise: exercise,
+                sleep: sleep
+            )
+        }
+        
+        // 새 결과를 캐시에 저장
+        let today = Calendar.current.startOfDay(for: Date())
+        Self.cachedData = (date: today, healthData: healthData)
+        print("데이터 자동 업데이트 완료")
+    }
+    
+    private func loadHealthDataWithCache() async {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        // 오늘 날짜의 캐시된 데이터가 있으면 사용
+        if let cached = Self.cachedData,
+           Calendar.current.isDate(cached.date, inSameDayAs: today),
+           !Self.isFirstLoad {
+            print("캐시된 데이터 사용")
+            self.healthData = cached.healthData
+            return
+        }
+        
+        // 캐시가 없거나 오래된 경우 새로 로드
+        await loadHealthData()
+        
+        // 결과를 캐시에 저장
+        Self.cachedData = (date: today, healthData: healthData)
+        Self.isFirstLoad = false
     }
 
     private func loadHealthData() async {
         isLoading = true
         errorMessage = nil
-
-        print("건강 데이터 로드 시작")
 
         let userName = getUserName()
 
@@ -86,76 +173,71 @@ class AnalyticsViewModel: ObservableObject {
             exerciseData, sleepData
         )
 
-        print("로드된 데이터:")
-        print("- 걸음수: \(exercise.averageSteps)")
-        print("- 칼로리: \(exercise.averageCalories)")
-        print("- 수면시간: \(sleep.averageHours)시간 \(sleep.averageMinutes)분")
-        print("- 수면 품질: \(sleep.sleepQuality)%")
-
         let aiInsight = generateAIInsight(
             exercise: exercise,
             sleep: sleep,
             hasRealData: self.hasRealData
         )
 
-        self.healthData = HealthData(
-            userName: userName,
-            aiInsight: aiInsight,
-            exercise: exercise,
-            sleep: sleep,
-        )
-
-        print("건강 데이터 로드 완료 - UI 업데이트됨")
-        isLoading = false
+        await MainActor.run {
+            self.healthData = HealthData(
+                userName: userName,
+                aiInsight: aiInsight,
+                exercise: exercise,
+                sleep: sleep,
+            )
+            
+            self.isLoading = false
+        }
     }
 
     private func loadExerciseData() async -> ExerciseData {
-        print("운동 데이터 로드 시작")
-
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             return Self.defaultExerciseData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        print("HealthKit 권한 상태:")
-        print("- 누락된 권한: \(authCheck.missingCore)")
-
-        if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return Self.defaultExerciseData
+        
+        // Exercise 관련 권한 확인
+        let stepTypeId = HKQuantityTypeIdentifier.stepCount.rawValue
+        let calorieTypeId = HKQuantityTypeIdentifier.activeEnergyBurned.rawValue
+        
+        let missingExerciseTypes = authCheck.missingCore.filter { type in
+            let identifier = type.identifier
+            return identifier == stepTypeId || identifier == calorieTypeId
         }
-
+        
+        let isHealthKitConnected = missingExerciseTypes.count < 2 // 둘 중 하나라도 있으면 연동됨
+        
+        var hasStepsData = false
+        var hasCaloriesData = false
         let todaySteps: Int
         let todayCalories: Int
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
-            print("오늘 걸음수: \(todaySteps)")
+            if todaySteps > 100 {
+                hasStepsData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("걸음수 가져오기 실패: \(error)")
-            todaySteps = Self.defaultExerciseData.defaultTodaySteps
+            todaySteps = Self.defaultExerciseData.averageSteps
         }
 
         do {
             todayCalories = try await healthManager.fetchCalorieCount()
-            print("오늘 칼로리: \(todayCalories)")
+            if todayCalories > 10 {
+                hasCaloriesData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("칼로리 가져오기 실패: \(error)")
-            todayCalories = Self.defaultExerciseData.defaultTodayCalories
-        }
-
-        if todaySteps > 100 || todayCalories > 10 {
-            self.hasRealData = true
-            print("실제 운동 데이터 발견")
+            todayCalories = Self.defaultExerciseData.averageCalories
         }
 
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -163,63 +245,62 @@ class AnalyticsViewModel: ObservableObject {
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
 
-        print("계산된 변화율:")
-        print("- 걸음수 변화: \(stepsChange)%")
-        print("- 칼로리 변화: \(caloriesChange)%")
-
         return ExerciseData(
-            averageSteps: todaySteps,
-            stepsChange: stepsChange,
-            averageCalories: todayCalories,
-            caloriesChange: caloriesChange,
-            weeklySteps: weeklySteps,
-            monthlySteps: monthlySteps,
-            dailyStepsChange: calculateDailyStepsChange(from: yearlyData, current: todaySteps),
-            weeklyStepsChange: calculateWeeklyStepsChange(from: yearlyData),
-            monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
-            dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
-            weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
-            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
+            averageSteps: hasStepsData ? todaySteps : Self.defaultExerciseData.averageSteps,
+            stepsChange: hasStepsData ? stepsChange : Self.defaultExerciseData.stepsChange,
+            averageCalories: hasCaloriesData ? todayCalories : Self.defaultExerciseData.averageCalories,
+            caloriesChange: hasCaloriesData ? caloriesChange : Self.defaultExerciseData.caloriesChange,
+            weeklySteps: hasStepsData ? weeklySteps : Self.defaultExerciseData.weeklySteps,
+            monthlySteps: hasStepsData ? monthlySteps : Self.defaultExerciseData.monthlySteps,
+            dailyStepsChange: hasStepsData ? calculateDailyStepsChange(from: yearlyData, current: todaySteps) : Self.defaultExerciseData.dailyStepsChange,
+            weeklyStepsChange: hasStepsData ? calculateWeeklyStepsChange(from: yearlyData) : Self.defaultExerciseData.weeklyStepsChange,
+            monthlyStepsChange: hasStepsData ? calculateMonthlyStepsChange(from: yearlyData) : Self.defaultExerciseData.monthlyStepsChange,
+            dailyCaloriesChange: hasCaloriesData ? calculateDailyCaloriesChange(from: yearlyData, current: todayCalories) : Self.defaultExerciseData.dailyCaloriesChange,
+            weeklyCaloriesChange: hasCaloriesData ? calculateWeeklyCaloriesChange(from: yearlyData) : Self.defaultExerciseData.weeklyCaloriesChange,
+            monthlyCaloriesChange: hasCaloriesData ? calculateMonthlyCaloriesChange(from: yearlyData) : Self.defaultExerciseData.monthlyCaloriesChange,
+            hasStepsData: hasStepsData,
+            hasCaloriesData: hasCaloriesData,
+            isHealthKitConnected: isHealthKitConnected
         )
     }
 
     private func loadSleepData() async -> SleepData {
-        print("수면 데이터 로드 시작")
-
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             return Self.deaultSleepData
         }
 
         let authCheck = await healthManager.finalAuthSnapshot()
-        if !authCheck.missingCore.isEmpty {
-            print("HealthKit 권한이 없어서 빈 데이터 반환")
-            return Self.deaultSleepData
-        }
 
+        // Sleep 관련 권한 확인 (더 직접적인 방법)
+        let sleepTypeId = HKCategoryTypeIdentifier.sleepAnalysis.rawValue
+        
+        let missingSleepTypes = authCheck.missingCore.filter { type in
+            type.identifier == sleepTypeId
+        }
+        
+        let isHealthKitConnected = missingSleepTypes.isEmpty // 수면 권한이 있으면 연동됨
+        var hasSleepTimeData = false
+        var hasSleepQualityData = false
         let sleepDuration: TimeInterval
+        
         do {
             sleepDuration = try await healthManager.fetchSleepDuration()
-            print("수면 시간: \(sleepDuration)초 (약 \(sleepDuration/3600)시간)")
+            if sleepDuration >= 3600 {
+                hasSleepTimeData = true
+                hasSleepQualityData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("수면 시간 가져오기 실패: \(error)")
             sleepDuration = Self.deaultSleepData.defaultSleepDuration
         }
 
         let hours = sleepDuration / 3600
         let minutes = Int((sleepDuration.truncatingRemainder(dividingBy: 3600)) / 60)
 
-        if sleepDuration >= 7200 {
-            self.hasRealData = true
-            print("실제 수면 데이터 발견")
-        }
-
         let yearlyData: [HealthManager.DailyMetric]
         do {
             yearlyData = try await healthManager.fetchLastYearFromYesterday()
-            print("수면 과거 데이터 개수: \(yearlyData.count)")
         } catch {
-            print("수면 과거 데이터 가져오기 실패: \(error)")
             yearlyData = generateMockYearlyData()
         }
 
@@ -227,23 +308,22 @@ class AnalyticsViewModel: ObservableObject {
         let sleepQuality = calculateSleepQuality(hours: hours)
         let qualityChange = calculateSleepQualityChange(from: yearlyData, currentHours: hours)
 
-        print("계산된 수면 데이터:")
-        print("- 수면 품질: \(sleepQuality)%")
-        print("- 품질 변화: \(qualityChange)%")
-
         return SleepData(
-            averageHours: hours,
-            averageMinutes: minutes,
-            sleepQuality: sleepQuality,
-            qualityChange: qualityChange,
-            weeklySleepHours: weeklySleep,
-            monthlySleepHours: monthlySleep,
-            dailySleepTimeChange: calculateDailySleepTimeChange(from: yearlyData, current: hours),
-            weeklySleepTimeChange: calculateWeeklySleepTimeChange(from: yearlyData),
-            monthlySleepTimeChange: calculateMonthlySleepTimeChange(from: yearlyData),
-            dailyQualityChange: calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality),
-            weeklyQualityChange: calculateWeeklySleepQualityChange(from: yearlyData),
-            monthlyQualityChange: calculateMonthlySleepQualityChange(from: yearlyData)
+            averageHours: hasSleepTimeData ? hours : Self.deaultSleepData.averageHours,
+            averageMinutes: hasSleepTimeData ? minutes : Self.deaultSleepData.averageMinutes,
+            sleepQuality: hasSleepQualityData ? sleepQuality : Self.deaultSleepData.sleepQuality,
+            qualityChange: hasSleepQualityData ? qualityChange : Self.deaultSleepData.qualityChange,
+            weeklySleepHours: hasSleepTimeData ? weeklySleep : Self.deaultSleepData.weeklySleepHours,
+            monthlySleepHours: hasSleepTimeData ? monthlySleep : Self.deaultSleepData.monthlySleepHours,
+            dailySleepTimeChange: hasSleepTimeData ? calculateDailySleepTimeChange(from: yearlyData, current: hours) : Self.deaultSleepData.dailySleepTimeChange,
+            weeklySleepTimeChange: hasSleepTimeData ? calculateWeeklySleepTimeChange(from: yearlyData) : Self.deaultSleepData.weeklySleepTimeChange,
+            monthlySleepTimeChange: hasSleepTimeData ? calculateMonthlySleepTimeChange(from: yearlyData) : Self.deaultSleepData.monthlySleepTimeChange,
+            dailyQualityChange: hasSleepQualityData ? calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality) : Self.deaultSleepData.dailyQualityChange,
+            weeklyQualityChange: hasSleepQualityData ? calculateWeeklySleepQualityChange(from: yearlyData) : Self.deaultSleepData.weeklyQualityChange,
+            monthlyQualityChange: hasSleepQualityData ? calculateMonthlySleepQualityChange(from: yearlyData) : Self.deaultSleepData.monthlyQualityChange,
+            hasSleepTimeData: hasSleepTimeData,
+            hasSleepQualityData: hasSleepQualityData,
+            isHealthKitConnected: isHealthKitConnected
         )
     }
 
@@ -254,19 +334,12 @@ class AnalyticsViewModel: ObservableObject {
         hasRealData: Bool
     ) -> AIInsightData {
 
-        print("AI 인사이트 생성 중...")
-//        print("- 일정: \(planCompletion.completedItems)/\(planCompletion.totalItems)")
-        print("- 걸음수: \(exercise.averageSteps)")
-        print("- 수면: \(sleep.averageHours)시간")
-        print("- hasRealData: \(hasRealData)")
-
 //        if planCompletion.totalItems == 0 {
 //            print("일정이 없음 - 일정 추가 권유")
 //            return AIInsightData(message: "오늘 일정을 추가해보세요. 체계적인 관리가 건강의 시작이에요!")
 //        }
 
         if !hasRealData {
-            print("실제 데이터 없음 - 대기 메시지")
             return AIInsightData(message: "활동을 시작하면 맞춤 분석을 제공해드릴게요!")
         }
 
@@ -324,8 +397,6 @@ class AnalyticsViewModel: ObservableObject {
         }
 
         let selectedInsight = insights.randomElement() ?? insights[0]
-        print("생성된 AI 인사이트: \(selectedInsight)")
-
         return AIInsightData(message: selectedInsight)
     }
 
@@ -558,7 +629,6 @@ class AnalyticsViewModel: ObservableObject {
     }
 
     private func generateMockYearlyData() -> [HealthManager.DailyMetric] {
-        print("Mock 연간 데이터 생성")
         let calendar = Calendar.current
         var data: [HealthManager.DailyMetric] = []
 
@@ -583,7 +653,7 @@ class AnalyticsViewModel: ObservableObject {
         return data.reversed()
     }
 
-    private func getUserName() -> String {
+    func getUserName() -> String {
         let coreDataService = CoreDataService.shared
 
         do {
@@ -606,6 +676,12 @@ class AnalyticsViewModel: ObservableObject {
 
     func refreshData() async {
         print("수동 새로고침 시작")
+        // 캐시 무효화하고 새로 로드
+        Self.cachedData = nil
         await loadHealthData()
+        
+        // 새 결과를 캐시에 저장
+        let today = Calendar.current.startOfDay(for: Date())
+        Self.cachedData = (date: today, healthData: healthData)
     }
 }

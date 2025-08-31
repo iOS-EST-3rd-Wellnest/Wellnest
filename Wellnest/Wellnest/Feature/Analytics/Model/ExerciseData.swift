@@ -21,6 +21,10 @@ struct ExerciseData {
     let dailyCaloriesChange: Int
     let weeklyCaloriesChange: Int
     let monthlyCaloriesChange: Int
+    
+    let hasStepsData: Bool
+    let hasCaloriesData: Bool
+    let isHealthKitConnected: Bool
 }
 
 extension ExerciseData {
