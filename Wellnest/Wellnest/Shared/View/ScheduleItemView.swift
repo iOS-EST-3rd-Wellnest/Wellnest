@@ -118,7 +118,7 @@ struct ScheduleItemView: View {
         }
         .overlay {
             Group {
-                if showOnlyPlanView && isUpcomingGroup || isAllDay {
+                if showOnlyPlanView, isUpcomingGroup || isAllDay {
                     RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
                         .stroke(Color.scheduleSolid(color: schedule.backgroundColor), lineWidth: 1)
                 } else {
