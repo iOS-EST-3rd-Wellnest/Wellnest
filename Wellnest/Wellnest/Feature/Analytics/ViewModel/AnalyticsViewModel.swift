@@ -49,9 +49,9 @@ class AnalyticsViewModel: ObservableObject {
         sleepQuality: 75,        // 수면 질 점수 (0~100 가정)
         qualityChange: 3,        // 전일 대비 +3%
         
-        weeklySleepHours: [6.8, 7.2, 6.5, 7.0, 7.4, 8.1, 8.0 ], // 최근 7일 (평일/주말 차이 반영)
+        weeklySleepHours: [6.8, 7.2, 4.5, 7.0, 7.4, 6.1, 8.0 ], // 최근 7일 (평일/주말 차이 반영)
         monthlySleepHours: [6.9, 7.1, 7.0, 6.8, 7.5, 8.0, 7.9,
-                            6.7, 7.3, 7.2, 6.9, 7.4, 7.8, 8.1,
+                            6.7, 7.3, 7.2, 3.9, 7.4, 7.8, 8.1,
                             6.6, 7.0, 7.3, 6.8, 7.2, 7.6, 8.0,
                             6.9, 7.1, 7.4, 7.2, 7.5, 8.2, 7.8,
                             6.8, 7.3], // 최근 30일
@@ -62,8 +62,8 @@ class AnalyticsViewModel: ObservableObject {
         dailyQualityChange: 1,       // 전일 대비 +1%
         weeklyQualityChange: -2,     // 지난주 대비 -2%
         monthlyQualityChange: 3,     // 지난달 대비 +3%
-        hasSleepTimeData: false,
-        hasSleepQualityData: false,
+        hasSleepTimeData: true,
+        hasSleepQualityData: true,
         isHealthKitConnected: false
     )
 
@@ -274,11 +274,20 @@ class AnalyticsViewModel: ObservableObject {
         // Sleep 관련 권한 확인 (더 직접적인 방법)
         let sleepTypeId = HKCategoryTypeIdentifier.sleepAnalysis.rawValue
         
+        guard !sleepTypeId.isEmpty else {
+            return Self.deaultSleepData
+        }
+        
         let missingSleepTypes = authCheck.missingCore.filter { type in
             type.identifier == sleepTypeId
         }
         
         let isHealthKitConnected = missingSleepTypes.isEmpty // 수면 권한이 있으면 연동됨
+        
+        guard isHealthKitConnected else {
+            return Self.deaultSleepData
+        }
+        
         var hasSleepTimeData = false
         var hasSleepQualityData = false
         let sleepDuration: TimeInterval
@@ -309,18 +318,18 @@ class AnalyticsViewModel: ObservableObject {
         let qualityChange = calculateSleepQualityChange(from: yearlyData, currentHours: hours)
 
         return SleepData(
-            averageHours: hasSleepTimeData ? hours : Self.deaultSleepData.averageHours,
-            averageMinutes: hasSleepTimeData ? minutes : Self.deaultSleepData.averageMinutes,
-            sleepQuality: hasSleepQualityData ? sleepQuality : Self.deaultSleepData.sleepQuality,
-            qualityChange: hasSleepQualityData ? qualityChange : Self.deaultSleepData.qualityChange,
-            weeklySleepHours: hasSleepTimeData ? weeklySleep : Self.deaultSleepData.weeklySleepHours,
-            monthlySleepHours: hasSleepTimeData ? monthlySleep : Self.deaultSleepData.monthlySleepHours,
-            dailySleepTimeChange: hasSleepTimeData ? calculateDailySleepTimeChange(from: yearlyData, current: hours) : Self.deaultSleepData.dailySleepTimeChange,
-            weeklySleepTimeChange: hasSleepTimeData ? calculateWeeklySleepTimeChange(from: yearlyData) : Self.deaultSleepData.weeklySleepTimeChange,
-            monthlySleepTimeChange: hasSleepTimeData ? calculateMonthlySleepTimeChange(from: yearlyData) : Self.deaultSleepData.monthlySleepTimeChange,
-            dailyQualityChange: hasSleepQualityData ? calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality) : Self.deaultSleepData.dailyQualityChange,
-            weeklyQualityChange: hasSleepQualityData ? calculateWeeklySleepQualityChange(from: yearlyData) : Self.deaultSleepData.weeklyQualityChange,
-            monthlyQualityChange: hasSleepQualityData ? calculateMonthlySleepQualityChange(from: yearlyData) : Self.deaultSleepData.monthlyQualityChange,
+            averageHours: hasSleepTimeData ? hours : 0,
+            averageMinutes: hasSleepTimeData ? minutes : 0,
+            sleepQuality: hasSleepQualityData ? sleepQuality : 0,
+            qualityChange: hasSleepQualityData ? qualityChange : 0,
+            weeklySleepHours: hasSleepTimeData ? weeklySleep : [],
+            monthlySleepHours: hasSleepTimeData ? monthlySleep : [],
+            dailySleepTimeChange: hasSleepTimeData ? calculateDailySleepTimeChange(from: yearlyData, current: hours) : 0,
+            weeklySleepTimeChange: hasSleepTimeData ? calculateWeeklySleepTimeChange(from: yearlyData) : 0,
+            monthlySleepTimeChange: hasSleepTimeData ? calculateMonthlySleepTimeChange(from: yearlyData) : 0,
+            dailyQualityChange: hasSleepQualityData ? calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality) : 0,
+            weeklyQualityChange: hasSleepQualityData ? calculateWeeklySleepQualityChange(from: yearlyData) : 0,
+            monthlyQualityChange: hasSleepQualityData ? calculateMonthlySleepQualityChange(from: yearlyData) : 0,
             hasSleepTimeData: hasSleepTimeData,
             hasSleepQualityData: hasSleepQualityData,
             isHealthKitConnected: isHealthKitConnected
