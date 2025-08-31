@@ -207,16 +207,16 @@ struct OnboardingButton: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    (colorScheme == .dark ? Color.black : Color.white).opacity(0.0),
-                    (colorScheme == .dark ? Color.black : Color.white).opacity(1.0)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 39)
-            .offset(y: 15)
+//            LinearGradient(
+//                gradient: Gradient(colors: [
+//                    (colorScheme == .dark ? Color.black : Color.white).opacity(0.0),
+//                    (colorScheme == .dark ? Color.black : Color.white).opacity(1.0)
+//                ]),
+//                startPoint: .top,
+//                endPoint: .bottom
+//            )
+//            .frame(height: 39)
+//            .offset(y: 15)
 
             HStack {
                 if showPrevious, currentPage > 0 {
@@ -241,32 +241,7 @@ struct OnboardingButton: View {
             }
             .padding(.horizontal, Spacing.layout)
             .padding(.bottom, Spacing.content)
-            .background {
-                ZStack {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-
-                    Rectangle()
-                        .fill(colorScheme == .light ? .white : .black)
-
-                }
-                .mask {
-                    LinearGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black.opacity(0.5), location: 0.3),
-                            .init(color: .black, location: 0.5),
-                            .init(color: .black, location: 0.7),
-                            .init(color: .black, location: 1.0)
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                }
-                .ignoresSafeArea(edges: .bottom)
-
-            }
-            .background(colorScheme == .dark ? Color.black : Color.white)
+            .tabBarGlassBackground()
         }
     }
 }

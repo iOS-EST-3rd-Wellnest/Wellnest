@@ -106,6 +106,7 @@ struct HealthKitInterworkView: View {
                 }
             }
             .layoutWidth()
+            .tabBarGlassBackground()
         }
         .padding(.horizontal)
         .padding(.bottom, Spacing.content)
@@ -357,4 +358,5 @@ extension HealthKitInterworkView {
 
 #Preview {
     HealthKitInterworkView()
+        .environmentObject(TabBarState())
 }

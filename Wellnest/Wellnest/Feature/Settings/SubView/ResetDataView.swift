@@ -80,6 +80,7 @@ struct ResetDataView: View {
                 showAlert = true
             }
             .layoutWidth()
+            .tabBarGlassBackground()
             .alert("모든 일정을 삭제하시겠습니까?", isPresented: $showAlert) {
                 Button("삭제", role: .destructive) {
                     resetData()
@@ -116,6 +117,8 @@ struct ResetDataView: View {
 
 #Preview {
     ResetDataView()
+        .environmentObject(TabBarState())
+
 }
 
 extension ResetDataView {

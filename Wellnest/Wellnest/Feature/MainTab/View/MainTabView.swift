@@ -58,27 +58,7 @@ struct MainTabView: View {
                 if hiddenTabBar.isHidden == false {
                     CustomTabBar(selectedTab: $selectedTab, showScheduleMenu: $showScheduleMenu)
                         .if(!showScheduleMenu && !showDatePicker) { view in
-                            view.background {
-                                ZStack {
-                                    Rectangle().fill(.ultraThinMaterial)
-
-                                    Rectangle().fill(colorScheme == .light ? .white : .black)
-                                }
-                                .mask {
-                                    LinearGradient(
-                                        gradient: Gradient(stops: [
-                                            .init(color: .clear, location: 0.0),
-                                            .init(color: .black.opacity(0.5), location: 0.3),
-                                            .init(color: .black, location: 0.5),
-                                            .init(color: .black, location: 0.7),
-                                            .init(color: .black, location: 1.0)
-                                        ]),
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                }
-                                .ignoresSafeArea(edges: .bottom)
-                            }
+                            view.tabBarGlassBackground()
                         }
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
