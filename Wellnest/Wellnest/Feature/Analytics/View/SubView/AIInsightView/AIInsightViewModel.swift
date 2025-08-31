@@ -50,10 +50,13 @@ private extension AIInsightViewModel {
     
     static func insightPrompt(input: ExerciseData?) -> String {
         return """
-                \(String(describing: input?.AIPrompt))
+                \(input?.AIPrompt ?? "건강 데이터가 없음")
                 
                 위 데이터를 참조해서 내가 오늘 어떻게 건강관리를 하면 좋을지 40자 제한, 한 문장으로 만들어줘.
-                응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘. 
+                응원하는 얘기도 좋아. 만약 데이터가 없으면 니가 추천해 주고 싶은 건강관리 말을 만들어줘.
+                
+                응답은 반드시 다음 JSON 형식으로 해줘:
+                {"sentence": "여기에 건강관리 문장"}
                 """
     }
 }
