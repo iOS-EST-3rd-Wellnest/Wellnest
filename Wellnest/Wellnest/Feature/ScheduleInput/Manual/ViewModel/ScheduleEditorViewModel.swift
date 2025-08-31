@@ -147,7 +147,7 @@ final class ScheduleEditorViewModel: ObservableObject {
         isSaving = true
         defer { isSaving = false }
 
-        let input = ScheduleInput(
+        var input = ScheduleInput(
             title: form.title,
             location: form.location,
             detail: form.detail,
@@ -175,6 +175,8 @@ final class ScheduleEditorViewModel: ObservableObject {
                 let ids = try await repository.create(with: input)
 
             } else {
+                let fetch = try await repository.fetch(by: id)
+                input.isCompleted = fetch.isCompleted
                 let updated = try await repository.update(id: id, with: input)
                 lastSavedID = updated
             }
@@ -183,6 +185,8 @@ final class ScheduleEditorViewModel: ObservableObject {
     }
 
     func updateRepeatRule() async throws {
+        guard case let .edit(id) = mode else { return }
+        let fetch = try await repository.fetch(by: id)
         try await deleteFollowingInSeries()
         let input = ScheduleInput(
             title: form.title,
@@ -197,33 +201,31 @@ final class ScheduleEditorViewModel: ObservableObject {
             repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
             alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
             isAlarmOn: form.isAlarmOn,
-            isCompleted: false,
+            isCompleted: fetch.isCompleted,
         )
         try await repository.create(with: input)
     }
 
     func updateRepeatSeries() async throws {
         guard case let .edit(id) = mode else { return }
-        let current = try await repository.fetch(by: id)
-        guard let seriesId = current.seriesId else { return }
+        let fetch = try await repository.fetch(by: id)
+        guard let seriesId = fetch.seriesId else { return }
 
-        let anchor = current.startDate
+        let anchor = fetch.startDate
         try await repository.deleteSeriesOccurrences(
             seriesId: seriesId,
             after: anchor,
             includeAnchor: true
         )
 
-        // (선택) 인덱스 이어붙이기: 앵커 이전 개수 계산
 //        let startIndex = try repository.countOccurrencesBefore(seriesId: seriesId, anchor: anchor)
 
         try CoreDataService.shared.saveContext()
         CoreDataService.shared.context.processPendingChanges()
-        await Task.yield() // 한 틱 양보로 경합 제거
+        await Task.yield()
 
-        // 3) 새 전개 입력은 seed-first(앵커부터)
         let duration = form.endDate.timeIntervalSince(form.startDate)
-        var input = ScheduleInput(
+        let input = ScheduleInput(
             title: form.title,
             location: form.location,
             detail: form.detail,
@@ -236,7 +238,7 @@ final class ScheduleEditorViewModel: ObservableObject {
             repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
             alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
             isAlarmOn: form.isAlarmOn,
-            isCompleted: false
+            isCompleted: fetch.isCompleted
         )
 
         _ = try await repository.create(with: input)
