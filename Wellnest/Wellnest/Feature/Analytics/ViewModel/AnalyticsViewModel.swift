@@ -104,22 +104,20 @@ class AnalyticsViewModel: ObservableObject {
             hasRealData: self.hasRealData
         )
 
-        self.healthData = HealthData(
-            userName: userName,
-            aiInsight: aiInsight,
-            exercise: exercise,
-            sleep: sleep,
-        )
-
-        print("건강 데이터 로드 완료 - UI 업데이트됨")
-        isLoading = false
+        await MainActor.run {
+            self.healthData = HealthData(
+                userName: userName,
+                aiInsight: aiInsight,
+                exercise: exercise,
+                sleep: sleep,
+            )
+            
+            self.isLoading = false
+        }
     }
 
     private func loadExerciseData() async -> ExerciseData {
-        print("운동 데이터 로드 시작")
-
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit을 사용할 수 없음")
             return Self.defaultExerciseData
         }
 
@@ -143,23 +141,22 @@ class AnalyticsViewModel: ObservableObject {
 
         do {
             todaySteps = try await healthManager.fetchStepCount()
-            print("오늘 걸음수: \(todaySteps)")
+            if todaySteps > 100 {
+                hasStepsData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("걸음수 가져오기 실패: \(error)")
-            todaySteps = Self.defaultExerciseData.defaultTodaySteps
+            todaySteps = Self.defaultExerciseData.averageSteps
         }
 
         do {
             todayCalories = try await healthManager.fetchCalorieCount()
-            print("오늘 칼로리: \(todayCalories)")
+            if todayCalories > 10 {
+                hasCaloriesData = true
+                self.hasRealData = true
+            }
         } catch {
-            print("칼로리 가져오기 실패: \(error)")
-            todayCalories = Self.defaultExerciseData.defaultTodayCalories
-        }
-
-        if todaySteps > 100 || todayCalories > 10 {
-            self.hasRealData = true
-            print("실제 운동 데이터 발견")
+            todayCalories = Self.defaultExerciseData.averageCalories
         }
 
         let yearlyData: [HealthManager.DailyMetric]
@@ -175,23 +172,22 @@ class AnalyticsViewModel: ObservableObject {
         let stepsChange = calculateStepsChange(from: yearlyData, current: todaySteps)
         let caloriesChange = calculateCaloriesChange(from: yearlyData, current: todayCalories)
 
-        print("계산된 변화율:")
-        print("- 걸음수 변화: \(stepsChange)%")
-        print("- 칼로리 변화: \(caloriesChange)%")
-
         return ExerciseData(
-            averageSteps: todaySteps,
-            stepsChange: stepsChange,
-            averageCalories: todayCalories,
-            caloriesChange: caloriesChange,
-            weeklySteps: weeklySteps,
-            monthlySteps: monthlySteps,
-            dailyStepsChange: calculateDailyStepsChange(from: yearlyData, current: todaySteps),
-            weeklyStepsChange: calculateWeeklyStepsChange(from: yearlyData),
-            monthlyStepsChange: calculateMonthlyStepsChange(from: yearlyData),
-            dailyCaloriesChange: calculateDailyCaloriesChange(from: yearlyData, current: todayCalories),
-            weeklyCaloriesChange: calculateWeeklyCaloriesChange(from: yearlyData),
-            monthlyCaloriesChange: calculateMonthlyCaloriesChange(from: yearlyData)
+            averageSteps: hasStepsData ? todaySteps : Self.defaultExerciseData.averageSteps,
+            stepsChange: hasStepsData ? stepsChange : Self.defaultExerciseData.stepsChange,
+            averageCalories: hasCaloriesData ? todayCalories : Self.defaultExerciseData.averageCalories,
+            caloriesChange: hasCaloriesData ? caloriesChange : Self.defaultExerciseData.caloriesChange,
+            weeklySteps: hasStepsData ? weeklySteps : Self.defaultExerciseData.weeklySteps,
+            monthlySteps: hasStepsData ? monthlySteps : Self.defaultExerciseData.monthlySteps,
+            dailyStepsChange: hasStepsData ? calculateDailyStepsChange(from: yearlyData, current: todaySteps) : Self.defaultExerciseData.dailyStepsChange,
+            weeklyStepsChange: hasStepsData ? calculateWeeklyStepsChange(from: yearlyData) : Self.defaultExerciseData.weeklyStepsChange,
+            monthlyStepsChange: hasStepsData ? calculateMonthlyStepsChange(from: yearlyData) : Self.defaultExerciseData.monthlyStepsChange,
+            dailyCaloriesChange: hasCaloriesData ? calculateDailyCaloriesChange(from: yearlyData, current: todayCalories) : Self.defaultExerciseData.dailyCaloriesChange,
+            weeklyCaloriesChange: hasCaloriesData ? calculateWeeklyCaloriesChange(from: yearlyData) : Self.defaultExerciseData.weeklyCaloriesChange,
+            monthlyCaloriesChange: hasCaloriesData ? calculateMonthlyCaloriesChange(from: yearlyData) : Self.defaultExerciseData.monthlyCaloriesChange,
+            hasStepsData: hasStepsData,
+            hasCaloriesData: hasCaloriesData,
+            isHealthKitConnected: isHealthKitConnected
         )
     }
 
@@ -249,23 +245,22 @@ class AnalyticsViewModel: ObservableObject {
         let sleepQuality = calculateSleepQuality(hours: hours)
         let qualityChange = calculateSleepQualityChange(from: yearlyData, currentHours: hours)
 
-        print("계산된 수면 데이터:")
-        print("- 수면 품질: \(sleepQuality)%")
-        print("- 품질 변화: \(qualityChange)%")
-
         return SleepData(
-            averageHours: hours,
-            averageMinutes: minutes,
-            sleepQuality: sleepQuality,
-            qualityChange: qualityChange,
-            weeklySleepHours: weeklySleep,
-            monthlySleepHours: monthlySleep,
-            dailySleepTimeChange: calculateDailySleepTimeChange(from: yearlyData, current: hours),
-            weeklySleepTimeChange: calculateWeeklySleepTimeChange(from: yearlyData),
-            monthlySleepTimeChange: calculateMonthlySleepTimeChange(from: yearlyData),
-            dailyQualityChange: calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality),
-            weeklyQualityChange: calculateWeeklySleepQualityChange(from: yearlyData),
-            monthlyQualityChange: calculateMonthlySleepQualityChange(from: yearlyData)
+            averageHours: hasSleepTimeData ? hours : Self.deaultSleepData.averageHours,
+            averageMinutes: hasSleepTimeData ? minutes : Self.deaultSleepData.averageMinutes,
+            sleepQuality: hasSleepQualityData ? sleepQuality : Self.deaultSleepData.sleepQuality,
+            qualityChange: hasSleepQualityData ? qualityChange : Self.deaultSleepData.qualityChange,
+            weeklySleepHours: hasSleepTimeData ? weeklySleep : Self.deaultSleepData.weeklySleepHours,
+            monthlySleepHours: hasSleepTimeData ? monthlySleep : Self.deaultSleepData.monthlySleepHours,
+            dailySleepTimeChange: hasSleepTimeData ? calculateDailySleepTimeChange(from: yearlyData, current: hours) : Self.deaultSleepData.dailySleepTimeChange,
+            weeklySleepTimeChange: hasSleepTimeData ? calculateWeeklySleepTimeChange(from: yearlyData) : Self.deaultSleepData.weeklySleepTimeChange,
+            monthlySleepTimeChange: hasSleepTimeData ? calculateMonthlySleepTimeChange(from: yearlyData) : Self.deaultSleepData.monthlySleepTimeChange,
+            dailyQualityChange: hasSleepQualityData ? calculateDailySleepQualityChange(from: yearlyData, current: sleepQuality) : Self.deaultSleepData.dailyQualityChange,
+            weeklyQualityChange: hasSleepQualityData ? calculateWeeklySleepQualityChange(from: yearlyData) : Self.deaultSleepData.weeklyQualityChange,
+            monthlyQualityChange: hasSleepQualityData ? calculateMonthlySleepQualityChange(from: yearlyData) : Self.deaultSleepData.monthlyQualityChange,
+            hasSleepTimeData: hasSleepTimeData,
+            hasSleepQualityData: hasSleepQualityData,
+            isHealthKitConnected: isHealthKitConnected
         )
     }
 
