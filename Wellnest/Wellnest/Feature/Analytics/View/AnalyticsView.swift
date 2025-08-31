@@ -94,7 +94,3 @@ struct AnalyticsView: View {
         .padding(.top, 20)
     }
 }
-
-#Preview {
-    AnalyticsView()
-}

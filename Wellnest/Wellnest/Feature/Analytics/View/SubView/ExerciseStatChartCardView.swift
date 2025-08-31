@@ -200,7 +200,6 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
-    #warning("이거 지금 실데이터로 매핑하기 어려움")
     private func generateTodayData() -> [Double] {
         // 오늘의 시간대별 걸음수 (현실적인 패턴)
         let totalSteps = Double(exerciseData.averageSteps)
@@ -240,7 +239,6 @@ struct ExerciseStatChartCardView: View {
         }
     }
 
-    #warning("이것 임의로 동작하도록 설정 해 둠")
     private func formatCaloriesDisplay() -> String {
         switch selectedPeriod {
         case .today:
