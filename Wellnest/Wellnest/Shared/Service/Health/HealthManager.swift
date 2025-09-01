@@ -27,7 +27,6 @@ struct MissingSampleCheck {
     let missingOptional: [HKObjectType]
 }
 
-@MainActor
 final class HealthManager {
     static let shared = HealthManager()
 
@@ -193,6 +192,7 @@ final class HealthManager {
     /// 필수 읽기 타입에 누락이 있을 경우 HealthKit 권한 요청을 수행하고, 최종 스냅샷을 반환한다.
     /// - Returns: 권한 허용 후 프로브 기반 최종 누락 스냅샷
     /// - Throws: `HealthAuthError.notAvailable`, `HealthAuthError.unknown`
+    @MainActor
     func requestAuthorizationIfNeeded() async throws -> MissingSampleCheck {
         guard HKHealthStore.isHealthDataAvailable() else {
             logger.record(HealthAuthError.notAvailable, userInfo: ["phase": "authIfNeeded"])
@@ -273,6 +273,7 @@ final class HealthManager {
     /// 지정된 읽기 타입 집합에 대해 권한을 요청한다. (단순 요청)
     /// - Throws: `HealthAuthError.notAvailable`, `HealthAuthError.unknown`
     /// - Note: 이후 상태 확인은 별도 로직 필요
+    @MainActor
     func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
             logger.record(HealthAuthError.notAvailable, userInfo: ["phase": "auth.simple"])
