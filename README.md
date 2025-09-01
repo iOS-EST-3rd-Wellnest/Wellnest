@@ -1,6 +1,6 @@
 
 
-<img width="1920" height="1080" alt="readmeImage" src="https://github.com/user-attachments/assets/8aff0cab-c2b7-45f9-ab63-66df88502b17" />
+<img width="1920" height="1080" alt="readmeImage" src="https://github.com/user-attachments/assets/080eaf3c-64ce-4a2c-a17e-4334be313250" />
 
 
 <div align="center">
@@ -43,6 +43,7 @@
 | 화면 | 요구사항 |
 | :--: | ----- |
 | 공통 | - 화면 간 이동에 문제 발생하지 않음<br> - 하단 탭바/사이드 메뉴 등 공통 네비게이션 제공<br> - 공통으로 사용되는 UI 컴포넌트/함수 등 분리 |
+| 스플래시 | - 앱 실행 시 앱 로고를 2초간 표시<br> - 최초 실행 시에는 온보딩 화면으로 이동 |
 | 온보딩 | - 전반적인 앱 소개<br> - 사용자의 신체정보, 선호활동, 건강상태 등 설문 조사 |
 | 홈 | - 온보딩 설문을 바탕으로 사용자 프로필 제공<br> - 오늘의 일정 확인 및 완료 여부 체크<br> - 오늘의 일정 삭제<br> - 사용자 맞춤형 컨텐츠(날씨, 영상) 제공<br> - 웰니스 목표 및 시각화된 달성률 피드백 제공 |
 | 일정 | - 사용자의 선호, 필요사항을 기반으로 맞춤형 일정 추천<br> - 직접/Alan AI 기반 일정 생성, 수정 및 삭제<br> - 캘린더 형태의 시각화된 일정 확인<br> - 일정 시간(시작/종료) 및 반복/알림 설정<br> - 장소 및 메모 추가 및 수정 |
@@ -122,6 +123,6 @@ Wellnest
 
 | Plan | Plan | Analytics | Settings |
 | :--: | :--: | :--: | :--: |
-| <img width="200" alt="달력1" src="https://github.com/user-attachments/assets/24478ed0-89a8-4fb5-9046-a7697114e5e9" /> | <img width="200" alt="달력2" src="https://github.com/user-attachments/assets/5fff99b4-ad43-4a53-a205-6670e904c7a4" /> | <img width="200" alt="통계1" src="https://github.com/user-attachments/assets/73bb3a60-e0a1-4761-a791-5b02ef985bff" /> | <img width="200" alt="설정" src="https://github.com/user-attachments/assets/4f16d184-0a08-4ff3-9e1c-4ab991a31f09" /> |
+| <img width="200" alt="플랜1" src="https://github.com/user-attachments/assets/50978523-0f3e-4a4b-bcf0-da68f1056dc1" /> | <img width="200" alt="플랜2" src="https://github.com/user-attachments/assets/bd78dc1e-096e-4952-ba51-c94a6f2852de" /> | <img width="200" alt="통계2" src="https://github.com/user-attachments/assets/c158385b-a2d1-4ca7-b563-90e7feb60a98" /> | <img width="200" alt="설정" src="https://github.com/user-attachments/assets/4f16d184-0a08-4ff3-9e1c-4ab991a31f09" /> |
 
 
