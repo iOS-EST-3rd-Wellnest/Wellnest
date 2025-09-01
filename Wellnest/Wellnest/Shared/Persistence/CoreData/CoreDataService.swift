@@ -21,7 +21,8 @@ final class CoreDataService {
 
     // MARK: - Persistent Container
     lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "Wellnest")
+        let name = "Wellnest"
+        let container = NSPersistentContainer(name: name)
         container.loadPersistentStores { [weak self] (_, error) in
             guard let self else { return }
             if let error = error as NSError? {
@@ -83,6 +84,7 @@ extension CoreDataService {
         predicate: NSPredicate? = nil,
         sortDescriptors: [NSSortDescriptor]? = nil
     ) throws -> [Entity] where Entity: NSManagedObject {
+        let entityName = String(describing: Entity.self)
         let request = NSFetchRequest<Entity>(entityName: String(describing: Entity.self))
         request.predicate = predicate
         request.sortDescriptors = sortDescriptors
@@ -125,6 +127,7 @@ extension CoreDataService {
     func delete<Entity>(
         _ entity: Entity
     ) throws where Entity: NSManagedObject {
+        let entityName = String(describing: Entity.self)
         context.delete(entity)
         do {
             try saveContext()
