@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import FirebaseCrashlytics
 
 final class AlanAIService: ObservableObject {
     @Published var isLoading: Bool = false
@@ -16,16 +17,22 @@ final class AlanAIService: ObservableObject {
 
     let clientID: String
     private let networkManager = NetworkManager.shared
+    let logger: CrashLogger
 
-    init() {
+    init(logger: CrashLogger = CrashlyticsLogger()) {
+        self.logger = logger
+        
         if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
            let plist = NSDictionary(contentsOfFile: path),
            let clientID = plist["ALAN_CLIENT_ID"] as? String {
             self.clientID = clientID
-            print("Secrets.plist에서 Client ID 로드 성공")
+            logger.log("AlanAIService: Secrets loaded (clientID length=\(clientID.count))")
         } else {
             self.clientID = ""
-            print("ALAN_CLIENT_ID를 Secrets.plist에서 찾을 수 없습니다.")
+            logger.log("AlanAIService: ALAN_CLIENT_ID not found")
+            logger.record(NSError(domain: "AlanAIService", code: 9101,
+                               userInfo: [NSLocalizedDescriptionKey: "ALAN_CLIENT_ID missing"]),
+                          userInfo: nil)
         }
     }
 
@@ -39,8 +46,15 @@ final class AlanAIService: ObservableObject {
             await MainActor.run {
                 isLoading = false
             }
-            throw NSError(domain: "AlanAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
+            let err = NSError(domain: "AlanAIService", code: -1,
+                              userInfo: [NSLocalizedDescriptionKey: "Client ID가 없습니다."])
+            logger.record(err, userInfo: ["phase": "precondition"])
+            throw err
         }
+
+        logger.set(prompt.count, forKey: "alan.prompt.length")
+        logger.set(Self.shortHash(prompt), forKey: "alan.prompt.hash")
+        logger.log("AlanAIService.requestString start")
 
         do {
             let content = try await networkManager.requestString(
@@ -56,6 +70,7 @@ final class AlanAIService: ObservableObject {
                 rawResponse = content
             }
 
+            logger.log("AlanAIService.requestString success (len=\(content.count))")
             return content
 
         } catch {
@@ -63,6 +78,10 @@ final class AlanAIService: ObservableObject {
                 isLoading = false
                 errorMessage = error.localizedDescription
             }
+            logger.record(error, userInfo: [
+                 "endpoint": "/api/v1/question",
+                 "phase": "requestString"
+             ])
             throw error
         }
     }
@@ -134,12 +153,15 @@ final class AlanAIService: ObservableObject {
 
         guard let validJSONString = jsonString else {
             let error = NSError(domain: "AlanAIService", code: -2, userInfo: [NSLocalizedDescriptionKey: "유효한 JSON 형식을 찾을 수 없습니다."])
-            print("JSON 추출 실패")
+            logger.record(error, userInfo: [
+                           "phase": "jsonExtract",
+                           "content.len": content.count])
             throw error
         }
 
         guard let jsonData = validJSONString.data(using: .utf8) else {
             let error = NSError(domain: "AlanAIService", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON 데이터 변환 실패"])
+            logger.record(error, userInfo: ["phase": "jsonDataConvert"])
             throw error
         }
 
@@ -147,10 +169,15 @@ final class AlanAIService: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let decodedObject = try decoder.decode(T.self, from: jsonData)
+            logger.log("AlanAIService.parseResponse success (type=\(String(describing: T.self)))")
             print("JSON 파싱 성공")
             return decodedObject
         } catch {
-            print("JSON 파싱 실패: \(error)")
+            logger.record(error, userInfo: [
+                       "phase": "jsonDecode",
+                       "type": String(describing: T.self),
+                       "json.len": validJSONString.count
+            ])
             throw error
         }
     }
@@ -209,5 +236,14 @@ final class AlanAIService: ObservableObject {
 
         let json = jsonLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return json.isEmpty ? nil : json
+    }
+
+    /// 프롬프트 원문을 남기지 않기 위한 짧은 해시
+    static func shortHash(_ text: String) -> String {
+        // 간단한 해싱(보안 목적 X, 로깅 식별용)
+        let s = text.utf8.reduce(UInt64(1469598103934665603)) { (h, b) in
+            (h ^ UInt64(b)) &* 1099511628211
+        }
+        return String(format: "%016llx", s)
     }
 }

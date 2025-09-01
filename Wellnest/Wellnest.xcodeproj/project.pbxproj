@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */; };
+		B05F0C5C2E65259F004861DB /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = B05F0C5B2E65259F004861DB /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B0049A5F2E3B3C5700D48E8C /* FirebaseAnalytics in Frameworks */,
+				B05F0C5C2E65259F004861DB /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +109,7 @@
 				B05A1EEB2E3B222800AA8F36 /* Sources */,
 				B05A1EEC2E3B222800AA8F36 /* Frameworks */,
 				B05A1EED2E3B222800AA8F36 /* Resources */,
+				B05F0C5D2E652998004861DB /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -118,6 +121,7 @@
 			name = Wellnest;
 			packageProductDependencies = (
 				B0049A5E2E3B3C5700D48E8C /* FirebaseAnalytics */,
+				B05F0C5B2E65259F004861DB /* FirebaseCrashlytics */,
 			);
 			productName = Wellnest;
 			productReference = B05A1EEF2E3B222800AA8F36 /* Wellnest.app */;
@@ -239,6 +243,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B05F0C5D2E652998004861DB /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B05A1EEB2E3B222800AA8F36 /* Sources */ = {
@@ -592,6 +617,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		B05F0C5B2E65259F004861DB /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B0049A5D2E3B3C5700D48E8C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

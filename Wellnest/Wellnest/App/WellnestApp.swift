@@ -11,7 +11,6 @@ import Firebase
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        FirebaseApp.configure()
         LocalNotiManager.shared.localNotiDelegate()
         return true
     }
@@ -20,7 +19,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct WellnestApp: App {
     let container = CoreDataService.shared
-    
+
+    init() {
+         FirebaseApp.configure()
+     }
+
     var body: some Scene {
         WindowGroup {
             AppRouter()
@@ -28,3 +31,5 @@ struct WellnestApp: App {
         }
     }
 }
+
+

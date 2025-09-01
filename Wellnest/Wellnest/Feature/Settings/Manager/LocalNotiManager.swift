@@ -10,25 +10,30 @@ import UserNotifications
 
 final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = LocalNotiManager()
-    
+
+    private let logger: CrashLogger
+    init(logger: CrashLogger = CrashlyticsLogger()) {
+        self.logger = logger
+        super.init()
+    }
+
     // MARK: - 권한 요청
     /// 사용자에게 로컬 알림 권한을 요청합니다.
     /// - Parameter completion: 권한 부여 여부(`true`/`false`) 콜백. 메인 스레드에서 호출됩니다.
     /// - Note: 시스템 알림창이 표시됩니다. 앱 최초 1회만 의미가 있으며,
     ///         이후 상태는 설정 앱에서 변경할 수 있습니다.
     func requestNotificationAuthorization(completion: @escaping (Bool) -> Void) {
-            let center = UNUserNotificationCenter.current()
-            center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-                if let error { print("알람 설정 에러: \(error)") }
-                DispatchQueue.main.async { completion(granted) }
-                
-                if granted {
-                    print("알람 허용")
-                } else {
-                    print("알람 거부")
-                }
+        let center = UNUserNotificationCenter.current()
+        logger.log("Noti.requestAuthorization start")
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if let error {
+                self.logger.record(error, userInfo: ["phase": "auth"])
             }
+            DispatchQueue.main.async { completion(granted) }
+            self.logger.set(granted, forKey: "noti.auth.granted")
+            self.logger.log(granted ? "Noti.auth granted" : "Noti.auth denied")
         }
+    }
     
     /// 주어진 `ScheduleEntity`를 기반으로 **단발성 로컬 알림**을 예약합니다.
     /// - Parameter schedule: 알림에 사용할 일정 엔티티.
@@ -43,16 +48,27 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
               let startDate = schedule.startDate,
               let alarmName = schedule.alarm,
         let alarmRule = AlarmRule.tags.first(where: { $0.name == alarmName }) else {
-        print("알림 등록 실패: 데이터 확인 필요.")
+            logger.record(NSError(domain: "LocalNoti", code: 9801,
+                                  userInfo: [NSLocalizedDescriptionKey: "필수 필드 누락(title/startDate/alarmRule)"]),
+                          userInfo: ["phase": "schedule"])
             return
         }
         
         let triggerDate = startDate.addingTimeInterval(alarmRule.timeOffset)
         guard triggerDate > Date() else {
-            print("이미 지난 시간입니다.")
+            logger.record(NSError(domain: "LocalNoti", code: 9802,
+                               userInfo: [NSLocalizedDescriptionKey: "과거 트리거 시각"] ),
+                          userInfo: ["phase": "schedule", "offset": Int(alarmRule.timeOffset)])
             return
         }
-        
+
+        logger.set(title.count, forKey: "noti.title.len")
+        logger.set(shortHash(title), forKey: "noti.title.hash")
+        logger.set(alarmName, forKey: "noti.alarm.name")
+        logger.set(Int(alarmRule.timeOffset), forKey: "noti.alarm.offset")
+        logger.set(Int(triggerDate.timeIntervalSinceNow), forKey: "noti.ttl.sec")
+        logger.log("Noti.schedule start")
+
         let content = UNMutableNotificationContent()
         content.title = "Wellnest"
         content.body = alarmBody(title: title, startDate: startDate)
@@ -65,18 +81,22 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
             ),
             repeats: false
         )
-        
+
+        let identifier = schedule.id?.uuidString ?? UUID().uuidString
         let request = UNNotificationRequest(
-            identifier: schedule.id?.uuidString ?? UUID().uuidString,
+            identifier: identifier,
             content: content,
             trigger: trigger
         )
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
-                print("\(error.localizedDescription) 알람 등록 실패")
+                self.logger.record(error, userInfo: [
+                    "phase": "addRequest",
+                    "id": identifier
+                ])
             } else {
-                print("\(title) 알람 등록 성공")
+                self.logger.log("Noti.schedule success id=\(identifier)")
             }
         }
     }
@@ -108,7 +128,7 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
         } else {
             when = dateFormatter.string(from: startDate)
         }
-        
+        logger.log("Noti.body composed (today/tomorrow/other)")
         return "\(title) 일정이 \(when)에 시작됩니다."
     }
     
@@ -116,6 +136,7 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
     /// - Note: 보통 앱 시작 시(AppDelegate/SceneDelegate/Application 루트) 한 번 호출합니다.
     func localNotiDelegate() {
         UNUserNotificationCenter.current().delegate = self
+        logger.log("Noti.delegate set")
     }
     
     /// 앱이 **포그라운드** 상태일 때 도착한 알림의 표시 방식을 결정합니다.
@@ -129,6 +150,12 @@ final class LocalNotiManager: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        logger.log("Noti.willPresent id=\(notification.request.identifier)")
         completionHandler([.banner, .sound])
     }
+
+    private func shortHash(_ text: String) -> String {
+           let h = text.utf8.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1)) &* 1099511628211 }
+           return String(format: "%016llx", h)
+       }
 }

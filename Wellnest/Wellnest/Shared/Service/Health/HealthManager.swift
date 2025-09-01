@@ -29,7 +29,13 @@ struct MissingSampleCheck {
 
 final class HealthManager {
     static let shared = HealthManager()
-    
+
+    private let logger: CrashLogger
+    init(logger: CrashLogger = CrashlyticsLogger()) {
+        self.logger = logger
+        logger.log("HK: HealthManager init")
+    }
+
     /// HealthKit 저장소
     let store = HKHealthStore()
     
@@ -78,6 +84,9 @@ final class HealthManager {
     /// 읽기 권한 상태를 **실제 읽기 프로브**로 점검해 스냅샷을 반환
     /// - Returns: 필수/선택 타입에 대해 읽기 불가로 판단된 타입 목록
     func authorizationSnapshotByReadProbe() async -> MissingSampleCheck {
+        logger.set(requiredCoreTypes.count, forKey: "hk.req.core.count")
+        logger.set(optionalTypes.count, forKey: "hk.req.opt.count")
+        logger.log("HK: auth snapshot (probe) start")
         @Sendable func canRead(_ type: HKObjectType) async -> Bool {
             if let qt = type as? HKQuantityType {
                 // 오늘~내일 범위에 대한 가벼운 샘플 쿼리
@@ -114,7 +123,10 @@ final class HealthManager {
         let (core, opt) = await (coreResults, optResults)
         let missingCore     = core.filter { !$0.1 }.map { $0.0 }
         let missingOptional = opt.filter  { !$0.1 }.map { $0.0 }
-        
+
+        logger.set(missingCore.count, forKey: "hk.missing.core")
+        logger.set(missingOptional.count, forKey: "hk.missing.opt")
+        logger.log("HK: auth snapshot (probe) done")
         return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
@@ -127,13 +139,14 @@ final class HealthManager {
     private func probeQuantityRead(type: HKQuantityType, start: Date, end: Date) async -> Bool {
         await withCheckedContinuation { cont in
             let pred = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 1, sortDescriptors: nil) { _, _, error in
+            let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 1, sortDescriptors: nil) { [logger] _, _, error in
                 if let ns = error as NSError?, ns.domain == HKErrorDomain {
                     switch ns.code {
                     case HKError.errorAuthorizationDenied.rawValue,
                         HKError.errorAuthorizationNotDetermined.rawValue,
                         HKError.errorHealthDataRestricted.rawValue,
                         HKError.errorHealthDataUnavailable.rawValue:
+                        logger.record(ns, userInfo: ["phase": "probe.quantity", "id": type.identifier])
                         cont.resume(returning: false)
                         return
                     default:
@@ -156,13 +169,14 @@ final class HealthManager {
     private func probeCategoryRead(type: HKCategoryType, start: Date, end: Date) async -> Bool {
         await withCheckedContinuation { cont in
             let pred = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 1, sortDescriptors: nil) { _, _, error in
+            let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 1, sortDescriptors: nil) { [logger] _, _, error in
                 if let ns = error as NSError?, ns.domain == HKErrorDomain {
                     switch ns.code {
                     case HKError.errorAuthorizationDenied.rawValue,
                         HKError.errorAuthorizationNotDetermined.rawValue,
                         HKError.errorHealthDataRestricted.rawValue,
                         HKError.errorHealthDataUnavailable.rawValue:
+                        logger.record(ns, userInfo: ["phase": "probe.category", "id": type.identifier])
                         cont.resume(returning: false)
                         return
                     default:
@@ -180,18 +194,30 @@ final class HealthManager {
     /// - Throws: `HealthAuthError.notAvailable`, `HealthAuthError.unknown`
     @MainActor
     func requestAuthorizationIfNeeded() async throws -> MissingSampleCheck {
-        guard HKHealthStore.isHealthDataAvailable() else { throw HealthAuthError.notAvailable }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            logger.record(HealthAuthError.notAvailable, userInfo: ["phase": "authIfNeeded"])
+            throw HealthAuthError.notAvailable
+        }
+        logger.log("HK: authIfNeeded start")
         let before = await finalAuthSnapshot()
-        if before.missingCore.isEmpty { return before }
+        if before.missingCore.isEmpty {
+            logger.log("HK: authIfNeeded skip (already ok)")
+            return before
+        }
         do {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 store.requestAuthorization(toShare: requiredShareTypes, read: requiredReadTypes) { _, error in
                     if let error { cont.resume(throwing: error) } else { cont.resume(returning: ()) }
                 }
             }
-        } catch { throw HealthAuthError.unknown(error) }
+        } catch {
+            logger.record(error, userInfo: ["phase": "authIfNeeded.request"])
+            throw HealthAuthError.unknown(error)
+        }
         try? await Task.sleep(for: .milliseconds(200))
-        
+        let after = await finalAuthSnapshot()
+        logger.set(after.missingCore.count, forKey: "hk.missing.core.after")
+        logger.log("HK: authIfNeeded done")
         return await finalAuthSnapshot()
     }
     
@@ -223,7 +249,8 @@ final class HealthManager {
             let can = await canReadByProbe(t)
             if !can { missingOptional.append(t) }
         }
-        
+        logger.set(missingCore.count, forKey: "hk.final.core")
+        logger.set(missingOptional.count, forKey: "hk.final.opt")
         return MissingSampleCheck(missingCore: missingCore, missingOptional: missingOptional)
     }
     
@@ -249,11 +276,11 @@ final class HealthManager {
     @MainActor
     func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
+            logger.record(HealthAuthError.notAvailable, userInfo: ["phase": "auth.simple"])
             throw HealthAuthError.notAvailable
         }
-        
+        logger.log("HK: requestAuthorization start")
         let toRead = requiredReadTypes
-        
         do {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 store.requestAuthorization(toShare: nil, read: toRead) { success, error in
@@ -262,11 +289,14 @@ final class HealthManager {
                 }
             }
         } catch {
+            logger.record(error, userInfo: ["phase": "auth.simple.request"])
             throw HealthAuthError.unknown(error)
         }
         
         // 실제 최종 상태 확인
         let missingCore = requiredCoreTypes.filter { store.authorizationStatus(for: $0) != .sharingAuthorized }
+        logger.set(missingCore.count, forKey: "hk.auth.missingCore.afterSimple")
+        logger.log("HK: requestAuthorization done")
         if missingCore.isEmpty {
             throw HealthAuthError.notAvailable
         }
@@ -280,7 +310,7 @@ final class HealthManager {
         guard let stepCount else {
             return 0
         }
-        
+        let started = Date()
         return await withCheckedContinuation { continuation in
             let now = Date()
             let startDate = Calendar.current.startOfDay(for: now)
@@ -290,18 +320,17 @@ final class HealthManager {
                 quantityType: stepCount,
                 quantitySamplePredicate: predicate,
                 options: .cumulativeSum
-            ) { _, result, error in
+            ) { [logger] _, result, error in
+                let ms = Int(Date().timeIntervalSince(started) * 1000)
                 if let error {
-                    print("‼️ 오늘의 걸음 수 가져오기 실패")
-                    print(error)
+                    logger.record(error, userInfo: ["phase": "fetch.steps", "elapsed.ms": ms])
                     continuation.resume(returning: 0)
                     return
                 }
-                
                 let count = result?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0
+                logger.set(Int(count), forKey: "hk.today.steps")
                 continuation.resume(returning: Int(count))
             }
-            
             store.execute(query)
         }
     }
@@ -309,10 +338,8 @@ final class HealthManager {
     /// 오늘 활동 칼로리(kcal) 합계를 가져온다.
     /// - Returns: 오늘 누적 활동 칼로리 (kcal)
     func fetchCalorieCount() async throws -> Int {
-        guard let calorieCount else {
-            return 0
-        }
-        
+        guard let calorieCount else { return 0 }
+        let started = Date()
         return await withCheckedContinuation { continuation in
             let now = Date()
             let startDate = Calendar.current.startOfDay(for: now)
@@ -322,15 +349,15 @@ final class HealthManager {
                 quantityType: calorieCount,
                 quantitySamplePredicate: predicate,
                 options: .cumulativeSum
-            ) { _, result, error in
+            ) { [logger] _, result, error in
+                let ms = Int(Date().timeIntervalSince(started) * 1000)
                 if let error {
-                    print("‼️ 오늘 소모 칼로리 가져오기 실패")
-                    print(error)
+                    logger.record(error, userInfo: ["phase": "fetch.kcal", "elapsed.ms": ms])
                     continuation.resume(returning: 0)
                     return
                 }
-                
                 if let calories = result?.sumQuantity()?.doubleValue(for: HKUnit.kilocalorie()) {
+                    logger.set(Int(calories), forKey: "hk.today.kcal")
                     continuation.resume(returning: Int(calories))
                 } else {
                     continuation.resume(returning: 0)
@@ -344,10 +371,10 @@ final class HealthManager {
     /// 최근 24시간 수면 시간을 합산해 반환한다.
     /// - Returns: 수면 시간(초 단위)
     func fetchSleepDuration() async throws -> TimeInterval {
+        let started = Date()
         guard let sleepTime else {
             return 0
         }
-        
         return await withCheckedContinuation { continuation in
             let calendar = Calendar.current
             let endDate = Date()
@@ -361,9 +388,11 @@ final class HealthManager {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sortDescriptor]
-            ) { _, results, error in
+            ) { [logger] _, results, error in
+                let ms = Int(Date().timeIntervalSince(started) * 1000)
+
                 guard error == nil else {
-                    print("‼️ 오늘 수면시간 가져오기 실패")
+                    logger.record(error!, userInfo: ["phase": "fetch.sleep", "elapsed.ms": ms])
                     continuation.resume(returning: 0)
                     return
                 }
@@ -380,7 +409,7 @@ final class HealthManager {
                         totalSleep += sample.endDate.timeIntervalSince(sample.startDate)
                     }
                 }
-                
+                logger.set(Int(totalSleep), forKey: "hk.today.sleep.sec")
                 continuation.resume(returning: totalSleep)
             }
             

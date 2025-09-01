@@ -7,12 +7,25 @@
 
 import Foundation
 import Combine
+import FirebaseCrashlytics
 
 extension AlanAIService {
     func generateHealthPlan(_ request: PlanRequest, userProfile: UserProfile = .default) {
         healthPlan = nil
 
+        logger.set(request.planType.rawValue, forKey: "alan.plan.type")
+              logger.set(request.preferences.count, forKey: "alan.plan.prefCount")
+              logger.set(request.selectedWeekdays.count, forKey: "alan.plan.weekdayCount")
+              logger.log("AlanAI.generateHealthPlan start")
+
         guard !clientID.isEmpty else {
+            logger.log("AlanAI: clientID empty → returning local test plan")
+             logger.record(
+                 NSError(domain: "AlanAIService", code: 9301,
+                         userInfo: [NSLocalizedDescriptionKey: "ClientID empty; fallback to test plan"]),
+                 userInfo: ["phase": "precondition", "planType": request.planType.rawValue]
+             )
+
             let calendar = Calendar.current
             let today = Date()
             let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
@@ -120,13 +133,15 @@ extension AlanAIService {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.isLoading = false
                 self.healthPlan = testPlan
-
-                print("플랜 생성 성공")
+                self.logger.log("AlanAI: test plan delivered schedules=\(testSchedules.count)")
             }
             return
         }
 
         let prompt = AlanPromptBuilder.buildPrompt(from: request, userProfile: userProfile)
+        logger.set(prompt.count, forKey: "alan.prompt.length")       // 원문 미저장
+        logger.set(Self.shortHash(prompt), forKey: "alan.prompt.hash")
+        logger.log("AlanAI: sending prompt to backend")
 
         let healthPlanExtractor: (String) -> String? = { [weak self] response in
             if let data = response.data(using: .utf8),
@@ -165,12 +180,15 @@ extension AlanAIService {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let healthPlan):
-                    print("플랜 생성 성공")
+                    self?.logger.log("AlanAI: plan success; schedules=\(healthPlan.schedules.count)")
                     // 날짜 범위 검증 및 필터링
                     let validatedPlan = self?.validateAndFilterSchedules(healthPlan, request: request) ?? healthPlan
                     self?.healthPlan = validatedPlan
                 case .failure(let error):
-                    print("플랜 생성 실패")
+                    self?.logger.record(error, userInfo: [
+                        "phase": "generateHealthPlan.callback",
+                        "planType": request.planType.rawValue
+                    ])
                     self?.errorMessage = error.localizedDescription
                 }
             }
@@ -265,18 +283,22 @@ extension AlanAIService {
 
     private func generateActivityFromPreferences(_ preferences: [String], index: Int) -> String {
         guard !preferences.isEmpty else {
+            logger.log("AlanAI.generateActivity: preferences empty → fallback")
             return "테스트 - 기본 운동"
         }
 
         let selectedCategory = preferences[index % preferences.count]
-        
+        logger.set(preferences.count, forKey: "alan.pref.count")
+        logger.log("AlanAI.generateActivity: selected=\(selectedCategory)")
         return "테스트 - \(selectedCategory)"
     }
     
     private func generateNotesForActivity(_ activity: String, weekday: String?) -> String {
         if let weekday = weekday {
+            logger.log("AlanAI.generateNotes: weekday=\(weekday)")
             return "\(weekday) \(activity) 일정입니다."
         } else {
+            logger.log("AlanAI.generateNotes: no weekday")
             return "테스트용 일정입니다. 실제 API 연결 후 개인맞춤 운동이 생성됩니다."
         }
     }
@@ -284,6 +306,7 @@ extension AlanAIService {
     private func validateAndFilterSchedules(_ healthPlan: HealthPlanResponse, request: PlanRequest) -> HealthPlanResponse {
         // Multiple 플랜이 아니면 검증하지 않음
         guard request.planType == .multiple else {
+            logger.log("AlanAI.validate: skip (planType != multiple)")
             return healthPlan
         }
         
@@ -293,14 +316,27 @@ extension AlanAIService {
         let startDate = request.multipleStartDate ?? Date()
         let endDate = request.multipleEndDate ?? Calendar.current.date(byAdding: .day, value: 7, to: startDate) ?? startDate
         let calendar = Calendar.current
-        
-        print("날짜 검증 시작 - 허용 범위: \(dateFormatter.string(from: startDate)) ~ \(dateFormatter.string(from: endDate))")
+
+        logger.set(dateFormatter.string(from: startDate), forKey: "alan.plan.start")
+        logger.set(dateFormatter.string(from: endDate),   forKey: "alan.plan.end")
+        logger.set(healthPlan.schedules.count,           forKey: "alan.plan.origCount")
+        logger.log("AlanAI.validate: filtering schedules by date range")
         
         // 날짜 범위 내의 스케줄만 필터링
         let validSchedules = healthPlan.schedules.filter { scheduleItem in
             guard let dateString = scheduleItem.date,
                   let scheduleDate = dateFormatter.date(from: dateString) else {
-                print("날짜 파싱 실패: \(scheduleItem.date ?? "nil")")
+                logger
+                    .record(
+                        NSError(
+                            domain: "AlanAIService",
+                            code: 9401,
+                            userInfo: [NSLocalizedDescriptionKey: "스케줄 날짜 파싱 실패"]
+                        ),
+                        userInfo: [
+                            "value": scheduleItem.date ?? "nil",
+                            "phase": "validate.filter"]
+                    )
                 return false
             }
             
@@ -311,20 +347,24 @@ extension AlanAIService {
             let endDay = calendar.startOfDay(for: endDate)
             let isValid = scheduleDay >= startDay && scheduleDay <= endDay
             if !isValid {
-                print("범위 벗어남: \(dateString) (허용: \(dateFormatter.string(from: startDate)) ~ \(dateFormatter.string(from: endDate)))")
+                logger.log("AlanAI.validate: out of range \(dateString)")
             }
             return isValid
         }
-        
-        print("원본 스케줄: \(healthPlan.schedules.count)개, 필터링 후: \(validSchedules.count)개")
-        
+
+        logger.set(validSchedules.count, forKey: "alan.plan.validCount")
+        logger.log("AlanAI.validate: filtered \(validSchedules.count) / \(healthPlan.schedules.count)")
+
         // 같은 날짜인 경우 카테고리별 일정 생성 보장
         let isSameDay = calendar.isDate(startDate, inSameDayAs: endDate)
         if isSameDay {
             // AI가 제대로 된 카테고리별 일정을 생성했는지 확인
             let expectedCount = request.preferences.count
             if validSchedules.count < expectedCount {
-                print("AI 응답 부족: \(validSchedules.count)개 < 예상 \(expectedCount)개. 강제 생성 시작")
+                logger.record(NSError(domain: "AlanAIService", code: 9402,
+                                      userInfo: [NSLocalizedDescriptionKey: "동일 일자 응답 부족"]),
+                              userInfo: ["have": validSchedules.count, "expect": expectedCount,
+                                         "phase": "validate.sameDay"])
                 let adjustedSchedules = generateSchedulesForCategories(validSchedules, request: request)
                 return HealthPlanResponse(
                     planType: healthPlan.planType,
@@ -355,6 +395,11 @@ extension AlanAIService {
         guard let startTime = request.multipleStartTime,
               let endTime = request.multipleEndTime,
               let startDate = request.multipleStartDate else {
+            logger.record(
+                NSError(domain: "AlanAIService", code: 9403,
+                        userInfo: [NSLocalizedDescriptionKey: "same-day 조정에 필요한 값 누락"]),
+                userInfo: ["phase": "adjust.sameDay"]
+            )
             return schedules
         }
         
@@ -367,7 +412,18 @@ extension AlanAIService {
         let totalMinutes = Int(endTime.timeIntervalSince(startTime) / 60)
         let scheduleCount = schedules.count
         let minutesPerSchedule = max(30, totalMinutes / scheduleCount)
-        
+
+        if totalMinutes <= 0 {
+              logger.record(
+                  NSError(domain: "AlanAIService", code: 9404,
+                          userInfo: [NSLocalizedDescriptionKey: "시간 범위가 0 또는 음수"]),
+                  userInfo: ["phase": "adjust.sameDay", "totalMinutes": totalMinutes]
+              )
+          }
+
+          logger.set(scheduleCount, forKey: "alan.adjust.count")
+          logger.set(minutesPerSchedule, forKey: "alan.adjust.minPer")
+
         let targetDateString = dateFormatter.string(from: startDate)
         
         return schedules.enumerated().map { index, schedule in
@@ -395,6 +451,12 @@ extension AlanAIService {
         guard let startTime = request.multipleStartTime,
               let endTime = request.multipleEndTime,
               let startDate = request.multipleStartDate else {
+            logger.record(
+                NSError(domain: "AlanAIService",
+                        code: 9405,
+                        userInfo: [NSLocalizedDescriptionKey: "카테고리 강제 생성에 필요한 값 누락"]),
+                userInfo: ["phase": "generate.categories"]
+            )
             return existingSchedules
         }
         
@@ -407,7 +469,21 @@ extension AlanAIService {
         let totalMinutes = Int(endTime.timeIntervalSince(startTime) / 60)
         let categoryCount = request.preferences.count
         let minutesPerSchedule = max(30, totalMinutes / categoryCount)
-        
+
+        if request.preferences.isEmpty {
+              logger.log("AlanAI.genCategories: preferences empty → using generic labels")
+          }
+        if totalMinutes <= 0 {
+            logger.record(
+                NSError(domain: "AlanAIService", code: 9406,
+                        userInfo: [NSLocalizedDescriptionKey: "시간 범위가 0 또는 음수(카테고리 생성)"]),
+                userInfo: ["phase": "generate.categories", "totalMinutes": totalMinutes]
+            )
+        }
+
+        logger.set(categoryCount, forKey: "alan.gen.catCount")
+        logger.set(minutesPerSchedule, forKey: "alan.gen.minPer")
+
         let targetDateString = dateFormatter.string(from: startDate)
         var newSchedules: [AIScheduleItem] = []
         
@@ -442,8 +518,7 @@ extension AlanAIService {
                 )
             )
         }
-        
-        print("카테고리별 강제 생성: \(newSchedules.count)개 일정 완료")
+        logger.log("AlanAI.genCategories: created=\(newSchedules.count)")
         return newSchedules
     }
 }
