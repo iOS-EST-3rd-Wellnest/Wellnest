@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+struct DayPartition {
+    var allDay: [ScheduleItem] = []
+    var starters: [Int: [ScheduleItem]] = [:]
+    var carryOvers: [ScheduleItem] = []
+}
+
 struct ScheduleSheetView: View {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -47,36 +53,86 @@ struct ScheduleSheetView: View {
                         item: currentWeather,
                         showCurrentOnly: Calendar.current.isDateInToday(planVM.selectedDate)
                     )
-                        .transition(.opacity)
+                    .transition(.opacity)
                 }
             }
             .frame(height: 40)
             .padding(.horizontal)
 
             ScrollView(showsIndicators: false) {
-                let upcomingIDs = planVM.highlightedUpcomingIDs(on: planVM.selectedDate)
+                let date = planVM.selectedDate
+                let items = planVM.selectedDateScheduleItems
+                let upcomingIDs = planVM.highlightedUpcomingIDs(on: date)
 
-                LazyVStack(spacing: 8) {
-                    if planVM.selectedDateScheduleItems.isEmpty {
-                        emptyStateView
-                    } else {
-                        ForEach(planVM.selectedDateScheduleItems, id: \.id) { item in
+                if items.isEmpty {
+                    emptyStateView
+                        .padding(.horizontal)
+                        .padding(.top, Spacing.inline)
+                } else {
+                    let partition = buildDayPartition(for: date, items: items)
+                    let sortedHours = partition.starters.keys.sorted()
+
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        ForEach(partition.allDay, id: \.id) { item in
                             ScheduleItemView(
                                 schedule: item,
-                                contextDate: planVM.selectedDate,
-                                onToggleComplete: { schedule in
-                                    Task {
-                                        await planVM.toggleCompleted(for: schedule.id)
-                                    }
-                                },
-                                isUpcomingGroup: upcomingIDs.contains(item.id)
+                                contextDate: nil,
+                                onToggleComplete: { _ in },
+                                isUpcomingGroup: false
                             )
                             .onTapGesture { selectedItem = item }
                         }
+
+
+                        let zeroHourStarters = partition.starters[0] ?? []
+                        if !partition.carryOvers.isEmpty || !zeroHourStarters.isEmpty {
+                            HourLine(hour: 0)
+
+                            ForEach(partition.carryOvers, id: \.id) { item in
+                                ScheduleItemView(
+                                    schedule: item,
+                                    contextDate: date,
+                                    onToggleComplete: { _ in },
+                                    isUpcomingGroup: false
+                                )
+                                .padding(.leading, 48)
+                                .onTapGesture { selectedItem = item }
+                            }
+
+                            ForEach(zeroHourStarters, id: \.id) { item in
+                                ScheduleItemView(
+                                    schedule: item,
+                                    contextDate: date,
+                                    onToggleComplete: { schedule in
+                                        Task { await planVM.toggleCompleted(for: schedule.id) }
+                                    },
+                                    isUpcomingGroup: upcomingIDs.contains(item.id)
+                                )
+                                .padding(.leading, 48)
+                                .onTapGesture { selectedItem = item }
+                            }
+                        }
+
+                        ForEach(sortedHours.filter { $0 != 0 }, id: \.self) { hour in
+                            HourLine(hour: hour)
+
+                            ForEach(partition.starters[hour] ?? [], id: \.id) { item in
+                                ScheduleItemView(
+                                    schedule: item,
+                                    contextDate: date,
+                                    onToggleComplete: { schedule in
+                                        Task { await planVM.toggleCompleted(for: schedule.id) }
+                                    },
+                                    isUpcomingGroup: upcomingIDs.contains(item.id)
+                                )
+                                .padding(.leading, 48)
+                                .onTapGesture { selectedItem = item }
+                            }
+                        }
                     }
+                    .padding(.horizontal)
+                    .padding(.top, Spacing.inline)
                 }
-                .padding(.horizontal)
-                .padding(.top, Spacing.inline)
             }
             .safeAreaInset(edge: .bottom) {
                 Color.clear
@@ -141,6 +197,25 @@ struct ScheduleSheetView: View {
         .padding(.vertical, Spacing.layout * 2)
     }
 
+    private struct HourLine: View {
+        let hour: Int
+
+        var body: some View {
+            HStack(spacing: 8) {
+                Text(String(format: "%02d:00", hour))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 48, alignment: .leading)
+                    .padding(.vertical, 2)
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.25))
+                    .frame(height: 1)
+            }
+            .accessibilityHidden(true)
+        }
+    }
+
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
@@ -158,6 +233,41 @@ struct ScheduleSheetView: View {
                 currentDragOffset = 0
             }
     }
+
+    private func buildDayPartition(
+        for date: Date,
+        items: [ScheduleItem],
+        calendar: Calendar = .current
+    ) -> DayPartition {
+        var result = DayPartition()
+        let dayStart = calendar.startOfDay(for: date)
+        let dayEnd   = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+
+        for item in items {
+            guard item.endDate > dayStart && item.startDate < dayEnd else { continue }
+
+            if item.isAllDay || item.display(on: date).isAllDayForThatDate {
+                result.allDay.append(item)
+                continue
+            }
+
+            if item.startDate < dayStart {
+                result.carryOvers.append(item)
+            } else {
+                let h = calendar.component(.hour, from: item.startDate)
+                result.starters[h, default: []].append(item)
+            }
+        }
+
+        result.allDay.sort { $0.title < $1.title }
+        result.carryOvers.sort { $0.endDate < $1.endDate }
+        for k in result.starters.keys {
+            result.starters[k]?.sort { $0.startDate < $1.startDate }
+        }
+        return result
+    }
+
+
 }
 
 #Preview {
