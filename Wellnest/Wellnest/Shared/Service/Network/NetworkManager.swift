@@ -42,6 +42,11 @@ enum HTTPStatusCategory {
  */
 final class NetworkManager {
     static let shared = NetworkManager()
+    private let logger: CrashLogger
+
+    private init(logger: CrashLogger = CrashlyticsLogger()) {
+        self.logger = logger
+    }
 
     enum NetworkError: Error {
         case invalidURL
@@ -114,8 +119,6 @@ final class NetworkManager {
             }
         }
     }
-
-    private init() {}
 
     /**
      * 범용 네트워크 요청 메소드 (JSON 응답용) - async/await 버전
@@ -268,14 +271,33 @@ final class NetworkManager {
         headers: [String: String]?
     ) -> URLRequest? {
         guard var components = URLComponents(string: url) else {
-            print("URLComponents 생성 실패: \(url)")
+            logger
+                .record(
+                    NSError(
+                        domain: "Network",
+                        code: 9601,
+                        userInfo: [NSLocalizedDescriptionKey: "URLComponents 생성 실패"]
+                    ),
+                    userInfo: ["phase":"buildRequest"]
+                )
             return nil
         }
 
         if let parameters = parameters {
+            logger.set(parameters.count, forKey: "net.params.count")
             components.queryItems = parameters.compactMap { key, value in
                 guard let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-                    print("파라미터 인코딩 실패: \(key)=\(value)")
+                    logger.record(
+                        NSError(
+                            domain: "Network",
+                            code: 9602,
+                            userInfo: [NSLocalizedDescriptionKey: "파라미터 인코딩 실패"]
+                        ),
+                        userInfo: [
+                            "key": key,
+                            "phase":"buildRequest"
+                        ]
+                    )
                     return nil
                 }
                 return URLQueryItem(name: key, value: encodedValue)
@@ -284,10 +306,20 @@ final class NetworkManager {
 
         guard let finalURL = components.url else {
             print("최종 URL 생성 실패")
-            print("   - scheme: \(components.scheme ?? "nil")")
-            print("   - host: \(components.host ?? "nil")")
-            print("   - path: \(components.path)")
-            print("   - query: \(components.query ?? "nil")")
+            logger
+                .record(
+                    NSError(
+                        domain: "Network",
+                        code: 9603,
+                        userInfo: [NSLocalizedDescriptionKey: "최종 URL 생성 실패"]
+                    ),
+                    userInfo: [
+                        "scheme": components.scheme ?? "nil",
+                        "host": components.host ?? "nil",
+                        "path": components.path,
+                        "phase":"buildRequest"
+                    ]
+                )
             return nil
         }
 
@@ -298,11 +330,13 @@ final class NetworkManager {
         if body != nil {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-
         headers?.forEach { key, value in
             request.setValue(value, forHTTPHeaderField: key)
         }
-
+        logger.set(method.rawValue, forKey: "net.method")
+        logger.set(finalURL.host ?? "-", forKey: "net.host")
+        logger.set(finalURL.path, forKey: "net.path")
+        logger.log("NET buildRequest ok")
         return request
     }
 
@@ -317,25 +351,45 @@ final class NetworkManager {
      * - Throws: NetworkError 또는 기타 네트워크 관련 에러
      */
     private func executeRequest(_ request: URLRequest) async throws -> Data {
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+          let startedAt = Date()
 
-            if let httpResponse = response as? HTTPURLResponse {
-                print("Status: \(httpResponse.statusCode)")
+          do {
+              let (data, response) = try await URLSession.shared.data(for: request)
 
-                try handleHTTPStatusCode(httpResponse.statusCode, data: data)
-            }
+              let elapsed = Date().timeIntervalSince(startedAt)
+              logger.set(Int(elapsed * 1000), forKey: "net.elapsed.ms")   // 성능 지표
+              logger.set(data.count, forKey: "net.bytes")
 
-            print("Data received: \(data.count) bytes")
-            return data
+              if let http = response as? HTTPURLResponse {
+                  logger.set(http.statusCode, forKey: "net.status")
 
-        } catch let error as NetworkError {
-            throw error
-        } catch {
-            print("Network Error: \(error.localizedDescription)")
-            throw error
-        }
-    }
+                  do {
+                      try handleHTTPStatusCode(http.statusCode, data: data)
+                  } catch let netErr as NetworkError {
+                      // HTTP 오류를 Non-Fatal로 기록 (원문/바디는 남기지 않음)
+                      logger.record(netErr, userInfo: [
+                          "phase": "httpStatus",
+                          "status": http.statusCode,
+                          "category": netErr.category
+                      ])
+                      throw netErr
+                  }
+              }
+
+              logger.log("NET success")
+              return data
+
+          } catch let netErr as NetworkError {
+              // 이미 NetworkError로 매핑된 경우
+              logger.record(netErr, userInfo: ["phase":"executeRequest.catchNet"])
+              throw netErr
+
+          } catch {
+              // 기타 에러
+              logger.record(error, userInfo: ["phase":"executeRequest.catchOther"])
+              throw error
+          }
+      }
 
     /**
      * HTTP 상태 코드를 범주별로 처리하는 메소드
