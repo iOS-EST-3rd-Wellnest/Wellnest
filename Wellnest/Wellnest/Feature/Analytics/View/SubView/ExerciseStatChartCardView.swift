@@ -29,7 +29,7 @@ struct ExerciseStatChartCardView: View {
                     if let series = selectedStepsSeries, !series.isEmpty {
                         BarChartView(
                             data: series,
-                            dates: exerciseData.steps30dDaily.map(\.date),
+                            dates: selectedDates,
                             color: .wellnestOrange,
                             period: selectedPeriod,
                             dataType: .steps
@@ -215,6 +215,17 @@ private extension ExerciseStatChartCardView {
         case .month:
             let arr = exerciseData.steps30dDaily.map(\.value)
             return arr.contains(where: { $0 > 0 }) ? arr : nil
+        }
+    }
+
+    var selectedDates: [Date]? {
+        switch selectedPeriod {
+        case .today:
+            return nil
+        case .week:
+            return exerciseData.steps7dDaily.map(\.date)
+        case .month:
+            return exerciseData.steps30dDaily.map(\.date)
         }
     }
 

@@ -51,7 +51,47 @@ final class AnalyticsViewModel: ObservableObject {
     func load() async {
         await loadWithBetterErrorHandling()
     }
+#if DEBUG
+private let dbgKoreanDayFormatter: DateFormatter = {
+    let df = DateFormatter()
+    df.locale = Locale(identifier: "ko_KR")
+    df.timeZone = TimeZone.current
+    df.dateFormat = "M/d(E)"   // 예: 8/25(일)
+    return df
+}()
 
+private func debugPrintDailyPoints(_ title: String, _ points: [DailyPoint], unit: String = "분") {
+    print("🔎 \(title) (\(points.count)개)")
+    for p in points.sorted(by: { $0.date < $1.date }) {
+        let d = dbgKoreanDayFormatter.string(from: p.date)
+        let v = Int(p.value.rounded())
+        print("  • \(d): \(v)\(unit)")
+    }
+}
+
+private func debugPrintSleepData(_ sleep: SleepData) {
+    print("====== 💤 SleepData Dump ======")
+    print("오늘 분: \(sleep.sleepTodayMinutes)분")
+
+    debugPrintDailyPoints("최근 7일(분)", sleep.sleep7dDailyMinutes, unit: "분")
+    debugPrintDailyPoints("최근 30일(분)", sleep.sleep30dDailyMinutes, unit: "분")
+
+    // 시간 단위로도 한 번
+    let sevenH = sleep.sleep7dDailyMinutes.map { ($0.date, $0.value / 60.0) }
+    let thirtyH = sleep.sleep30dDailyMinutes.map { ($0.date, $0.value / 60.0) }
+
+    print("— 7일(시간)")
+    for (d, h) in sevenH.sorted(by: { $0.0 < $1.0 }) {
+        print("  • \(dbgKoreanDayFormatter.string(from: d)): \(String(format: "%.2f", h))시간")
+    }
+
+    print("— 30일(시간)")
+    for (d, h) in thirtyH.sorted(by: { $0.0 < $1.0 }) {
+        print("  • \(dbgKoreanDayFormatter.string(from: d)): \(String(format: "%.2f", h))시간")
+    }
+    print("================================")
+}
+#endif
     func loadWithBetterErrorHandling() async {
         guard userDefaults.isHealthKitEnabled else { return }
 
@@ -77,6 +117,10 @@ final class AnalyticsViewModel: ObservableObject {
             )
             self.errorMessage = nil
 
+
+#if DEBUG
+debugPrintSleepData(sleep)
+#endif
         } catch {
             print("❌ loadWithBetterErrorHandling 실패: \(error)")
             self.errorMessage = error.localizedDescription

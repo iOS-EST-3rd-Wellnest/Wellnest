@@ -213,16 +213,16 @@ private extension SleepStatChartCardView {
         }
     }
 
-    /// 월간 라벨용 날짜 배열
     var selectedDates: [Date]? {
         switch selectedPeriod {
+        case .today:
+            return nil
+        case .week:
+            return sleepData.sleep7dDailyMinutes.map(\.date)
         case .month:
             return sleepData.sleep30dDailyMinutes.map(\.date)
-        default:
-            return nil
         }
     }
-
 
     var chartTitle: String {
         switch selectedPeriod {

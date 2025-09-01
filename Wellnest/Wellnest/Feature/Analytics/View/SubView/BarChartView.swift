@@ -215,9 +215,14 @@ private extension BarChartView {
             }
 
         case .week:
-            let weekdays = ["월", "화", "수", "목", "금", "토", "일"]
-            return weekdays[min(index, weekdays.count - 1)]
-
+            if index < dateSeries.count, let date = dateSeries[index] {
+                let df = DateFormatter()
+                df.locale = Locale(identifier: "ko_KR")
+                df.dateFormat = "E"   // 월, 화, 수 ...
+                return df.string(from: date)
+            } else {
+                return ""
+            }
         case .month:
             let position = index + 1
             guard position % 5 == 0 else { return "" }

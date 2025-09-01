@@ -25,23 +25,6 @@ struct SleepData: Sendable {
     let isHealthKitConnected: Bool
 }
 
-enum SleepStage: Int, Codable, Hashable {
-    case inBed       // 옵션: inBed는 필요 시 배경 처리에만 사용
-    case asleepCore  // 가벼운 수면(light)
-    case asleepDeep  // 깊은 수면(deep)
-    case rem         // 렘 수면(REM)
-    case awake       // 각성 상태
-}
-
-struct SleepSession: Sendable, Hashable {
-    let start: Date
-    let end: Date
-
-    init(start: Date, end: Date) {
-        self.start = start
-        self.end = end
-    }
-}
 
 
 
