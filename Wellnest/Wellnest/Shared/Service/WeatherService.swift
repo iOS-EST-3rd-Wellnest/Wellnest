@@ -8,25 +8,43 @@
 import Foundation
 
 final class WeatherService {
-    let key: String
-    
-    init() {
+    private let key: String
+    private let logger: CrashLogger
+
+    init(logger: CrashLogger = CrashlyticsLogger()) {
+        self.logger = logger
+
         if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
            let plist = NSDictionary(contentsOfFile: path),
            let plistKey = plist["OpenWeather_API_KEY"] as? String {
             key = plistKey
-            print("✅ Secrets.plist에서 OpenWeather_API_KEY KEY 로드 성공 (길이: \(plistKey.count))")
+            logger.log("WeatherService: Secrets loaded (len=\(plistKey.count)")
         } else {
             key = ""
-            print("⚠️ OpenWeather_API_KEY를 Secrets.plist에서 찾을 수 없습니다.")
+            logger.log("WeatherService: API key not found")
+            logger
+                .record(
+                    NSError(domain: "WeatherService",
+                            code: 9001,
+                            userInfo: [NSLocalizedDescriptionKey: "OpenWeather API key missing"]),
+                    userInfo: nil
+                )
         }
     }
     
     func fetchCurrentWeather(lat: Double, lon: Double) async throws -> WeatherItem {
         let url = "https://api.openweathermap.org/data/2.5/weather?appid=\(key)&lat=\(lat)&lon=\(lon)&units=metric&lang=kr"
-        
+
+        logger.set(Math.round(lat, places: 4), forKey: "weather.lat")
+        logger.set(Math.round(lon, places: 4), forKey: "weather.lon")
+        logger.set("metric", forKey: "weather.units")
+        logger.set("kr", forKey: "weather.lang")
+        logger.log("WeatherService.fetchCurrent start")
+
         do {
             let weather: WeatherCurrentModel = try await NetworkManager.shared.request(url: url)
+            logger.log("WeatherService.fetchCurrent success")
+                        logger.set(Int(weather.dt), forKey: "weather.dt")
 
             return WeatherItem(
                 temp: Int(weather.main.temp.rounded()),
@@ -37,17 +55,35 @@ final class WeatherService {
                 dt: Date(timeIntervalSince1970: TimeInterval(weather.dt))
             )
         } catch {
-            print("🛑 error: \(error.localizedDescription)")
+            logger.record(error, userInfo: [
+                "endpoint": "/data/2.5/weather",
+                "units": "metric",
+                "lang": "kr"
+            ])
             throw error
         }
     }
     
     func fetch5dayWeather(lat: Double, lon: Double) async throws -> [WeatherItem] {
         let url = "https://api.openweathermap.org/data/2.5/forecast?appid=\(key)&lat=\(lat)&lon=\(lon)&units=metric&lang=kr"
-        
+
+        logger.set(Math.round(lat, places: 4), forKey: "forecast.lat")
+        logger.set(Math.round(lon, places: 4), forKey: "forecast.lon")
+        logger.log("WeatherService.fetch5day start")
+
         do {
             let weather: WeatherListModel = try await NetworkManager.shared.request(url: url)
-            return try await makeFiveDayWeather(lat: lat, lon: lon, using: weather)
+            if weather.list.isEmpty {
+                logger.record(NSError(domain: "WeatherService", code: 9002,
+                                      userInfo: [NSLocalizedDescriptionKey: "Forecast list empty"]),
+                              userInfo: ["endpoint": "/data/2.5/forecast"])
+            } else {
+                logger.set(weather.list.count, forKey: "forecast.slotCount")
+            }
+            let items = try await makeFiveDayWeather(lat: lat, lon: lon, using: weather)
+            logger.log("WeatherService.fetch5day success items=\(items.count)")
+            logger.set(items.count, forKey: "forecast.itemsCount")
+            return items
         } catch {
             print("🛑 error: \(error.localizedDescription)")
             throw error
@@ -115,4 +151,11 @@ final class WeatherService {
         return [current] + Array(dayItems.prefix(4))
     }
     
+}
+
+enum Math {
+    static func round(_ value: Double, places: Int) -> Double {
+        let p = pow(10.0, Double(places))
+        return (value * p).rounded() / p
+    }
 }
