@@ -7,32 +7,18 @@
 
 import Foundation
 
-struct ExerciseData {
-    let averageSteps: Int
-    let stepsChange: Int
-    let averageCalories: Int
-    let caloriesChange: Int
-    let weeklySteps: [Double]
-    let monthlySteps: [Double]
+struct ExerciseData: Sendable {
+    let stepsTodayTotal: Int
+    let stepsToday3hBuckets: [TimeBucket]
 
-    let dailyStepsChange: Int
-    let weeklyStepsChange: Int
-    let monthlyStepsChange: Int
-    let dailyCaloriesChange: Int
-    let weeklyCaloriesChange: Int
-    let monthlyCaloriesChange: Int
-    
-    let hasStepsData: Bool
-    let hasCaloriesData: Bool
+    let steps7dDaily: [DailyPoint]
+    let steps7dTotal: Int
+    let steps7dAverage: Int
+
+    let steps30dDaily: [DailyPoint]
+    let steps30dTotal: Int
+    let steps30dAverage: Int
+
     let isHealthKitConnected: Bool
 }
 
-extension ExerciseData {
-    var defaultTodaySteps: Int {
-        return 7203
-    }
-    
-    var defaultTodayCalories: Int {
-        return 2120
-    }
-}

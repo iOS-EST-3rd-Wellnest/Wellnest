@@ -7,199 +7,250 @@
 
 import SwiftUI
 
+// MARK: - 메인 차트 뷰
 struct BarChartView: View {
+    /// 값 시리즈
     let data: [Double]
+    /// 월간 라벨용 실제 날짜 시리즈 (예: ExerciseData.steps30dDaily.map(\.date))
+    /// - today/week에서는 무시됨
+    let dates: [Date]?
+    /// 막대 컬러
     let color: Color
+    /// 기간
     let period: ChartPeriod
+    /// 표기 단위
     let dataType: DataType
 
-    private var maxValue: Double {
-        data.max() ?? 1
-    }
+    @State private var selectedIndex: Int? = nil
+    @State private var animationProgress: CGFloat = 0
 
-    private var xAxisLabels: [String] {
-        switch period {
-        case .today:
-            return ["6시", "9시", "12시", "15시", "18시", "21시", "24시"]
-        case .week:
-            return ["월", "화", "수", "목", "금", "토", "일"]
-        case .month:
-            return getWeeksInCurrentMonth().enumerated().map { "\($0.offset + 1)주" }
-        }
-    }
+    // Tunables
+    private let chartHeight: CGFloat = 140
+    private let barSpacing: CGFloat = 6
+    private let barCornerRadius: CGFloat = 3
+    private let labelHeight: CGFloat = 20
+    private let minBarPixel: CGFloat = 2   // 데이터 0이어도 최소 높이
 
-    private var yAxisValues: [Double] {
-        switch dataType {
-        case .steps:
-            switch period {
-            case .today:
-                let max = maxValue
-                if max <= 500 {
-                    return [0, 100, 200, 300, 400, 500]
-                } else if max <= 2000 {
-                    return [0, 500, 1000, 1500, 2000]
-                } else {
-                    let step = (max / 4).rounded(.up)
-                    return [0, step, step * 2, step * 3, step * 4]
-                }
-            case .week, .month:
-                let max = maxValue
-                if max <= 1000 {
-                    return [0, 250, 500, 750, 1000]
-                } else if max <= 5000 {
-                    return [0, 1000, 2000, 3000, 4000, 5000]
-                } else if max <= 10000 {
-                    return [0, 2500, 5000, 7500, 10000]
-                } else {
-                    let step = (max / 4).rounded(.up)
-                    return [0, step, step * 2, step * 3, step * 4]
-                }
-            }
-        case .sleep:
-            return [0, 2, 4, 6, 8, 10]
-        }
-    }
-
-    private func getWeeksInCurrentMonth() -> [Date] {
-        let calendar = Calendar.current
-        let today = Date()
-        guard let monthRange = calendar.range(of: .weekOfMonth, in: .month, for: today) else {
-            return []
-        }
-
-        return Array(monthRange).map { _ in today }
-    }
+    // Tooltip (막대 폭과 무관한 고정 폭)
+    private let tooltipWidth: CGFloat = 72
 
     var body: some View {
-        if dataType == .sleep && period == .today {
-            // 수면 타임라인 뷰
-            sleepTimelineView
-        } else {
-            // 일반 바 차트
-            regularBarChartView
-        }
-    }
-
-    private var sleepTimelineView: some View {
         VStack(spacing: 12) {
-            // 시간축
-            HStack {
-                ForEach(["23:00", "02:00", "05:00", "08:00"], id: \.self) { time in
-                    Text(time)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            chartWithLabels
+                .frame(height: chartHeight + labelHeight)
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.8).delay(0.2)) { animationProgress = 1.0 }
+        }
+        .onChange(of: data) { _ in
+            animationProgress = 0
+            withAnimation(.easeOut(duration: 0.6)) { animationProgress = 1.0 }
+            selectedIndex = nil
+        }
+    }
+}
+
+// MARK: - 차트 + 라벨 통합 컴포넌트
+private extension BarChartView {
+
+    var chartWithLabels: some View {
+        GeometryReader { geo in
+            let count = referenceCount(for: period)
+
+            // 값/날짜 시리즈를 기간 기준 개수로 패딩
+            let series = paddedSeries(data, to: count)
+            let dateSeries = paddedDates(dates, to: count)
+
+            let barWidth = calculateBarWidth(containerWidth: geo.size.width, referenceCount: count)
+            let contentWidth = totalContentWidth(forCount: count, barWidth: barWidth)
+            let maxValue = max(series.max() ?? 0, 1)
+
+            let forceScrollForMonth = (period == .month)
+            let needsScrolling = forceScrollForMonth || contentWidth > geo.size.width
+
+            Group {
+                if needsScrolling {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            barContent(series: series, barWidth: barWidth, maxValue: maxValue)
+                                .frame(width: contentWidth, height: chartHeight, alignment: .bottom)
+                            labelContent(count: count, barWidth: barWidth, dateSeries: dateSeries)
+                                .frame(width: contentWidth, height: labelHeight, alignment: .top)
+                        }
+                    }
+                } else {
+                    VStack(spacing: 12) {
+                        barContent(series: series, barWidth: barWidth, maxValue: maxValue)
+                            .frame(maxWidth: .infinity, minHeight: chartHeight, maxHeight: chartHeight, alignment: .bottom)
+                        labelContent(count: count, barWidth: barWidth, dateSeries: dateSeries)
+                            .frame(maxWidth: .infinity, minHeight: labelHeight, maxHeight: labelHeight, alignment: .top)
+                    }
                 }
             }
-            .padding(.horizontal, 8)
+        }
+        .dynamicTypeSize(.medium) // 차트 영역은 고정 폰트 크기
+    }
 
-            // 수면 바
-            GeometryReader { geometry in
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [color, color.opacity(0.6)]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ))
-                    .frame(height: 32)
-                    .padding(.horizontal, 8)
+    func barContent(series: [Double], barWidth: CGFloat, maxValue: Double) -> some View {
+        HStack(alignment: .bottom, spacing: barSpacing) {
+            ForEach(series.indices, id: \.self) { index in
+                let value = series[index]
+                let isSelected = (selectedIndex == index)
+
+                RoundedRectangle(cornerRadius: barCornerRadius)
+                    .fill(barGradient(isSelected: selectedIndex == index))
+                    .frame(width: barWidth, height: barHeight(value: value, maxValue: maxValue))
+                    .overlay(alignment: .top) {
+                        if selectedIndex == index {
+                            Text(formatValue(value))
+                                .font(.system(size: 11, weight: .semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .frame(width: tooltipWidth) // 고정 폭
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(.primary.opacity(0.08), lineWidth: 0.5)
+                                )
+                                .offset(y: -30)             // 막대 꼭대기에서 위로 (원하면 -8/-12 등으로 조정)
+                                .allowsHitTesting(false)
+                                .transition(.opacity)
+                        }
+                    }
+                    .scaleEffect(y: animationProgress, anchor: .bottom)
+                    .contentShape(Rectangle()) // 탭 영역 확장
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedIndex = (selectedIndex == index) ? nil : index
+                        }
+                    }
+                    .zIndex(isSelected ? 1 : 0)
             }
-            .frame(height: 32)
         }
     }
 
-    private var regularBarChartView: some View {
-        HStack(spacing: 0) {
-            // Y축 레이블
-            VStack(alignment: .trailing, spacing: 0) {
-                ForEach(yAxisValues.reversed(), id: \.self) { value in
-                    HStack {
-                        Text(formatYAxisLabel(value))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    .frame(maxHeight: .infinity)
-                }
-            }
-            .frame(width: 45, height: 160)
-            .padding(.trailing, 5)
-
-            VStack(spacing: 8) {
-                // 차트 영역
-                ZStack {
-                    // 격자선
-                    VStack(spacing: 0) {
-                        ForEach(yAxisValues.reversed().dropLast(), id: \.self) { _ in
-                            HStack {
-                                Rectangle()
-                                    .fill(Color.secondary.opacity(0.1))
-                                    .frame(height: 0.5)
-                            }
-                            Spacer()
-                        }
-                    }
-
-                    // 바 차트
-                    HStack(alignment: .bottom, spacing: 0) {
-                        ForEach(Array(data.enumerated()), id: \.offset) { index, value in
-                            if value > 0 {
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(color.gradient)
-                                    .frame(height: barHeight(for: value))
-                            } else {
-                                Spacer()
-                                    .frame(height: 2)
-                            }
-                            if index < data.count - 1 {
-                                Spacer()
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 4)
-                }
-                .frame(height: 160)
-
-                // X축 레이블
-                HStack(spacing: 0) {
-                    ForEach(xAxisLabels, id: \.self) { label in
-                        Text(label)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 14)
-                .padding(.horizontal, 4)
+    func labelContent(count: Int, barWidth: CGFloat, dateSeries: [Date?]) -> some View {
+        HStack(alignment: .top, spacing: barSpacing) {
+            ForEach(0..<count, id: \.self) { i in
+                Text(xLabel(at: i, totalCount: count, dateSeries: dateSeries))
+                    .font(.system(size: 10))     // 고정 폰트
+                    .foregroundStyle(.secondary)
+                    .frame(width: barWidth)
+                    .lineLimit(1)
+                    .minimumScaleFactor(1.0)     // 축소/확대 방지
+                    .multilineTextAlignment(.center)
             }
         }
-        .padding(.leading, -14)
+    }
+}
+
+// MARK: - 계산 & 유틸
+private extension BarChartView {
+
+    func referenceCount(for period: ChartPeriod) -> Int {
+        switch period {
+        case .today: return 8   // 0,3,6,9,12,15,18,21시
+        case .week:  return 7   // 월~일
+        case .month: return 30  // 월간 30개 기준(스크롤 허용)
+        }
     }
 
-    private func barHeight(for value: Double) -> CGFloat {
-        guard maxValue > 0 else { return 2 }
+    func paddedSeries(_ data: [Double], to count: Int) -> [Double] {
+        if data.count >= count { return Array(data.prefix(count)) }
+        return data + Array(repeating: 0, count: count - data.count)
+    }
+
+    func paddedDates(_ dates: [Date]?, to count: Int) -> [Date?] {
+        guard let dates = dates else { return Array(repeating: nil, count: count) }
+        if dates.count >= count { return Array(dates.prefix(count)) }
+        return dates + Array(repeating: nil, count: count - dates.count)
+    }
+
+    func calculateBarWidth(containerWidth: CGFloat, referenceCount: Int) -> CGFloat {
+        let minWidth: CGFloat = 8
+        let maxWidth: CGFloat = 40
+        let availableWidth = containerWidth - CGFloat(max(referenceCount - 1, 0)) * barSpacing
+        let idealWidth = availableWidth / CGFloat(max(referenceCount, 1))
+
+        let baseWidth = min(max(idealWidth, minWidth), maxWidth)
+
+        // 월간은 막대 너비 2배
+        return period == .month ? (baseWidth * 2) : baseWidth
+    }
+
+    func totalContentWidth(forCount count: Int, barWidth: CGFloat) -> CGFloat {
+        let totalBarWidth = barWidth * CGFloat(count)
+        let totalSpacing = barSpacing * CGFloat(max(count - 1, 0))
+        return totalBarWidth + totalSpacing
+    }
+
+    func barHeight(value: Double, maxValue: Double) -> CGFloat {
+        guard maxValue > 0 else { return minBarPixel }
         let ratio = value / maxValue
-        return CGFloat(ratio) * 160
+        return max(minBarPixel, CGFloat(ratio) * chartHeight * 0.85) // 최소 높이 보장
     }
 
-    private func formatYAxisLabel(_ value: Double) -> String {
+    func barGradient(isSelected: Bool) -> LinearGradient {
+        LinearGradient(
+            colors: isSelected
+                ? [color.opacity(0.9), color]
+                : [color.opacity(0.7), color.opacity(0.9)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    // 라벨은 기간 규칙으로 생성 (월간은 실제 날짜의 '일' 표시)
+    func xLabel(at index: Int, totalCount: Int, dateSeries: [Date?]) -> String {
+        switch period {
+        case .today:
+            let hour = index * 3
+            switch hour {
+            case 0:  return "0시"
+            case 12: return "12시"
+            case 18: return "18시"
+            default: return "\(hour)시"
+            }
+
+        case .week:
+            if index < dateSeries.count, let date = dateSeries[index] {
+                let df = DateFormatter()
+                df.locale = Locale(identifier: "ko_KR")
+                df.dateFormat = "E"   // 월, 화, 수 ...
+                return df.string(from: date)
+            } else {
+                return ""
+            }
+        case .month:
+            let position = index + 1
+            guard position % 5 == 0 else { return "" }
+
+            if index < dateSeries.count, let date = dateSeries[index] {
+                let day = Calendar.current.component(.day, from: date)
+                return "\(day)"
+            } else {
+                return "\(position)"
+            }
+        }
+    }
+
+    func formatValue(_ value: Double) -> String {
         switch dataType {
         case .steps:
-            if value >= 10000 {
-                return "\(String(format: "%.1f", value / 10000))만"
-            } else if value >= 1000 {
-                return "\(Int(value / 1000))천"
-            } else if value == 0 {
-                return "0"
+            if value >= 10_000 {
+                return String(format: "%.1f만", value / 10_000)
+            } else if value >= 1_000 {
+                return String(format: "%.1f천", value / 1_000)
             } else {
-                return "\(Int(value))"
+                return String(format: "%.0f", value)
             }
+
         case .sleep:
-            if value == 0 {
-                return "0"
-            } else {
-                return "\(Int(value))시간"
-            }
+            let hours = Int(value)
+            let minutes = Int((value - Double(hours)) * 60)
+            return minutes == 0 ? "\(hours)시간" : "\(hours)시간 \(minutes)분"
         }
     }
 }
