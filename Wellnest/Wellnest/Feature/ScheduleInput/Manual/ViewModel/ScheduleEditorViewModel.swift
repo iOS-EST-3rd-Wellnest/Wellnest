@@ -110,27 +110,29 @@ final class ScheduleEditorViewModel: ObservableObject {
         return UIColor(named: name) != nil
     }
 
-    @MainActor
     func loadIfNeeded() async {
         guard case let .edit(id) = mode else { return }
         do {
             let scheduleSnapshot = try await repository.fetch(by: id)
-            form = ScheduleFormState(
-                title: scheduleSnapshot.title,
-                location: scheduleSnapshot.location,
-                detail: scheduleSnapshot.detail,
-                startDate: scheduleSnapshot.startDate,
-                endDate: scheduleSnapshot.endDate,
-                isAllDay: scheduleSnapshot.isAllDay,
-                isRepeated: scheduleSnapshot.repeatRuleName != nil,
-                selectedRepeatRule: scheduleSnapshot.repeatRuleName.flatMap { RepeatRule.init(name: $0) },
-                repeatEndMode: (scheduleSnapshot.repeatEndDate == nil) ? .none : .date,
-                repeatEndDate: scheduleSnapshot.repeatEndDate ?? Date(),
-                isAlarmOn: scheduleSnapshot.isAlarmOn,
-                alarmRule: scheduleSnapshot.alarmRuleName.flatMap(AlarmRule.init(name:)),
-                selectedColorName: scheduleSnapshot.backgroundColorName
-            )
-            previewColor = Color(form.selectedColorName)
+            await MainActor.run {
+                form = ScheduleFormState(
+                    title: scheduleSnapshot.title,
+                    location: scheduleSnapshot.location,
+                    detail: scheduleSnapshot.detail,
+                    startDate: scheduleSnapshot.startDate,
+                    endDate: scheduleSnapshot.endDate,
+                    isAllDay: scheduleSnapshot.isAllDay,
+                    isRepeated: scheduleSnapshot.repeatRuleName != nil,
+                    selectedRepeatRule: scheduleSnapshot.repeatRuleName.flatMap { RepeatRule.init(name: $0) },
+                    repeatEndMode: (scheduleSnapshot.repeatEndDate == nil) ? .none : .date,
+                    repeatEndDate: scheduleSnapshot.repeatEndDate ?? Date(),
+                    isAlarmOn: scheduleSnapshot.isAlarmOn,
+                    alarmRule: scheduleSnapshot.alarmRuleName.flatMap(AlarmRule.init(name:)),
+                    selectedColorName: scheduleSnapshot.backgroundColorName
+                )
+                previewColor = Color(form.selectedColorName)
+            }
+
         } catch {
             print("편집 데이터 로드 실패: \(error)")
         }
@@ -147,7 +149,7 @@ final class ScheduleEditorViewModel: ObservableObject {
         isSaving = true
         defer { isSaving = false }
 
-        let input = ScheduleInput(
+        var input = ScheduleInput(
             title: form.title,
             location: form.location,
             detail: form.detail,
@@ -175,6 +177,8 @@ final class ScheduleEditorViewModel: ObservableObject {
                 let ids = try await repository.create(with: input)
 
             } else {
+                let fetch = try await repository.fetch(by: id)
+                input.isCompleted = fetch.isCompleted
                 let updated = try await repository.update(id: id, with: input)
                 lastSavedID = updated
             }
@@ -182,9 +186,20 @@ final class ScheduleEditorViewModel: ObservableObject {
         }
     }
 
+    @MainActor
     func updateRepeatRule() async throws {
-        try await deleteFollowingInSeries()
-        let input = ScheduleInput(
+        guard case let .edit(id) = mode else { return }
+        let fetch = try await repository.fetch(by: id)
+
+        let keepCompleted = fetch.isCompleted
+
+        try await repository.deleteSeriesOccurrences(
+            seriesId: fetch.seriesId ?? UUID(),
+            after: fetch.startDate,
+            includeAnchor: false
+        )
+
+        var inputForSelected = ScheduleInput(
             title: form.title,
             location: form.location,
             detail: form.detail,
@@ -197,38 +212,42 @@ final class ScheduleEditorViewModel: ObservableObject {
             repeatEndDate: form.hasRepeatEndDate ? form.repeatEndDate : nil,
             alarmRuleName: form.isAlarmOn ? form.alarmRule?.name : nil,
             isAlarmOn: form.isAlarmOn,
-            isCompleted: false,
+            isCompleted: keepCompleted       // ✅ 선택된 것만 완료 유지
         )
-        try await repository.create(with: input)
+        try await repository.update(id: id, with: inputForSelected)
+
+        // 4) 이후 발생분은 항상 미완료로 생성
+        //    - 생성 API가 "하나씩" 만드는 경우: 익스팬더로 9/1..9/7 구해 루프에서 create
+        //    - 생성 API가 "규칙 전체"를 만드는 경우: 앵커의 다음 발생일부터 만들도록 설정
+        var inputForFuture = inputForSelected
+        inputForFuture.isCompleted = false   // ✅ 새 occurrence는 항상 미완료
+
+        // 앵커의 다음 발생부터 시작하도록 시작/끝을 조정 (예: daily라면 +1일)
+        // 규칙에 따라 nextStart를 계산하세요. (아래는 daily 예시)
+        let duration = inputForSelected.endDate.timeIntervalSince(inputForSelected.startDate)
+        let nextStart = Calendar.current.date(byAdding: .day, value: 1, to: fetch.startDate) ?? fetch.startDate
+        inputForFuture.startDate = nextStart
+        inputForFuture.endDate   = nextStart.addingTimeInterval(duration)
+
+        // 반복 종료일(있다면) 그대로 유지 → nextStart > repeatEndDate면 create 내부에서 no-op 처리
+        try await repository.create(with: inputForFuture)
     }
 
+    @MainActor
     func updateRepeatSeries() async throws {
-        guard case let .edit(id) = mode else { return }
-        let current = try await repository.fetch(by: id)
-        guard let seriesId = current.seriesId else { return }
+        guard case let .edit(selectedID) = mode else { return }
 
-        let anchor = current.startDate
-        try await repository.deleteSeriesOccurrences(
-            seriesId: seriesId,
-            after: anchor,
-            includeAnchor: true
-        )
+        let selected = try await repository.fetch(by: selectedID)
+        guard let seriesId = selected.seriesId else { return }
 
-        // (선택) 인덱스 이어붙이기: 앵커 이전 개수 계산
-//        let startIndex = try repository.countOccurrencesBefore(seriesId: seriesId, anchor: anchor)
+        let timeDelta = form.startDate.timeIntervalSince(selected.startDate)
 
-        try CoreDataService.shared.saveContext()
-        CoreDataService.shared.context.processPendingChanges()
-        await Task.yield() // 한 틱 양보로 경합 제거
-
-        // 3) 새 전개 입력은 seed-first(앵커부터)
-        let duration = form.endDate.timeIntervalSince(form.startDate)
-        var input = ScheduleInput(
+        let baseInput = ScheduleInput(
             title: form.title,
             location: form.location,
             detail: form.detail,
-            startDate: anchor,
-            endDate: anchor.addingTimeInterval(duration),
+            startDate: selected.startDate,
+            endDate: selected.endDate,
             isAllDay: form.isAllDay,
             backgroundColorName: form.selectedColorName,
             repeatRuleName: form.isRepeated ? form.selectedRepeatRule?.name : nil,
@@ -239,7 +258,85 @@ final class ScheduleEditorViewModel: ObservableObject {
             isCompleted: false
         )
 
-        _ = try await repository.create(with: input)
+        let ctx = CoreDataService.shared.context
+        let fetchReq = NSFetchRequest<NSManagedObjectID>(entityName: "ScheduleEntity")
+        fetchReq.resultType = .managedObjectIDResultType
+        fetchReq.predicate = NSPredicate(format: "seriesId == %@", seriesId as CVarArg)
+
+        let allIDs = try ctx.fetch(fetchReq)
+
+        try await ctx.perform {
+            for oid in allIDs {
+                guard let obj = try? ctx.existingObject(with: oid) as? ScheduleEntity else { continue }
+
+                obj.title = baseInput.title
+                obj.detail = baseInput.detail
+                obj.location = baseInput.location
+                obj.backgroundColor = baseInput.backgroundColorName
+                obj.isAllDay = NSNumber(value: baseInput.isAllDay)
+                obj.alarm = baseInput.alarmRuleName
+                obj.repeatRule = baseInput.repeatRuleName
+                obj.hasRepeatEndDate = baseInput.hasRepeatEndDate
+                obj.repeatEndDate = baseInput.repeatEndDate
+
+
+                if timeDelta != 0 {
+                    if let s = obj.startDate { obj.startDate = s.addingTimeInterval(timeDelta) }
+                    if let e = obj.endDate   { obj.endDate   = e.addingTimeInterval(timeDelta) }
+                } else {
+                    // 시간 이동을 원치 않으면 아무 것도 하지 않음
+                    // (혹은 선택 아이템의 duration로 재계산하고 싶다면 여기서 처리)
+                }
+            }
+        }
+
+        try CoreDataService.shared.saveContext()
+        ctx.processPendingChanges()
+    }
+    @MainActor
+    func editFollowingAndReseries() async throws {
+        guard case let .edit(id) = mode else { return }
+        let ctx = CoreDataService.shared.context
+
+        // 선택된 아이템과 seriesId 확보
+        let selected = try await repository.fetch(by: id)
+        guard let seriesId = selected.seriesId else { return }
+
+        // (옵션) 시간 이동량을 쓰고 싶다면 사용
+        let timeDelta = form.startDate.timeIntervalSince(selected.startDate)
+
+        // 같은 seriesId 전부 조회
+        let req = NSFetchRequest<ScheduleEntity>(entityName: "ScheduleEntity")
+        req.predicate = NSPredicate(format: "seriesId == %@", seriesId as CVarArg)
+        let items = try ctx.fetch(req)
+
+        print("seriesId items: \(items)")
+
+        try await ctx.perform { [weak self] in
+            guard let self else { return }
+
+            for obj in items {
+                // ✅ 콘텐츠 속성만 업데이트 (제목/메모/장소/색/종일/알람)
+                obj.title = self.form.title
+                obj.detail = self.form.detail
+                obj.location = self.form.location
+                obj.backgroundColor = self.form.selectedColorName
+                obj.isAllDay = NSNumber(value: self.form.isAllDay)
+                obj.alarm = self.form.isAlarmOn ? self.form.alarmRule?.name : nil
+
+                // ❌ 반복/식별/완료 상태는 유지
+                // obj.repeatRule / obj.hasRepeatEndDate / obj.repeatEndDate / obj.seriesId / obj.isCompleted 그대로
+
+                // (선택) 전체 시간을 동일 Δ만큼 이동하고 싶다면 주석 해제
+                // if timeDelta != 0 {
+                //     if let s = obj.startDate { obj.startDate = s.addingTimeInterval(timeDelta) }
+                //     if let e = obj.endDate   { obj.endDate   = e.addingTimeInterval(timeDelta) }
+                // }
+            }
+        }
+
+        try CoreDataService.shared.saveContext()
+        ctx.processPendingChanges()
     }
 
     @MainActor

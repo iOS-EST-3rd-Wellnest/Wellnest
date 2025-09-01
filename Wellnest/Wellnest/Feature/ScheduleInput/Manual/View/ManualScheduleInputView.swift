@@ -95,6 +95,7 @@ struct ManualScheduleInputView: View {
                         .onChange(of: viewModel.form.selectedRepeatRule) { newValue in
                             if viewModel.isEditMode && viewModel.form.isRepeated {
                                 isChangedRepeatRule = true
+
                             }
                         }
                         TagToggleSection(
@@ -151,7 +152,6 @@ struct ManualScheduleInputView: View {
                                      attachmentAnchor: .rect(.bounds),
                                      arrowEdge: .trailing) {
                                 let content = ColorPickerView(selectedColorName: $viewModel.form.selectedColorName)
-                                #if os(iOS)
                                 if UIDevice.current.userInterfaceIdiom == .pad {
                                     content
                                         .frame(width: 320, height: 200)
@@ -165,9 +165,6 @@ struct ManualScheduleInputView: View {
                                         content
                                     }
                                 }
-                                #else
-                                content
-                                #endif
 
                             }
                         }
@@ -188,7 +185,6 @@ struct ManualScheduleInputView: View {
                     }
                     .padding()
                 }
-                .padding(.bottom, 80)
                 .task {
                     await viewModel.loadIfNeeded()
                     if viewModel.isEditMode {
@@ -252,51 +248,25 @@ struct ManualScheduleInputView: View {
                     Text("앱 설정에서 알림을 켜주세요.")
                 }
             }
-            .overlay(alignment: .bottom) {
-                VStack(spacing: 0) {
-                    // 버튼 위로 덮일 페이드
-                    LinearGradient(
-                        colors: [
-                            colorScheme == .dark
-                                ? .black.opacity(0.0)
-                                : .white.opacity(0.0),
-                            colorScheme == .dark
-                                ? .black.opacity(1.0)
-                                : .white.opacity(1.0),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                    .frame(height: 80)
+            .safeAreaInset(edge: .bottom) {
+                ZStack(alignment: .bottom) {
+                    FilledButton(title: viewModel.primaryButtonTitle,disabled: viewModel.form.isTextEmpty, action: {
+                        // 편집 모드일 때
+                        if viewModel.isEditMode {
 
-                    ZStack(alignment: .bottom) {
-                        // 버튼
-                        FilledButton(title: viewModel.primaryButtonTitle,
-                                     disabled: viewModel.form.isTextEmpty) {
-                            // 편집 모드일 때
-                            if viewModel.isEditMode {
+                            // 반복 아이탬일 경우
+                            // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
 
-                                // 반복 아이탬일 경우
-                                // 또는 반복 아이탬은 아니지만 반복 체크를 한 경우
-
-                                if viewModel.form.isRepeated || isChangedRepeatRule {
-                                    withAnimation {
-                                        // 이후 아이탬에 대해 수정 메뉴 띄우기
-                                        showOnlySeriesItemEditMenu.toggle()
-                                    }
+                            if viewModel.form.isRepeated || isChangedRepeatRule {
+                                withAnimation {
+                                    // 이후 아이탬에 대해 수정 메뉴 띄우기
+                                    showOnlySeriesItemEditMenu.toggle()
                                 }
-                                // 반복 아이탬이 아니며, 수정된 내용이 반복 규칙이 아닌 경우
-                                else {
-                                    Task {
-                                        // 단순 스케줄 업데이트
-                                        try await viewModel.saveSchedule()
-                                        currentFocus = nil
-                                        selectedTab = .plan
-                                        selectedCreationType = nil
-                                        dismiss()
-                                    }
-                                }
-                            } else {
+                            }
+                            // 반복 아이탬이 아니며, 수정된 내용이 반복 규칙이 아닌 경우
+                            else {
                                 Task {
+                                    // 단순 스케줄 업데이트
                                     try await viewModel.saveSchedule()
                                     currentFocus = nil
                                     selectedTab = .plan
@@ -304,40 +274,52 @@ struct ManualScheduleInputView: View {
                                     dismiss()
                                 }
                             }
-                        }
-                        .padding(.horizontal)
-                        .frame(maxWidth: .infinity)
-                        if showOnlySeriesItemEditMenu {
-                            VStack(spacing: 0) {
-                                Section(header:
-                                    Text("반복되는 이벤트입니다.")
-                                        .font(.footnote)
-                                        .foregroundColor(.secondary)
-                                        .padding(.vertical, 6)
-
-                                ) {
-                                    Divider()
-                                    Button("이후 이벤트에 대해 저장") {
-                                        // 반복 이벤트로 바뀜
-                                        if isChangedRepeatRule {
-                                            Task {
-                                                try await viewModel.updateRepeatRule()
-                                            }
-                                        } else {
-                                            // 반복 이벤트에 대해서 전부 수정
-                                            Task {
-                                                try await viewModel.updateRepeatSeries()
-                                            }
-                                        }
-                                        showOnlySeriesItemEditMenu = false
-                                        selectedTab = .plan
-                                        selectedCreationType = nil
-                                        currentFocus = nil
-                                        dismiss()
-                                    }
-                                    .padding()
-                                }
+                        } else {
+                            Task {
+                                try await viewModel.saveSchedule()
+                                currentFocus = nil
+                                selectedTab = .plan
+                                selectedCreationType = nil
+                                dismiss()
                             }
+                        }
+                    }
+                    )
+                    .tabBarGlassBackground()
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity)
+
+                    if showOnlySeriesItemEditMenu {
+                        VStack(spacing: 0) {
+                            Section(header:
+                                Text("반복되는 이벤트입니다.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.vertical, 6)
+
+                            ) {
+                                Divider()
+                                Button("이후 이벤트에 대해 저장") {
+                                    // 반복 이벤트로 바뀜
+                                    if isChangedRepeatRule {
+                                        Task {
+                                            try await viewModel.updateRepeatRule()
+                                        }
+                                    } else {
+                                        // 반복 이벤트에 대해서 전부 수정
+                                        Task {
+                                            try await viewModel.editFollowingAndReseries()
+                                        }
+                                    }
+                                    showOnlySeriesItemEditMenu = false
+                                    selectedTab = .plan
+                                    selectedCreationType = nil
+                                    currentFocus = nil
+                                    dismiss()
+                                }
+                                .padding()
+                            }
+                        }
                             .foregroundColor(colorScheme == .dark ? .white : .black)
                             .background(RoundedRectangle(cornerRadius: 12)
                                             .fill(Color(.systemBackground))
@@ -350,18 +332,17 @@ struct ManualScheduleInputView: View {
                                                         lineWidth: 0.8
                                                     )
                                             ))
-                            .shadow(radius: 0.5)
-                            .frame(width: 200)
-                            .offset(y: -70)
-                            .transition(.asymmetric(
-                                insertion: .scale(scale: 0.9, anchor: .bottom).combined(with: .opacity),
-                                removal:   .opacity
-                            ))
-                        }
+                        .shadow(radius: 0.5)
+                        .frame(width: 200)
+                        .offset(y: -70)
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.9, anchor: .bottom).combined(with: .opacity),
+                            removal:   .opacity
+                        ))
                     }
-                    .animation(.spring(response: 0.22, dampingFraction: 0.85), value: showMenu)
-
                 }
+                .animation(.spring(response: 0.22, dampingFraction: 0.85), value: showMenu)
+                
             }
             .padding(.bottom, 8)
             .frame(width: isDevicePad ? 600 : UIScreen.main.bounds.width)
