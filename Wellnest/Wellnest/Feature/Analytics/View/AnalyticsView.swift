@@ -33,6 +33,8 @@ struct AnalyticsView: View {
         .background(Color(.systemBackground))
         .coordinateSpace(name: "analyticsViewScroll")
         .safeAreaBlur(offsetY: $offsetY)
+        .task { await viewModel.load() }
+        .refreshable { await viewModel.load() }
     }
 
     private var customNavigationHeader: some View {
